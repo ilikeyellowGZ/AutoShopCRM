@@ -17,8 +17,13 @@
     "vite": "latest"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.4",
     "@types/react": "latest",
     "@types/react-dom": "latest",
+    "jsdom": "^29.1.1",
     "react-grab": "^0.1.50",
     "react-scan": "^0.5.7",
     "typescript": "latest",
