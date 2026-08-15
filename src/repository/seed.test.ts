@@ -3,6 +3,7 @@ import type { TaskItem } from "../domain/models";
 import { createSeedState } from "./seed";
 
 const expectedAngles = ["front", "front-left", "left", "rear-left", "rear", "rear-right", "right", "front-right"];
+const originalMojibakeSeparator = "\u00e2\u20ac\u201d";
 
 describe("createSeedState", () => {
   it("creates the complete connected demo roster with stable vehicle IDs", () => {
@@ -26,7 +27,8 @@ describe("createSeedState", () => {
       const slug = vehicle.gallery.images[0].src.split("/")[3];
       expect(vehicle.gallery.images.map((image) => image.angle)).toEqual(expectedAngles);
       expect(vehicle.gallery.images.map((image) => image.src)).toEqual(expectedAngles.map((angle, index) => `/media/vehicles/${slug}/${String(index + 1).padStart(2, "0")}-${angle}.png`));
-      expect(vehicle.gallery.images.every((image) => image.alt.includes("â€”") === false)).toBe(true);
+      expect(vehicle.gallery.images.every((image) => image.alt.includes(originalMojibakeSeparator) === false)).toBe(true);
+      expect(vehicle.gallery.images.every((image) => image.alt.endsWith(`: ${image.label.toLowerCase()}`))).toBe(true);
     }
     expect(new Set(state.vehicles.flatMap((vehicle) => vehicle.gallery.images.map((image) => image.src))).size).toBe(80);
   });
