@@ -12,7 +12,7 @@ const gallery = (slug: string, vehicle: string): VehicleGallery => ({
     angle,
     label,
     src: `/media/vehicles/${slug}/${String(index + 1).padStart(2, "0")}-${angle}.png`,
-    alt: `${vehicle} — ${label.toLowerCase()}`,
+    alt: `${vehicle}: ${label.toLowerCase()}`,
   })),
 });
 

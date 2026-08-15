@@ -38,11 +38,16 @@ const tasks: TaskItem[] = [
 
 const activities: AuditActivity[] = Array.from({ length: 12 }, (_, index) => ({ id: `activity-${String(index + 1).padStart(2, "0")}`, action: ["Vehicle updated", "Lead contacted", "Deal progressed", "Service note added"][index % 4], detail: `Demo activity ${index + 1} recorded for the employee workspace.`, actor: index % 2 ? "Marcus Botha" : "Alicia Brown", occurredAt: at(16, 8 + index), tone: (["info", "positive", "warning", "neutral"] as const)[index % 4] }));
 
+const copyGallery = (vehicleId: string) => {
+  const gallery = vehicleGalleries[vehicleId];
+  return { ...gallery, images: gallery.images.map((image) => ({ ...image })) };
+};
+
 export function createSeedState(): DemoState {
-  const vehicles = vehicleRows.map((vehicle) => ({ ...vehicle, gallery: vehicleGalleries[vehicle.id] }));
-  return { schemaVersion: 1, vehicles, customers, leads, deals, financeDrafts: [{ vehicleId: "vehicle-02", vehiclePrice: 2_180_000, downPayment: 350_000, termMonths: 60, aprPercent: 11.5, tradeAllowance: 280_000, lienPayoff: 90_000, serviceContract: 32_000, gapInsurance: 14_500 }], serviceJobs, tasks, notifications: [
+  const vehicles = vehicleRows.map((vehicle) => ({ ...vehicle, gallery: copyGallery(vehicle.id) }));
+  return { schemaVersion: 1, vehicles, customers: customers.map((customer) => ({ ...customer })), leads: leads.map((lead) => ({ ...lead })), deals: deals.map((deal) => ({ ...deal })), financeDrafts: [{ vehicleId: "vehicle-02", vehiclePrice: 2_180_000, downPayment: 350_000, termMonths: 60, aprPercent: 11.5, tradeAllowance: 280_000, lienPayoff: 90_000, serviceContract: 32_000, gapInsurance: 14_500 }], serviceJobs: serviceJobs.map((job) => ({ ...job })), tasks: tasks.map((task) => ({ ...task })), notifications: [
     { id: "notification-01", title: "M4 CSL reserved", detail: "Deposit received from Jonas Kisting.", read: false, tone: "positive", relatedId: "deal-02" }, { id: "notification-02", title: "Taycan parts delayed", detail: "Rear sensor delivery moved to Tuesday.", read: false, tone: "warning", relatedId: "service-02" }, { id: "notification-03", title: "RS6 inbound", detail: "Carrier has checked in at the branch.", read: true, tone: "info", relatedId: "vehicle-03" }, { id: "notification-04", title: "Approval required", detail: "Defender deal needs margin approval.", read: false, tone: "critical", relatedId: "deal-04" }, { id: "notification-05", title: "Gallery ready", detail: "Golf 8 R images have been uploaded.", read: true, tone: "positive", relatedId: "vehicle-09" }, { id: "notification-06", title: "New lead", detail: "A customer requested a GT3 callback.", read: false, tone: "info", relatedId: "lead-01" },
-  ], activities, preferences: { branch: "Windhoek", density: "comfortable", activePage: "Dashboard", activeSubview: "Overview" }, drafts: { vehicleIntake: null, lead: null, deal: null, serviceNotes: {} } };
+  ], activities: activities.map((activity) => ({ ...activity })), preferences: { branch: "Windhoek", density: "comfortable", activePage: "Dashboard", activeSubview: "Overview" }, drafts: { vehicleIntake: null, lead: null, deal: null, serviceNotes: {} } };
 }
 
 export { NOW };
