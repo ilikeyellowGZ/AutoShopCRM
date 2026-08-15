@@ -33,6 +33,35 @@ describe("DemoRepository", () => {
     expect(repository.getState().vehicles[0].id).toBe("vehicle-01");
   });
 
+  it.each([
+    ["a vehicle missing price", (state: Record<string, any>) => { delete state.vehicles[0].price; }],
+    ["a vehicle missing derivative", (state: Record<string, any>) => { delete state.vehicles[0].derivative; }],
+    ["a gallery missing its cover image", (state: Record<string, any>) => { delete state.vehicles[0].gallery.coverImageId; }],
+    ["an image missing its label", (state: Record<string, any>) => { delete state.vehicles[0].gallery.images[0].label; }],
+    ["an image with an invalid angle", (state: Record<string, any>) => { state.vehicles[0].gallery.images[0].angle = "side"; }],
+    ["an image with a non-path source", (state: Record<string, any>) => { state.vehicles[0].gallery.images[0].src = "data:image/png;base64,abc"; }],
+    ["a truncated finance draft", (state: Record<string, any>) => { delete state.financeDrafts[0].aprPercent; }],
+    ["a truncated customer", (state: Record<string, any>) => { delete state.customers[0].city; }],
+    ["a truncated lead", (state: Record<string, any>) => { delete state.leads[0].dueAt; }],
+    ["a truncated deal", (state: Record<string, any>) => { delete state.deals[0].grossProfit; }],
+    ["a truncated service job", (state: Record<string, any>) => { delete state.serviceJobs[0].note; }],
+    ["a truncated task", (state: Record<string, any>) => { delete state.tasks[0].tone; }],
+    ["a truncated activity", (state: Record<string, any>) => { delete state.activities[0].occurredAt; }],
+    ["a task with a mismatched related record type", (state: Record<string, any>) => { state.tasks[0].relatedId = "service-01"; }],
+  ])("recovers from %s", (_name, corrupt) => {
+    const storage = memoryStorage();
+    const state = createDemoRepository(storage).getState() as unknown as Record<string, any>;
+    corrupt(state);
+    storage.setItem(STORAGE_KEY, JSON.stringify(state));
+
+    const recovered = createDemoRepository(storage).getState();
+
+    expect(recovered).toMatchObject({ schemaVersion: 1 });
+    expect(recovered.vehicles[0]).toMatchObject({ derivative: "GT3", price: 4_250_000 });
+    expect(recovered.financeDrafts[0].aprPercent).toBe(11.5);
+    expect(recovered.tasks[0].relatedId).toBe("lead-01");
+  });
+
   it("persists a task completion and writes an audit activity", () => {
     const storage = memoryStorage();
     const repository = createDemoRepository(storage);
