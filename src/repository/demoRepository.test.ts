@@ -21,6 +21,18 @@ describe("DemoRepository", () => {
     expect(JSON.parse(storage.getItem(STORAGE_KEY) ?? "{}").schemaVersion).toBe(1);
   });
 
+  it("recovers from nested corrupt records before repository actions can crash", () => {
+    const storage = memoryStorage();
+    const state = createDemoRepository(storage).getState();
+    state.vehicles[0] = null as never;
+    storage.setItem(STORAGE_KEY, JSON.stringify(state));
+
+    const repository = createDemoRepository(storage);
+
+    expect(() => repository.updateVehicle("vehicle-01", { exterior: "White" })).not.toThrow();
+    expect(repository.getState().vehicles[0].id).toBe("vehicle-01");
+  });
+
   it("persists a task completion and writes an audit activity", () => {
     const storage = memoryStorage();
     const repository = createDemoRepository(storage);
@@ -38,6 +50,15 @@ describe("DemoRepository", () => {
     const existing = repository.getState().vehicles[0];
 
     expect(() => repository.addVehicle({ ...existing, id: "vehicle-11", stockId: "WEE-0011" })).toThrow("VIN already exists in the active Weelee inventory.");
+  });
+
+  it("rejects an update that would duplicate a blank VIN", () => {
+    const repository = createDemoRepository(memoryStorage());
+    const [first, second] = repository.getState().vehicles;
+    repository.updateVehicle(first.id, { vin: "" });
+
+    expect(() => repository.updateVehicle(second.id, { vin: "" })).toThrow("VIN already exists in the active Weelee inventory.");
+    expect(repository.getState().vehicles.find((vehicle) => vehicle.id === second.id)?.vin).toBe(second.vin);
   });
 
   it("updates, persists, audits, and notifies for a mutation", () => {
@@ -77,5 +98,34 @@ describe("DemoRepository", () => {
 
     expect(repository.getState().tasks[0].status).not.toBe("Completed");
     expect(repository.getState().activities[0].action).toBe("Demo data reset");
+  });
+
+  it("keeps reset audit activity IDs increasing within a repository session", () => {
+    const repository = createDemoRepository(memoryStorage());
+    repository.reset();
+    const firstId = repository.getState().activities[0].id;
+    repository.reset();
+
+    expect(repository.getState().activities[0].id).not.toBe(firstId);
+    expect(repository.getState().activities[0].id).toBe("activity-14");
+  });
+
+  it("remains usable when browser storage reads and writes fail", () => {
+    const storage = memoryStorage();
+    storage.getItem = () => { throw new Error("Storage unavailable"); };
+    storage.setItem = () => { throw new Error("Storage full"); };
+    const repository = createDemoRepository(storage);
+
+    expect(() => repository.completeTask(repository.getState().tasks[0].id)).not.toThrow();
+    expect(repository.getState().tasks[0].status).toBe("Completed");
+  });
+
+  it("isolates subscriber snapshots from repository state", () => {
+    const repository = createDemoRepository(memoryStorage());
+    repository.subscribe((snapshot) => { snapshot.vehicles[0].exterior = "Subscriber mutation"; });
+
+    repository.updateVehicle("vehicle-01", { location: "Updated location" });
+
+    expect(repository.getState().vehicles[0]).toMatchObject({ exterior: "Chalk", location: "Updated location" });
   });
 });

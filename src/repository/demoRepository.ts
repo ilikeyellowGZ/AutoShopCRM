@@ -36,19 +36,18 @@ export type DemoRepository = {
 };
 
 const clone = <T,>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
-const nextActivityId = (activities: AuditActivity[]) => {
-  const maximum = activities.reduce((largest, activity) => Math.max(largest, Number(activity.id.match(/(\d+)$/)?.[1]) || 0), 0);
-  return `activity-${String(maximum + 1).padStart(2, "0")}`;
-};
+const maximumActivityNumber = (activities: AuditActivity[]) => activities.reduce((largest, activity) => Math.max(largest, Number(activity.id.match(/(\d+)$/)?.[1]) || 0), 0);
+const activityId = (number: number) => `activity-${String(number).padStart(2, "0")}`;
 
 export function createDemoRepository(storage: Storage): DemoRepository {
   let state = clone(loadDemoState(storage));
+  let activityNumber = maximumActivityNumber(state.activities);
   const listeners = new Set<(state: DemoState) => void>();
 
   const commit = (action: string, detail: string, mutate: (draft: DemoState) => void, tone: AuditActivity["tone"] = "info") => {
     const draft = clone(state);
     mutate(draft);
-    draft.activities.unshift({ id: nextActivityId(draft.activities), action, detail, actor: "Weelee Employee", occurredAt: NOW, tone });
+    draft.activities.unshift({ id: activityId(++activityNumber), action, detail, actor: "Weelee Employee", occurredAt: NOW, tone });
     state = draft;
     saveDemoState(storage, state);
     listeners.forEach((listener) => listener(clone(state)));
@@ -69,7 +68,7 @@ export function createDemoRepository(storage: Storage): DemoRepository {
     reset: () => {
       const resetState = createSeedState();
       resetState.activities.unshift({
-        id: nextActivityId(resetState.activities),
+        id: activityId(++activityNumber),
         action: "Demo data reset",
         detail: "The employee demo was restored to its deterministic seed data.",
         actor: "Weelee Employee",
@@ -95,8 +94,10 @@ export function createDemoRepository(storage: Storage): DemoRepository {
     },
     updateVehicle: (vehicleId, patch) => commit("Vehicle updated", "Vehicle record was updated.", (draft) => {
       const index = findIndex(draft.vehicles, vehicleId, "Vehicle");
-      const vin = patch.vin;
-      if (vin && draft.vehicles.some((item) => item.id !== vehicleId && item.vin === vin)) throw new Error("VIN already exists in the active Weelee inventory.");
+      if ("vin" in patch) {
+        if (typeof patch.vin !== "string") throw new Error("VIN must be a string.");
+        if (draft.vehicles.some((item) => item.id !== vehicleId && item.vin === patch.vin)) throw new Error("VIN already exists in the active Weelee inventory.");
+      }
       draft.vehicles[index] = { ...draft.vehicles[index], ...clone(patch) };
     }),
     addCustomer: (customer) => commit("Customer added", `${customer.name} was added to the customer directory.`, (draft) => { draft.customers.push(clone(customer)); }, "positive"),
