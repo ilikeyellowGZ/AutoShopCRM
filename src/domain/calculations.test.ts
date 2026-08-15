@@ -21,8 +21,8 @@ describe("MotorOS domain calculations", () => {
   });
 
   it("calculates amortized monthly payment and guards a zero interest rate", () => {
-    expect(monthlyPayment({ principal: 100_000, annualRatePercent: 0, termMonths: 60 })).toBeCloseTo(1666.67, 2);
-    expect(monthlyPayment({ principal: 100_000, annualRatePercent: 12, termMonths: 60 })).toBeCloseTo(2224.44, 2);
+    expect(monthlyPayment({ principal: 100_000, annualRatePercent: 0, termMonths: 60 })).toBe(1666.67);
+    expect(monthlyPayment({ principal: 100_000, annualRatePercent: 12, termMonths: 60 })).toBe(2224.44);
   });
 
   it("returns zero for finance payments with invalid amounts, rates, or terms", () => {

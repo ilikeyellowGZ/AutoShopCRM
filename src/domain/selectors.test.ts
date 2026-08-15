@@ -1,8 +1,10 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { createSeedState } from "../repository/seed";
 import { selectCustomerDirectory, selectDashboardMetrics, selectFilteredVehicles, selectPipelineColumns } from "./selectors";
 
 describe("demo selectors", () => {
+  afterEach(() => vi.restoreAllMocks());
+
   it("filters inventory by model, VIN, stock ID, and status", () => {
     const state = createSeedState();
     expect(selectFilteredVehicles(state, "GT3", "All")).toHaveLength(1);
@@ -18,6 +20,14 @@ describe("demo selectors", () => {
     expect(state.vehicles.map((vehicle) => vehicle.id)).toEqual(vehicleIds);
   });
 
+  it("uses invariant normalization when locale-sensitive lowercasing differs", () => {
+    vi.spyOn(String.prototype, "toLocaleLowerCase").mockImplementation(function toLocaleLowerCase(this: string): string {
+      return this.toString().includes("Porsche") ? "locale-dependent" : this.toString().toLowerCase();
+    });
+
+    expect(selectFilteredVehicles(createSeedState(), "porsche", "All").map((vehicle) => vehicle.id)).toEqual(["vehicle-01", "vehicle-05"]);
+  });
+
   it("returns all four pipeline columns even when one is empty", () => {
     const state = createSeedState();
     state.leads = state.leads.filter((lead) => lead.stage !== "Delivery");
@@ -26,6 +36,23 @@ describe("demo selectors", () => {
 
     expect(columns.map((column) => column.stage)).toEqual(["Lead", "Negotiation", "Contract", "Delivery"]);
     expect(columns.find((column) => column.stage === "Delivery")).toMatchObject({ count: 0, value: 0, leads: [] });
+  });
+
+  it("recomputes a non-empty stage count and value from changed lead data", () => {
+    const state = createSeedState();
+    const movedLead = state.leads[0];
+    movedLead.stage = "Contract";
+    movedLead.value = 5_000_000;
+
+    const columns = selectPipelineColumns(state);
+
+    expect(columns.map((column) => column.stage)).toEqual(["Lead", "Negotiation", "Contract", "Delivery"]);
+    expect(columns.find((column) => column.stage === "Contract")).toMatchObject({
+      stage: "Contract",
+      count: 5,
+      value: 16_000_000,
+      leads: expect.arrayContaining([expect.objectContaining({ id: "lead-01", value: 5_000_000 })]),
+    });
   });
 
   it("derives dashboard counts and pipeline value from the connected state", () => {

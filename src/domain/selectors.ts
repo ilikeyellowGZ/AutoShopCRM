@@ -20,7 +20,7 @@ export type PipelineColumn = {
   value: number;
 };
 
-const normalized = (value: string) => value.trim().toLocaleLowerCase();
+const normalized = (value: string) => value.trim().toLowerCase();
 
 export function selectDashboardMetrics(state: DemoState): DashboardMetrics {
   return {
