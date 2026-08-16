@@ -90,6 +90,29 @@ describe("DemoRepository", () => {
     expect(() => repository.addVehicle({ ...existing, id: "vehicle-11", stockId: "WEE-0011" })).toThrow("VIN already exists in the active Weelee inventory.");
   });
 
+  it("rejects duplicate customer emails without persisting a partial customer", () => {
+    const repository = createDemoRepository(memoryStorage());
+    const existing = repository.getState().customers[0];
+
+    expect(() => repository.addCustomer({ ...existing, id: "customer-13", email: ` ${existing.email.toUpperCase()} ` })).toThrow("A customer with this email already exists.");
+    expect(repository.getState().customers).toHaveLength(12);
+  });
+
+  it("rejects lead and deal references that do not belong to the active directory", () => {
+    const repository = createDemoRepository(memoryStorage());
+    const state = repository.getState();
+
+    expect(() => repository.addLead({ ...state.leads[0], id: "lead-99", customerId: "customer-missing" })).toThrow("Customer not found.");
+    expect(() => repository.addDeal({ ...state.deals[0], id: "deal-99", vehicleId: "vehicle-missing" })).toThrow("Vehicle not found.");
+  });
+
+  it("rejects an identical persisted pipeline stage move", () => {
+    const repository = createDemoRepository(memoryStorage());
+    const lead = repository.getState().leads[0];
+
+    expect(() => repository.moveLead(lead.id, lead.stage)).toThrow("Lead is already in this pipeline stage.");
+  });
+
   it("persists successful vehicle creation with a typed vehicle audit", () => {
     const storage = memoryStorage(); const repository = createDemoRepository(storage); const vehicle = repository.getState().vehicles[0];
     repository.addVehicle({ ...vehicle, id: "vehicle-11", vin: "1HGCM82633A004352", stockId: "WEE-2411" });

@@ -44,6 +44,7 @@ const clone = <T,>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
 const maximumActivityNumber = (activities: AuditActivity[]) => activities.reduce((largest, activity) => Math.max(largest, Number(activity.id.match(/(\d+)$/)?.[1]) || 0), 0);
 const activityId = (number: number) => `activity-${String(number).padStart(2, "0")}`;
 export const normalizeVehicleIdentifier = (value: string) => value.trim().toUpperCase();
+const normalizeEmail = (value: string) => value.trim().toLowerCase();
 
 function validateVehicleIdentifiers(vehicle: Pick<Vehicle, "vin" | "stockId">, vehicles: readonly Vehicle[], excludedId?: string) {
   const vin = normalizeVehicleIdentifier(vehicle.vin);
@@ -53,6 +54,19 @@ function validateVehicleIdentifiers(vehicle: Pick<Vehicle, "vin" | "stockId">, v
   if (vehicles.some((item) => item.id !== excludedId && normalizeVehicleIdentifier(item.vin) === vin)) throw new Error("VIN already exists in the active Weelee inventory.");
   if (vehicles.some((item) => item.id !== excludedId && normalizeVehicleIdentifier(item.stockId) === stockId)) throw new Error("Stock ID already exists in the active Weelee inventory.");
   return { vin, stockId };
+}
+
+function validateCustomer(customer: Customer, customers: readonly Customer[], excludedId?: string) {
+  const email = normalizeEmail(customer.email);
+  if (!customer.name.trim()) throw new Error("Customer name is required.");
+  if (!email.includes("@")) throw new Error("A valid customer email is required.");
+  if (customers.some((item) => item.id !== excludedId && normalizeEmail(item.email) === email)) throw new Error("A customer with this email already exists.");
+  return { ...customer, name: customer.name.trim(), email };
+}
+
+function validateCustomerAndVehicle(customerId: string, vehicleId: string, state: DemoState) {
+  if (!state.customers.some((customer) => customer.id === customerId)) throw new Error("Customer not found.");
+  if (!state.vehicles.some((vehicle) => vehicle.id === vehicleId)) throw new Error("Vehicle not found.");
 }
 
 export function createDemoRepository(storage: Storage): DemoRepository {
@@ -118,15 +132,36 @@ export function createDemoRepository(storage: Storage): DemoRepository {
         draft.vehicles[index] = { ...draft.vehicles[index], ...clone(patch), ...identifiers };
       }, "info", "vehicle", vehicleId);
     },
-    addCustomer: (customer) => commit("Customer added", `${customer.name} was added to the customer directory.`, (draft) => { draft.customers.push(clone(customer)); }, "positive", "customer", customer.id),
-    updateCustomer: (customerId, patch) => commit("Customer updated", "Customer record was updated.", (draft) => { const index = findIndex(draft.customers, customerId, "Customer"); draft.customers[index] = { ...draft.customers[index], ...clone(patch) }; }, "info", "customer", customerId),
-    addLead: (lead) => commit("Lead added", "A new customer lead was created.", (draft) => { draft.leads.push(clone(lead)); }, "positive", "lead", lead.id),
-    moveLead: (leadId, stage) => commit("Lead moved", `Lead moved to ${stage}.`, (draft) => {
+    addCustomer: (customer) => {
+      const validated = validateCustomer(customer, state.customers);
+      commit("Customer added", `${validated.name} was added to the customer directory.`, (draft) => { draft.customers.push(clone(validated)); }, "positive", "customer", customer.id);
+    },
+    updateCustomer: (customerId, patch) => {
+      const current = state.customers[findIndex(state.customers, customerId, "Customer")];
+      const validated = validateCustomer({ ...current, ...patch }, state.customers, customerId);
+      commit("Customer updated", "Customer record was updated.", (draft) => { const index = findIndex(draft.customers, customerId, "Customer"); draft.customers[index] = clone(validated); }, "info", "customer", customerId);
+    },
+    addLead: (lead) => {
+      validateCustomerAndVehicle(lead.customerId, lead.vehicleId, state);
+      commit("Lead added", "A new customer lead was created.", (draft) => { draft.leads.push(clone(lead)); }, "positive", "lead", lead.id);
+    },
+    moveLead: (leadId, stage) => {
+      const current = state.leads[findIndex(state.leads, leadId, "Lead")];
+      if (current.stage === stage) throw new Error("Lead is already in this pipeline stage.");
+      commit("Lead moved", `Lead moved to ${stage}.`, (draft) => {
       const index = findIndex(draft.leads, leadId, "Lead");
       draft.leads[index] = { ...draft.leads[index], stage };
-    }, "info", "lead", leadId),
-    updateLeadStage: (leadId, stage) => commit("Lead moved", `Lead moved to ${stage}.`, (draft) => { const index = findIndex(draft.leads, leadId, "Lead"); draft.leads[index] = { ...draft.leads[index], stage }; }, "info", "lead", leadId),
-    addDeal: (deal) => commit("Deal added", "A new deal was created.", (draft) => { draft.deals.push(clone(deal)); }, "positive", "deal", deal.id),
+      }, "info", "lead", leadId);
+    },
+    updateLeadStage: (leadId, stage) => {
+      const current = state.leads[findIndex(state.leads, leadId, "Lead")];
+      if (current.stage === stage) throw new Error("Lead is already in this pipeline stage.");
+      commit("Lead moved", `Lead moved to ${stage}.`, (draft) => { const index = findIndex(draft.leads, leadId, "Lead"); draft.leads[index] = { ...draft.leads[index], stage }; }, "info", "lead", leadId);
+    },
+    addDeal: (deal) => {
+      validateCustomerAndVehicle(deal.customerId, deal.vehicleId, state);
+      commit("Deal added", "A new deal was created.", (draft) => { draft.deals.push(clone(deal)); }, "positive", "deal", deal.id);
+    },
     updateDealStatus: (dealId, status) => commit("Deal updated", `Deal status changed to ${status}.`, (draft) => { const index = findIndex(draft.deals, dealId, "Deal"); draft.deals[index] = { ...draft.deals[index], status }; }, "info", "deal", dealId),
     updateFinanceDraft: (vehicleId, patch) => commit("Finance draft updated", "Finance values were saved locally.", (draft) => {
       const index = draft.financeDrafts.findIndex((item) => item.vehicleId === vehicleId);
