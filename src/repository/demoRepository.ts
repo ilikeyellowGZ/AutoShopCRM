@@ -27,11 +27,16 @@ export type DemoRepository = {
   addVehicle(vehicle: Vehicle): void;
   updateVehicle(vehicleId: string, patch: Partial<Vehicle>): void;
   addCustomer(customer: Customer): void;
+  updateCustomer(customerId: string, patch: Partial<Customer>): void;
   addLead(lead: Lead): void;
+  updateLeadStage(leadId: string, stage: LeadStage): void;
   moveLead(leadId: string, stage: LeadStage): void;
   addDeal(deal: Deal): void;
+  updateDealStatus(dealId: string, status: Deal["status"]): void;
   updateFinanceDraft(vehicleId: string, patch: Partial<FinanceDraft>): void;
   updateServiceJob(jobId: string, patch: Partial<ServiceJob>): void;
+  addServiceJob(job: ServiceJob): void;
+  updateServiceState(jobId: string, status: ServiceJob["status"]): void;
   markNotificationRead(notificationId: string): void;
 };
 
@@ -114,12 +119,15 @@ export function createDemoRepository(storage: Storage): DemoRepository {
       }, "info", "vehicle", vehicleId);
     },
     addCustomer: (customer) => commit("Customer added", `${customer.name} was added to the customer directory.`, (draft) => { draft.customers.push(clone(customer)); }, "positive", "customer", customer.id),
+    updateCustomer: (customerId, patch) => commit("Customer updated", "Customer record was updated.", (draft) => { const index = findIndex(draft.customers, customerId, "Customer"); draft.customers[index] = { ...draft.customers[index], ...clone(patch) }; }, "info", "customer", customerId),
     addLead: (lead) => commit("Lead added", "A new customer lead was created.", (draft) => { draft.leads.push(clone(lead)); }, "positive", "lead", lead.id),
     moveLead: (leadId, stage) => commit("Lead moved", `Lead moved to ${stage}.`, (draft) => {
       const index = findIndex(draft.leads, leadId, "Lead");
       draft.leads[index] = { ...draft.leads[index], stage };
     }, "info", "lead", leadId),
+    updateLeadStage: (leadId, stage) => commit("Lead moved", `Lead moved to ${stage}.`, (draft) => { const index = findIndex(draft.leads, leadId, "Lead"); draft.leads[index] = { ...draft.leads[index], stage }; }, "info", "lead", leadId),
     addDeal: (deal) => commit("Deal added", "A new deal was created.", (draft) => { draft.deals.push(clone(deal)); }, "positive", "deal", deal.id),
+    updateDealStatus: (dealId, status) => commit("Deal updated", `Deal status changed to ${status}.`, (draft) => { const index = findIndex(draft.deals, dealId, "Deal"); draft.deals[index] = { ...draft.deals[index], status }; }, "info", "deal", dealId),
     updateFinanceDraft: (vehicleId, patch) => commit("Finance draft updated", "Finance values were saved locally.", (draft) => {
       const index = draft.financeDrafts.findIndex((item) => item.vehicleId === vehicleId);
       if (index < 0) {
@@ -133,6 +141,8 @@ export function createDemoRepository(storage: Storage): DemoRepository {
       const index = findIndex(draft.serviceJobs, jobId, "Service job");
       draft.serviceJobs[index] = { ...draft.serviceJobs[index], ...clone(patch) };
     }, "info", "service", jobId),
+    addServiceJob: (job) => commit("Service job added", "A service job was created.", (draft) => { draft.serviceJobs.push(clone(job)); }, "positive", "service", job.id),
+    updateServiceState: (jobId, status) => commit("Service job updated", `Service job moved to ${status}.`, (draft) => { const index = findIndex(draft.serviceJobs, jobId, "Service job"); draft.serviceJobs[index] = { ...draft.serviceJobs[index], status }; }, "info", "service", jobId),
     markNotificationRead: (notificationId) => commit("Notification read", "A notification was marked as read.", (draft) => {
       const index = findIndex(draft.notifications, notificationId, "Notification");
       draft.notifications[index] = { ...draft.notifications[index], read: true };

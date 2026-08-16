@@ -114,6 +114,26 @@ describe("DemoRepository", () => {
     repository.updateServiceJob(state.serviceJobs[0].id, { note: "Checked" }); expect(repository.getState().activities[0]).toMatchObject({ targetType: "service", targetId: state.serviceJobs[0].id });
   });
 
+  it("writes an explicit audit target matrix for every entity mutation", () => {
+    const repository = createDemoRepository(memoryStorage()); const state = repository.getState();
+    const cases: Array<[string, () => void, string, string, string]> = [
+      ["task complete", () => repository.completeTask(state.tasks[0].id), "Task completed", "task", state.tasks[0].id],
+      ["task reschedule", () => repository.rescheduleTask(state.tasks[0].id, "2026-08-20T09:00:00+02:00"), "Task rescheduled", "task", state.tasks[0].id],
+      ["customer update", () => repository.updateCustomer(state.customers[0].id, { city: "Walvis Bay" }), "Customer updated", "customer", state.customers[0].id],
+      ["lead stage", () => repository.updateLeadStage(state.leads[0].id, "Delivery"), "Lead moved", "lead", state.leads[0].id],
+      ["deal status", () => repository.updateDealStatus(state.deals[0].id, "Closed"), "Deal updated", "deal", state.deals[0].id],
+      ["service state", () => repository.updateServiceState(state.serviceJobs[0].id, "Ready"), "Service job updated", "service", state.serviceJobs[0].id],
+    ];
+    for (const [_name, invoke, action, targetType, targetId] of cases) { invoke(); expect(repository.getState().activities[0]).toMatchObject({ action, targetType, targetId }); }
+  });
+
+  it("keeps preferences, drafts, and notifications intentionally system-scoped", () => {
+    const repository = createDemoRepository(memoryStorage()); const state = repository.getState();
+    repository.setPreferences({ branch: "Swakopmund" }); expect(repository.getState().activities[0]).toMatchObject({ targetType: "system", targetId: "system" });
+    repository.updateDraft("lead", { owner: "Alicia Brown" }); expect(repository.getState().activities[0]).toMatchObject({ targetType: "system", targetId: "system" });
+    repository.markNotificationRead(state.notifications[0].id); expect(repository.getState().activities[0]).toMatchObject({ targetType: "system", targetId: "system" });
+  });
+
   it("rejects canonical VIN and stock duplicates without mutating state or audit history", () => {
     const repository = createDemoRepository(memoryStorage());
     const before = repository.getState();
