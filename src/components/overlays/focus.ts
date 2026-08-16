@@ -14,10 +14,12 @@ export function isTopOverlay(id: symbol) {
   return top?.id === id;
 }
 
-export function useOverlayFocus(open: boolean, container: RefObject<HTMLElement | null>, onClose: () => void) {
+export function useOverlayFocus(open: boolean, container: RefObject<HTMLElement | null>, onClose: () => void, onOverlayKeyDown?: (event: KeyboardEvent) => void) {
   const id = useRef(Symbol("overlay")).current;
   const onCloseRef = useRef(onClose);
+  const onOverlayKeyDownRef = useRef(onOverlayKeyDown);
   onCloseRef.current = onClose;
+  onOverlayKeyDownRef.current = onOverlayKeyDown;
   useEffect(() => {
     if (!open) return;
     const entry = { id, container, restoreFocus: document.activeElement instanceof HTMLElement ? document.activeElement : null, order: ++order };
@@ -28,12 +30,16 @@ export function useOverlayFocus(open: boolean, container: RefObject<HTMLElement 
     const keydown = (event: KeyboardEvent) => {
       if (!isTopOverlay(id)) return;
       if (event.key === "Escape") { event.preventDefault(); onCloseRef.current(); return; }
-      if (event.key !== "Tab" || !container.current) return;
-      const elements = focusable(container.current);
-      if (!elements.length) { event.preventDefault(); container.current.focus(); return; }
-      const first = elements[0]; const last = elements[elements.length - 1];
-      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
-      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+      if (event.key === "Tab") {
+        if (!container.current) return;
+        const elements = focusable(container.current);
+        if (!elements.length) { event.preventDefault(); container.current.focus(); return; }
+        const first = elements[0]; const last = elements[elements.length - 1];
+        if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+        else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+        return;
+      }
+      onOverlayKeyDownRef.current?.(event);
     };
     document.addEventListener("keydown", keydown);
     return () => { overlays.splice(overlays.findIndex((item) => item.id === id), 1); if (--lockCount === 0) document.body.style.overflow = previousOverflow; document.removeEventListener("keydown", keydown); entry.restoreFocus?.focus(); };

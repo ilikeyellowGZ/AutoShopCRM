@@ -63,4 +63,19 @@ describe("Dialog", () => {
     await userEvent.keyboard("{ArrowRight}");
     expect(change).toHaveBeenCalledWith(1);
   });
+
+  it("does not move an obscured media viewer until the top overlay closes", async () => {
+    const change = vi.fn();
+    const images = [{ id: "1", angle: "front", label: "Front", src: "/front.webp", alt: "Front" }, { id: "2", angle: "rear", label: "Rear", src: "/rear.webp", alt: "Rear" }] as const;
+    function Harness() {
+      const [drawerOpen, setDrawerOpen] = useState(true);
+      return <><MediaViewer images={[...images]} activeIndex={0} onIndexChange={change} onClose={() => {}} />{drawerOpen && <Drawer open title="Filters" onClose={() => setDrawerOpen(false)}><button>Apply filters</button></Drawer>}</>;
+    }
+    render(<Harness />);
+    await userEvent.keyboard("{ArrowRight}");
+    expect(change).not.toHaveBeenCalled();
+    await userEvent.keyboard("{Escape}");
+    await userEvent.keyboard("{ArrowRight}");
+    expect(change).toHaveBeenCalledWith(1);
+  });
 });
