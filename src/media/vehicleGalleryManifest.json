@@ -1,0 +1,644 @@
+{
+  "vehicles": [
+    {
+      "id": "vehicle-01",
+      "slug": "2024-porsche-911-gt3",
+      "displayName": "2024 Porsche 911 GT3",
+      "coverImageId": "2024-porsche-911-gt3-01",
+      "images": [
+        {
+          "id": "2024-porsche-911-gt3-01",
+          "angle": "front",
+          "label": "Front elevation",
+          "src": "/media/vehicles/2024-porsche-911-gt3/01-front.png",
+          "alt": "2024 Porsche 911 GT3: front elevation"
+        },
+        {
+          "id": "2024-porsche-911-gt3-02",
+          "angle": "front-left",
+          "label": "Front-left three-quarter",
+          "src": "/media/vehicles/2024-porsche-911-gt3/02-front-left.png",
+          "alt": "2024 Porsche 911 GT3: front-left three-quarter"
+        },
+        {
+          "id": "2024-porsche-911-gt3-03",
+          "angle": "left",
+          "label": "Left profile",
+          "src": "/media/vehicles/2024-porsche-911-gt3/03-left.png",
+          "alt": "2024 Porsche 911 GT3: left profile"
+        },
+        {
+          "id": "2024-porsche-911-gt3-04",
+          "angle": "rear-left",
+          "label": "Rear-left three-quarter",
+          "src": "/media/vehicles/2024-porsche-911-gt3/04-rear-left.png",
+          "alt": "2024 Porsche 911 GT3: rear-left three-quarter"
+        },
+        {
+          "id": "2024-porsche-911-gt3-05",
+          "angle": "rear",
+          "label": "Rear elevation",
+          "src": "/media/vehicles/2024-porsche-911-gt3/05-rear.png",
+          "alt": "2024 Porsche 911 GT3: rear elevation"
+        },
+        {
+          "id": "2024-porsche-911-gt3-06",
+          "angle": "rear-right",
+          "label": "Rear-right three-quarter",
+          "src": "/media/vehicles/2024-porsche-911-gt3/06-rear-right.png",
+          "alt": "2024 Porsche 911 GT3: rear-right three-quarter"
+        },
+        {
+          "id": "2024-porsche-911-gt3-07",
+          "angle": "right",
+          "label": "Right profile",
+          "src": "/media/vehicles/2024-porsche-911-gt3/07-right.png",
+          "alt": "2024 Porsche 911 GT3: right profile"
+        },
+        {
+          "id": "2024-porsche-911-gt3-08",
+          "angle": "front-right",
+          "label": "Front-right three-quarter",
+          "src": "/media/vehicles/2024-porsche-911-gt3/08-front-right.png",
+          "alt": "2024 Porsche 911 GT3: front-right three-quarter"
+        }
+      ]
+    },
+    {
+      "id": "vehicle-02",
+      "slug": "2023-bmw-m4-csl",
+      "displayName": "2023 BMW M4 CSL",
+      "coverImageId": "2023-bmw-m4-csl-01",
+      "images": [
+        {
+          "id": "2023-bmw-m4-csl-01",
+          "angle": "front",
+          "label": "Front elevation",
+          "src": "/media/vehicles/2023-bmw-m4-csl/01-front.png",
+          "alt": "2023 BMW M4 CSL: front elevation"
+        },
+        {
+          "id": "2023-bmw-m4-csl-02",
+          "angle": "front-left",
+          "label": "Front-left three-quarter",
+          "src": "/media/vehicles/2023-bmw-m4-csl/02-front-left.png",
+          "alt": "2023 BMW M4 CSL: front-left three-quarter"
+        },
+        {
+          "id": "2023-bmw-m4-csl-03",
+          "angle": "left",
+          "label": "Left profile",
+          "src": "/media/vehicles/2023-bmw-m4-csl/03-left.png",
+          "alt": "2023 BMW M4 CSL: left profile"
+        },
+        {
+          "id": "2023-bmw-m4-csl-04",
+          "angle": "rear-left",
+          "label": "Rear-left three-quarter",
+          "src": "/media/vehicles/2023-bmw-m4-csl/04-rear-left.png",
+          "alt": "2023 BMW M4 CSL: rear-left three-quarter"
+        },
+        {
+          "id": "2023-bmw-m4-csl-05",
+          "angle": "rear",
+          "label": "Rear elevation",
+          "src": "/media/vehicles/2023-bmw-m4-csl/05-rear.png",
+          "alt": "2023 BMW M4 CSL: rear elevation"
+        },
+        {
+          "id": "2023-bmw-m4-csl-06",
+          "angle": "rear-right",
+          "label": "Rear-right three-quarter",
+          "src": "/media/vehicles/2023-bmw-m4-csl/06-rear-right.png",
+          "alt": "2023 BMW M4 CSL: rear-right three-quarter"
+        },
+        {
+          "id": "2023-bmw-m4-csl-07",
+          "angle": "right",
+          "label": "Right profile",
+          "src": "/media/vehicles/2023-bmw-m4-csl/07-right.png",
+          "alt": "2023 BMW M4 CSL: right profile"
+        },
+        {
+          "id": "2023-bmw-m4-csl-08",
+          "angle": "front-right",
+          "label": "Front-right three-quarter",
+          "src": "/media/vehicles/2023-bmw-m4-csl/08-front-right.png",
+          "alt": "2023 BMW M4 CSL: front-right three-quarter"
+        }
+      ]
+    },
+    {
+      "id": "vehicle-03",
+      "slug": "2024-audi-rs6-avant",
+      "displayName": "2024 Audi RS6 Avant",
+      "coverImageId": "2024-audi-rs6-avant-01",
+      "images": [
+        {
+          "id": "2024-audi-rs6-avant-01",
+          "angle": "front",
+          "label": "Front elevation",
+          "src": "/media/vehicles/2024-audi-rs6-avant/01-front.png",
+          "alt": "2024 Audi RS6 Avant: front elevation"
+        },
+        {
+          "id": "2024-audi-rs6-avant-02",
+          "angle": "front-left",
+          "label": "Front-left three-quarter",
+          "src": "/media/vehicles/2024-audi-rs6-avant/02-front-left.png",
+          "alt": "2024 Audi RS6 Avant: front-left three-quarter"
+        },
+        {
+          "id": "2024-audi-rs6-avant-03",
+          "angle": "left",
+          "label": "Left profile",
+          "src": "/media/vehicles/2024-audi-rs6-avant/03-left.png",
+          "alt": "2024 Audi RS6 Avant: left profile"
+        },
+        {
+          "id": "2024-audi-rs6-avant-04",
+          "angle": "rear-left",
+          "label": "Rear-left three-quarter",
+          "src": "/media/vehicles/2024-audi-rs6-avant/04-rear-left.png",
+          "alt": "2024 Audi RS6 Avant: rear-left three-quarter"
+        },
+        {
+          "id": "2024-audi-rs6-avant-05",
+          "angle": "rear",
+          "label": "Rear elevation",
+          "src": "/media/vehicles/2024-audi-rs6-avant/05-rear.png",
+          "alt": "2024 Audi RS6 Avant: rear elevation"
+        },
+        {
+          "id": "2024-audi-rs6-avant-06",
+          "angle": "rear-right",
+          "label": "Rear-right three-quarter",
+          "src": "/media/vehicles/2024-audi-rs6-avant/06-rear-right.png",
+          "alt": "2024 Audi RS6 Avant: rear-right three-quarter"
+        },
+        {
+          "id": "2024-audi-rs6-avant-07",
+          "angle": "right",
+          "label": "Right profile",
+          "src": "/media/vehicles/2024-audi-rs6-avant/07-right.png",
+          "alt": "2024 Audi RS6 Avant: right profile"
+        },
+        {
+          "id": "2024-audi-rs6-avant-08",
+          "angle": "front-right",
+          "label": "Front-right three-quarter",
+          "src": "/media/vehicles/2024-audi-rs6-avant/08-front-right.png",
+          "alt": "2024 Audi RS6 Avant: front-right three-quarter"
+        }
+      ]
+    },
+    {
+      "id": "vehicle-04",
+      "slug": "2024-land-rover-defender-110",
+      "displayName": "2024 Land Rover Defender 110",
+      "coverImageId": "2024-land-rover-defender-110-01",
+      "images": [
+        {
+          "id": "2024-land-rover-defender-110-01",
+          "angle": "front",
+          "label": "Front elevation",
+          "src": "/media/vehicles/2024-land-rover-defender-110/01-front.png",
+          "alt": "2024 Land Rover Defender 110: front elevation"
+        },
+        {
+          "id": "2024-land-rover-defender-110-02",
+          "angle": "front-left",
+          "label": "Front-left three-quarter",
+          "src": "/media/vehicles/2024-land-rover-defender-110/02-front-left.png",
+          "alt": "2024 Land Rover Defender 110: front-left three-quarter"
+        },
+        {
+          "id": "2024-land-rover-defender-110-03",
+          "angle": "left",
+          "label": "Left profile",
+          "src": "/media/vehicles/2024-land-rover-defender-110/03-left.png",
+          "alt": "2024 Land Rover Defender 110: left profile"
+        },
+        {
+          "id": "2024-land-rover-defender-110-04",
+          "angle": "rear-left",
+          "label": "Rear-left three-quarter",
+          "src": "/media/vehicles/2024-land-rover-defender-110/04-rear-left.png",
+          "alt": "2024 Land Rover Defender 110: rear-left three-quarter"
+        },
+        {
+          "id": "2024-land-rover-defender-110-05",
+          "angle": "rear",
+          "label": "Rear elevation",
+          "src": "/media/vehicles/2024-land-rover-defender-110/05-rear.png",
+          "alt": "2024 Land Rover Defender 110: rear elevation"
+        },
+        {
+          "id": "2024-land-rover-defender-110-06",
+          "angle": "rear-right",
+          "label": "Rear-right three-quarter",
+          "src": "/media/vehicles/2024-land-rover-defender-110/06-rear-right.png",
+          "alt": "2024 Land Rover Defender 110: rear-right three-quarter"
+        },
+        {
+          "id": "2024-land-rover-defender-110-07",
+          "angle": "right",
+          "label": "Right profile",
+          "src": "/media/vehicles/2024-land-rover-defender-110/07-right.png",
+          "alt": "2024 Land Rover Defender 110: right profile"
+        },
+        {
+          "id": "2024-land-rover-defender-110-08",
+          "angle": "front-right",
+          "label": "Front-right three-quarter",
+          "src": "/media/vehicles/2024-land-rover-defender-110/08-front-right.png",
+          "alt": "2024 Land Rover Defender 110: front-right three-quarter"
+        }
+      ]
+    },
+    {
+      "id": "vehicle-05",
+      "slug": "2024-porsche-taycan-turbo-s",
+      "displayName": "2024 Porsche Taycan Turbo S",
+      "coverImageId": "2024-porsche-taycan-turbo-s-01",
+      "images": [
+        {
+          "id": "2024-porsche-taycan-turbo-s-01",
+          "angle": "front",
+          "label": "Front elevation",
+          "src": "/media/vehicles/2024-porsche-taycan-turbo-s/01-front.png",
+          "alt": "2024 Porsche Taycan Turbo S: front elevation"
+        },
+        {
+          "id": "2024-porsche-taycan-turbo-s-02",
+          "angle": "front-left",
+          "label": "Front-left three-quarter",
+          "src": "/media/vehicles/2024-porsche-taycan-turbo-s/02-front-left.png",
+          "alt": "2024 Porsche Taycan Turbo S: front-left three-quarter"
+        },
+        {
+          "id": "2024-porsche-taycan-turbo-s-03",
+          "angle": "left",
+          "label": "Left profile",
+          "src": "/media/vehicles/2024-porsche-taycan-turbo-s/03-left.png",
+          "alt": "2024 Porsche Taycan Turbo S: left profile"
+        },
+        {
+          "id": "2024-porsche-taycan-turbo-s-04",
+          "angle": "rear-left",
+          "label": "Rear-left three-quarter",
+          "src": "/media/vehicles/2024-porsche-taycan-turbo-s/04-rear-left.png",
+          "alt": "2024 Porsche Taycan Turbo S: rear-left three-quarter"
+        },
+        {
+          "id": "2024-porsche-taycan-turbo-s-05",
+          "angle": "rear",
+          "label": "Rear elevation",
+          "src": "/media/vehicles/2024-porsche-taycan-turbo-s/05-rear.png",
+          "alt": "2024 Porsche Taycan Turbo S: rear elevation"
+        },
+        {
+          "id": "2024-porsche-taycan-turbo-s-06",
+          "angle": "rear-right",
+          "label": "Rear-right three-quarter",
+          "src": "/media/vehicles/2024-porsche-taycan-turbo-s/06-rear-right.png",
+          "alt": "2024 Porsche Taycan Turbo S: rear-right three-quarter"
+        },
+        {
+          "id": "2024-porsche-taycan-turbo-s-07",
+          "angle": "right",
+          "label": "Right profile",
+          "src": "/media/vehicles/2024-porsche-taycan-turbo-s/07-right.png",
+          "alt": "2024 Porsche Taycan Turbo S: right profile"
+        },
+        {
+          "id": "2024-porsche-taycan-turbo-s-08",
+          "angle": "front-right",
+          "label": "Front-right three-quarter",
+          "src": "/media/vehicles/2024-porsche-taycan-turbo-s/08-front-right.png",
+          "alt": "2024 Porsche Taycan Turbo S: front-right three-quarter"
+        }
+      ]
+    },
+    {
+      "id": "vehicle-06",
+      "slug": "2024-mercedes-amg-c63-s",
+      "displayName": "2024 Mercedes-AMG C63 S",
+      "coverImageId": "2024-mercedes-amg-c63-s-01",
+      "images": [
+        {
+          "id": "2024-mercedes-amg-c63-s-01",
+          "angle": "front",
+          "label": "Front elevation",
+          "src": "/media/vehicles/2024-mercedes-amg-c63-s/01-front.png",
+          "alt": "2024 Mercedes-AMG C63 S: front elevation"
+        },
+        {
+          "id": "2024-mercedes-amg-c63-s-02",
+          "angle": "front-left",
+          "label": "Front-left three-quarter",
+          "src": "/media/vehicles/2024-mercedes-amg-c63-s/02-front-left.png",
+          "alt": "2024 Mercedes-AMG C63 S: front-left three-quarter"
+        },
+        {
+          "id": "2024-mercedes-amg-c63-s-03",
+          "angle": "left",
+          "label": "Left profile",
+          "src": "/media/vehicles/2024-mercedes-amg-c63-s/03-left.png",
+          "alt": "2024 Mercedes-AMG C63 S: left profile"
+        },
+        {
+          "id": "2024-mercedes-amg-c63-s-04",
+          "angle": "rear-left",
+          "label": "Rear-left three-quarter",
+          "src": "/media/vehicles/2024-mercedes-amg-c63-s/04-rear-left.png",
+          "alt": "2024 Mercedes-AMG C63 S: rear-left three-quarter"
+        },
+        {
+          "id": "2024-mercedes-amg-c63-s-05",
+          "angle": "rear",
+          "label": "Rear elevation",
+          "src": "/media/vehicles/2024-mercedes-amg-c63-s/05-rear.png",
+          "alt": "2024 Mercedes-AMG C63 S: rear elevation"
+        },
+        {
+          "id": "2024-mercedes-amg-c63-s-06",
+          "angle": "rear-right",
+          "label": "Rear-right three-quarter",
+          "src": "/media/vehicles/2024-mercedes-amg-c63-s/06-rear-right.png",
+          "alt": "2024 Mercedes-AMG C63 S: rear-right three-quarter"
+        },
+        {
+          "id": "2024-mercedes-amg-c63-s-07",
+          "angle": "right",
+          "label": "Right profile",
+          "src": "/media/vehicles/2024-mercedes-amg-c63-s/07-right.png",
+          "alt": "2024 Mercedes-AMG C63 S: right profile"
+        },
+        {
+          "id": "2024-mercedes-amg-c63-s-08",
+          "angle": "front-right",
+          "label": "Front-right three-quarter",
+          "src": "/media/vehicles/2024-mercedes-amg-c63-s/08-front-right.png",
+          "alt": "2024 Mercedes-AMG C63 S: front-right three-quarter"
+        }
+      ]
+    },
+    {
+      "id": "vehicle-07",
+      "slug": "2023-toyota-gr-supra",
+      "displayName": "2023 Toyota GR Supra",
+      "coverImageId": "2023-toyota-gr-supra-01",
+      "images": [
+        {
+          "id": "2023-toyota-gr-supra-01",
+          "angle": "front",
+          "label": "Front elevation",
+          "src": "/media/vehicles/2023-toyota-gr-supra/01-front.png",
+          "alt": "2023 Toyota GR Supra: front elevation"
+        },
+        {
+          "id": "2023-toyota-gr-supra-02",
+          "angle": "front-left",
+          "label": "Front-left three-quarter",
+          "src": "/media/vehicles/2023-toyota-gr-supra/02-front-left.png",
+          "alt": "2023 Toyota GR Supra: front-left three-quarter"
+        },
+        {
+          "id": "2023-toyota-gr-supra-03",
+          "angle": "left",
+          "label": "Left profile",
+          "src": "/media/vehicles/2023-toyota-gr-supra/03-left.png",
+          "alt": "2023 Toyota GR Supra: left profile"
+        },
+        {
+          "id": "2023-toyota-gr-supra-04",
+          "angle": "rear-left",
+          "label": "Rear-left three-quarter",
+          "src": "/media/vehicles/2023-toyota-gr-supra/04-rear-left.png",
+          "alt": "2023 Toyota GR Supra: rear-left three-quarter"
+        },
+        {
+          "id": "2023-toyota-gr-supra-05",
+          "angle": "rear",
+          "label": "Rear elevation",
+          "src": "/media/vehicles/2023-toyota-gr-supra/05-rear.png",
+          "alt": "2023 Toyota GR Supra: rear elevation"
+        },
+        {
+          "id": "2023-toyota-gr-supra-06",
+          "angle": "rear-right",
+          "label": "Rear-right three-quarter",
+          "src": "/media/vehicles/2023-toyota-gr-supra/06-rear-right.png",
+          "alt": "2023 Toyota GR Supra: rear-right three-quarter"
+        },
+        {
+          "id": "2023-toyota-gr-supra-07",
+          "angle": "right",
+          "label": "Right profile",
+          "src": "/media/vehicles/2023-toyota-gr-supra/07-right.png",
+          "alt": "2023 Toyota GR Supra: right profile"
+        },
+        {
+          "id": "2023-toyota-gr-supra-08",
+          "angle": "front-right",
+          "label": "Front-right three-quarter",
+          "src": "/media/vehicles/2023-toyota-gr-supra/08-front-right.png",
+          "alt": "2023 Toyota GR Supra: front-right three-quarter"
+        }
+      ]
+    },
+    {
+      "id": "vehicle-08",
+      "slug": "2024-ford-ranger-raptor",
+      "displayName": "2024 Ford Ranger Raptor",
+      "coverImageId": "2024-ford-ranger-raptor-01",
+      "images": [
+        {
+          "id": "2024-ford-ranger-raptor-01",
+          "angle": "front",
+          "label": "Front elevation",
+          "src": "/media/vehicles/2024-ford-ranger-raptor/01-front.png",
+          "alt": "2024 Ford Ranger Raptor: front elevation"
+        },
+        {
+          "id": "2024-ford-ranger-raptor-02",
+          "angle": "front-left",
+          "label": "Front-left three-quarter",
+          "src": "/media/vehicles/2024-ford-ranger-raptor/02-front-left.png",
+          "alt": "2024 Ford Ranger Raptor: front-left three-quarter"
+        },
+        {
+          "id": "2024-ford-ranger-raptor-03",
+          "angle": "left",
+          "label": "Left profile",
+          "src": "/media/vehicles/2024-ford-ranger-raptor/03-left.png",
+          "alt": "2024 Ford Ranger Raptor: left profile"
+        },
+        {
+          "id": "2024-ford-ranger-raptor-04",
+          "angle": "rear-left",
+          "label": "Rear-left three-quarter",
+          "src": "/media/vehicles/2024-ford-ranger-raptor/04-rear-left.png",
+          "alt": "2024 Ford Ranger Raptor: rear-left three-quarter"
+        },
+        {
+          "id": "2024-ford-ranger-raptor-05",
+          "angle": "rear",
+          "label": "Rear elevation",
+          "src": "/media/vehicles/2024-ford-ranger-raptor/05-rear.png",
+          "alt": "2024 Ford Ranger Raptor: rear elevation"
+        },
+        {
+          "id": "2024-ford-ranger-raptor-06",
+          "angle": "rear-right",
+          "label": "Rear-right three-quarter",
+          "src": "/media/vehicles/2024-ford-ranger-raptor/06-rear-right.png",
+          "alt": "2024 Ford Ranger Raptor: rear-right three-quarter"
+        },
+        {
+          "id": "2024-ford-ranger-raptor-07",
+          "angle": "right",
+          "label": "Right profile",
+          "src": "/media/vehicles/2024-ford-ranger-raptor/07-right.png",
+          "alt": "2024 Ford Ranger Raptor: right profile"
+        },
+        {
+          "id": "2024-ford-ranger-raptor-08",
+          "angle": "front-right",
+          "label": "Front-right three-quarter",
+          "src": "/media/vehicles/2024-ford-ranger-raptor/08-front-right.png",
+          "alt": "2024 Ford Ranger Raptor: front-right three-quarter"
+        }
+      ]
+    },
+    {
+      "id": "vehicle-09",
+      "slug": "2024-volkswagen-golf-8-r",
+      "displayName": "2024 Volkswagen Golf 8 R",
+      "coverImageId": "2024-volkswagen-golf-8-r-01",
+      "images": [
+        {
+          "id": "2024-volkswagen-golf-8-r-01",
+          "angle": "front",
+          "label": "Front elevation",
+          "src": "/media/vehicles/2024-volkswagen-golf-8-r/01-front.png",
+          "alt": "2024 Volkswagen Golf 8 R: front elevation"
+        },
+        {
+          "id": "2024-volkswagen-golf-8-r-02",
+          "angle": "front-left",
+          "label": "Front-left three-quarter",
+          "src": "/media/vehicles/2024-volkswagen-golf-8-r/02-front-left.png",
+          "alt": "2024 Volkswagen Golf 8 R: front-left three-quarter"
+        },
+        {
+          "id": "2024-volkswagen-golf-8-r-03",
+          "angle": "left",
+          "label": "Left profile",
+          "src": "/media/vehicles/2024-volkswagen-golf-8-r/03-left.png",
+          "alt": "2024 Volkswagen Golf 8 R: left profile"
+        },
+        {
+          "id": "2024-volkswagen-golf-8-r-04",
+          "angle": "rear-left",
+          "label": "Rear-left three-quarter",
+          "src": "/media/vehicles/2024-volkswagen-golf-8-r/04-rear-left.png",
+          "alt": "2024 Volkswagen Golf 8 R: rear-left three-quarter"
+        },
+        {
+          "id": "2024-volkswagen-golf-8-r-05",
+          "angle": "rear",
+          "label": "Rear elevation",
+          "src": "/media/vehicles/2024-volkswagen-golf-8-r/05-rear.png",
+          "alt": "2024 Volkswagen Golf 8 R: rear elevation"
+        },
+        {
+          "id": "2024-volkswagen-golf-8-r-06",
+          "angle": "rear-right",
+          "label": "Rear-right three-quarter",
+          "src": "/media/vehicles/2024-volkswagen-golf-8-r/06-rear-right.png",
+          "alt": "2024 Volkswagen Golf 8 R: rear-right three-quarter"
+        },
+        {
+          "id": "2024-volkswagen-golf-8-r-07",
+          "angle": "right",
+          "label": "Right profile",
+          "src": "/media/vehicles/2024-volkswagen-golf-8-r/07-right.png",
+          "alt": "2024 Volkswagen Golf 8 R: right profile"
+        },
+        {
+          "id": "2024-volkswagen-golf-8-r-08",
+          "angle": "front-right",
+          "label": "Front-right three-quarter",
+          "src": "/media/vehicles/2024-volkswagen-golf-8-r/08-front-right.png",
+          "alt": "2024 Volkswagen Golf 8 R: front-right three-quarter"
+        }
+      ]
+    },
+    {
+      "id": "vehicle-10",
+      "slug": "2024-bmw-x5-m-competition",
+      "displayName": "2024 BMW X5 M Competition",
+      "coverImageId": "2024-bmw-x5-m-competition-01",
+      "images": [
+        {
+          "id": "2024-bmw-x5-m-competition-01",
+          "angle": "front",
+          "label": "Front elevation",
+          "src": "/media/vehicles/2024-bmw-x5-m-competition/01-front.png",
+          "alt": "2024 BMW X5 M Competition: front elevation"
+        },
+        {
+          "id": "2024-bmw-x5-m-competition-02",
+          "angle": "front-left",
+          "label": "Front-left three-quarter",
+          "src": "/media/vehicles/2024-bmw-x5-m-competition/02-front-left.png",
+          "alt": "2024 BMW X5 M Competition: front-left three-quarter"
+        },
+        {
+          "id": "2024-bmw-x5-m-competition-03",
+          "angle": "left",
+          "label": "Left profile",
+          "src": "/media/vehicles/2024-bmw-x5-m-competition/03-left.png",
+          "alt": "2024 BMW X5 M Competition: left profile"
+        },
+        {
+          "id": "2024-bmw-x5-m-competition-04",
+          "angle": "rear-left",
+          "label": "Rear-left three-quarter",
+          "src": "/media/vehicles/2024-bmw-x5-m-competition/04-rear-left.png",
+          "alt": "2024 BMW X5 M Competition: rear-left three-quarter"
+        },
+        {
+          "id": "2024-bmw-x5-m-competition-05",
+          "angle": "rear",
+          "label": "Rear elevation",
+          "src": "/media/vehicles/2024-bmw-x5-m-competition/05-rear.png",
+          "alt": "2024 BMW X5 M Competition: rear elevation"
+        },
+        {
+          "id": "2024-bmw-x5-m-competition-06",
+          "angle": "rear-right",
+          "label": "Rear-right three-quarter",
+          "src": "/media/vehicles/2024-bmw-x5-m-competition/06-rear-right.png",
+          "alt": "2024 BMW X5 M Competition: rear-right three-quarter"
+        },
+        {
+          "id": "2024-bmw-x5-m-competition-07",
+          "angle": "right",
+          "label": "Right profile",
+          "src": "/media/vehicles/2024-bmw-x5-m-competition/07-right.png",
+          "alt": "2024 BMW X5 M Competition: right profile"
+        },
+        {
+          "id": "2024-bmw-x5-m-competition-08",
+          "angle": "front-right",
+          "label": "Front-right three-quarter",
+          "src": "/media/vehicles/2024-bmw-x5-m-competition/08-front-right.png",
+          "alt": "2024 BMW X5 M Competition: front-right three-quarter"
+        }
+      ]
+    }
+  ]
+}

@@ -2,7 +2,7 @@
 .weelee-header { border-bottom: 1px solid var(--color-line); }
 .weelee-header-inner, .primary-navigation-scroll, .weelee-main { width: min(1180px, calc(100% - 64px)); margin-inline: auto; }
 .weelee-header-inner { display: flex; min-height: 76px; align-items: center; gap: var(--space-4); }
-.weelee-logo { display: block; width: 168px; height: 44px; object-fit: contain; object-position: left center; }
+.weelee-logo { display: block; width: 168px; height: auto; object-fit: contain; object-position: left center; }
 .weelee-branch, .weelee-search, .weelee-utility, .weelee-employee, .weelee-header-menu, .navigation-tab, .mobile-destination-trigger { min-height: 44px; border: 1px solid var(--color-line-strong); border-radius: var(--radius-control); background: var(--color-canvas); color: var(--color-ink); font-size: 13px; font-weight: 600; }
 .weelee-branch { padding: 0 14px; }
 .weelee-search { flex: 1; max-width: 330px; padding: 0 16px; color: var(--color-muted); text-align: left; }

@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { expect, it } from "vitest";
 import { createDemoRepository } from "../../repository/demoRepository";
 import { memoryStorage } from "../../test/memoryStorage";
@@ -12,6 +12,18 @@ it("switches between accessible inventory card and table modes", () => {
   fireEvent.click(screen.getByRole("button", { name: "Table" }));
   expect(screen.getByRole("button", { name: "Table" })).toHaveAttribute("aria-pressed", "true");
   expect(screen.getByRole("table", { name: /inventory vehicles/i })).toBeInTheDocument();
+});
+
+it("replaces a failed inventory card cover with an accessible local fallback", () => {
+  const repository = createDemoRepository(memoryStorage());
+  const { container } = render(<InventoryPage state={repository.getState()} repository={repository} />);
+
+  const cards = within(container).getAllByRole("button").filter((button) => button.classList.contains("inventory-card"));
+  const cover = within(cards[0]).getByRole("presentation");
+  fireEvent.error(cover);
+
+  expect(within(cards[0]).getByRole("img", { name: "2024 Porsche 911 GT3 image unavailable" })).toHaveTextContent("Vehicle image unavailable");
+  expect(within(container).queryAllByRole("presentation")).toHaveLength(9);
 });
 
 it("renders exact linked detail artifacts and an empty document state when links are removed", () => {
