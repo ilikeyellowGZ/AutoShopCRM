@@ -43,4 +43,34 @@ describe("App", () => {
       }
     }
   }, 15_000);
+
+  it("opens a chosen inventory record and returns to the list without remounting", async () => {
+    const user = userEvent.setup();
+    render(<App repository={createDemoRepository(memoryStorage())} />);
+    await user.click(screen.getByRole("button", { name: "Inventory" }));
+    await user.click(screen.getByRole("button", { name: /2024 Porsche 911/i }));
+    expect(screen.getByRole("heading", { name: /2024 Porsche 911 GT3/i })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Back to inventory" }));
+    expect(screen.getByRole("heading", { name: "Vehicle inventory" })).toBeInTheDocument();
+  });
+
+  it("opens an exact deal command record", async () => {
+    const user = userEvent.setup();
+    render(<App repository={createDemoRepository(memoryStorage())} />);
+    await user.click(screen.getByRole("button", { name: /Search. Press/i }));
+    await user.type(screen.getByRole("combobox", { name: "Search employee records" }), "deal-01");
+    await user.click(screen.getByRole("option", { name: /Deal deal-01/i }));
+    expect(screen.getByRole("heading", { name: "Deal deal-01" })).toBeInTheDocument();
+  });
+
+  it("persists inventory filter and table view across repository reload", async () => {
+    const storage = memoryStorage(); const user = userEvent.setup(); const first = createDemoRepository(storage);
+    const { unmount } = render(<App repository={first} />);
+    await user.click(screen.getByRole("button", { name: "Inventory" }));
+    await user.selectOptions(screen.getByRole("combobox", { name: "Status" }), "Reserved");
+    await user.click(screen.getByRole("button", { name: "Table" }));
+    unmount(); render(<App repository={createDemoRepository(storage)} />);
+    expect(screen.getByRole("combobox", { name: "Status" })).toHaveValue("Reserved");
+    expect(screen.getByRole("button", { name: "Table" })).toHaveAttribute("aria-pressed", "true");
+  });
 });

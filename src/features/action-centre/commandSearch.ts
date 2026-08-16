@@ -14,10 +14,10 @@ type Candidate = CommandSearchResult & { searchable: string[] };
 const normalise = (value: string) => value.trim().toLocaleLowerCase();
 
 function taskTarget(task: TaskItem): NavigationTarget {
-  if (task.relatedType === "vehicle") return { page: "inventory", subview: task.relatedId };
-  if (task.relatedType === "deal") return { page: "sales", subview: "deals" };
-  if (task.relatedType === "lead") return { page: "customers", subview: "leads" };
-  return { page: "service", subview: "service-board" };
+  if (task.relatedType === "vehicle") return { page: "inventory", subview: task.relatedId, recordType: "task", recordId: task.id, contextId: task.relatedId };
+  if (task.relatedType === "deal") return { page: "sales", subview: "deals", recordType: "task", recordId: task.id, contextId: task.relatedId };
+  if (task.relatedType === "lead") return { page: "customers", subview: "leads", recordType: "task", recordId: task.id, contextId: task.relatedId };
+  return { page: "service", subview: "service-board", recordType: "task", recordId: task.id, contextId: task.relatedId };
 }
 
 export function searchCommands(state: DemoState, query: string): CommandSearchResult[] {
@@ -32,7 +32,7 @@ export function searchCommands(state: DemoState, query: string): CommandSearchRe
       type: "vehicle" as const,
       title: `${vehicle.year} ${vehicle.make} ${vehicle.model} ${vehicle.derivative}`,
       detail: `${vehicle.stockId} · ${vehicle.status}`,
-      target: { page: "inventory" as const, subview: vehicle.id },
+      target: { page: "inventory" as const, subview: vehicle.id, recordType: "vehicle" as const, recordId: vehicle.id },
       searchable: [vehicle.id, vehicle.stockId, vehicle.vin, vehicle.make, vehicle.model, vehicle.derivative, vehicle.exterior],
     })),
     ...state.customers.map((customer) => ({
@@ -40,7 +40,7 @@ export function searchCommands(state: DemoState, query: string): CommandSearchRe
       type: "customer" as const,
       title: customer.name,
       detail: `${customer.city} · ${customer.crmStatus}`,
-      target: { page: "customers" as const, subview: customer.id },
+      target: { page: "customers" as const, subview: customer.id, recordType: "customer" as const, recordId: customer.id },
       searchable: [customer.id, customer.name, customer.email, customer.phone, customer.city],
     })),
     ...state.deals.map((deal) => {
@@ -51,7 +51,7 @@ export function searchCommands(state: DemoState, query: string): CommandSearchRe
         type: "deal" as const,
         title: `Deal ${deal.id}`,
         detail: `${customer?.name ?? "Customer"} · ${vehicle ? `${vehicle.make} ${vehicle.model}` : "Vehicle"} · ${deal.status}`,
-        target: { page: "sales" as const, subview: "deals" },
+        target: { page: "sales" as const, subview: "deals", recordType: "deal" as const, recordId: deal.id },
         searchable: [deal.id, customer?.name ?? "", vehicle?.stockId ?? "", vehicle?.make ?? "", vehicle?.model ?? "", deal.status],
       };
     }),

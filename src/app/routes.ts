@@ -2,7 +2,8 @@ export const pageKeys = ["my-day", "inventory", "customers", "pipeline", "sales"
 
 export type PageKey = (typeof pageKeys)[number];
 export type SubviewKey = string;
-export type NavigationTarget = { page: PageKey; subview: SubviewKey };
+export type RecordType = "vehicle" | "customer" | "lead" | "deal" | "service" | "task";
+export type NavigationTarget = { page: PageKey; subview: SubviewKey; recordType?: RecordType; recordId?: string; contextId?: string };
 
 export type NavigationGroup = {
   label: string;

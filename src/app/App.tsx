@@ -38,6 +38,15 @@ function ConnectedSubview({ subview, state, onNavigate }: { subview: string; sta
   return <section className="action-centre" aria-labelledby={`${subview}-title`}><header className="action-centre-heading"><p>Connected employee workspace</p><h1 id={`${subview}-title`}>{title}</h1><span>{records.length} connected records</span></header><ul className="action-centre-list">{records.map((record) => <li key={record.id}><div><strong>{record.title}</strong><p>{record.detail}</p></div><Button variant="secondary" onClick={() => onNavigate({ page: subviewTitles[subview]?.includes("Customer") ? "customers" : subviewTitles[subview]?.includes("Service") ? "service" : ["deals", "quotations", "approvals", "deliveries", "commissions"].includes(subview) ? "sales" : "inventory", subview: record.id })}>Open record</Button></li>)}</ul></section>;
 }
 
+function ExactRecordView({ target, state }: { target: NavigationTarget; state: ReturnType<DemoRepository["getState"]> }) {
+  const id = target.recordId;
+  const item = target.recordType === "vehicle" ? state.vehicles.find((record) => record.id === id) : target.recordType === "customer" ? state.customers.find((record) => record.id === id) : target.recordType === "lead" ? state.leads.find((record) => record.id === id) : target.recordType === "deal" ? state.deals.find((record) => record.id === id) : target.recordType === "service" ? state.serviceJobs.find((record) => record.id === id) : state.tasks.find((record) => record.id === id);
+  if (!item) return <section className="action-centre" aria-labelledby="record-not-found"><h1 id="record-not-found">Record not found</h1><p>The requested connected record is not available in this demo.</p></section>;
+  const record = item as any;
+  const label = target.recordType === "vehicle" ? `${record.year} ${record.make} ${record.model}` : target.recordType === "customer" ? record.name : target.recordType === "lead" ? record.nextAction : target.recordType === "deal" ? `Deal ${record.id}` : target.recordType === "service" ? `Service job ${record.id}` : record.title;
+  return <section className="action-centre" aria-labelledby="record-title"><header className="action-centre-heading"><p>Connected {target.recordType} record</p><h1 id="record-title">{label}</h1><span>{record.id}</span></header><p>{target.recordType === "task" ? record.detail : "This record is linked to the locally persisted employee workspace."}</p></section>;
+}
+
 function OperationsView({ subview, repository, state, onReset }: { subview: string; repository: DemoRepository; state: ReturnType<DemoRepository["getState"]>; onReset: () => void }) {
   if (subview === "tasks") return <ActionCentreView state={state} repository={repository} />;
   if (subview === "calendar") return <section className="action-centre" aria-labelledby="calendar-title"><header className="action-centre-heading"><p>Operations</p><h1 id="calendar-title">Calendar</h1></header><ul className="action-centre-list">{state.tasks.map((task) => <li key={task.id}><div><strong>{task.title}</strong><p>{task.detail}</p></div><time dateTime={task.dueAt}>{new Intl.DateTimeFormat("en-NA", { dateStyle: "medium", timeStyle: "short" }).format(new Date(task.dueAt))}</time></li>)}</ul></section>;
@@ -64,6 +73,7 @@ export function App({ repository: providedRepository }: { repository?: DemoRepos
   };
   const notify = (title: string, detail?: string) => app.pushToast({ title, detail, tone: "positive" });
   const content = (() => {
+    if (target.recordId && target.recordType && target.recordType !== "vehicle" && target.recordType !== "customer") return <ExactRecordView target={target} state={app.state} />;
     switch (target.page) {
       case "my-day":
         if (target.subview === "action-centre") return <ActionCentreView state={app.state} repository={repository} />;
