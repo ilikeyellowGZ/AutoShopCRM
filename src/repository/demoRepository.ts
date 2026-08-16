@@ -129,7 +129,7 @@ export function createDemoRepository(storage: Storage): DemoRepository {
     },
     setPreferences: (patch) => {
       const meaningfulSettingChanged = (patch.branch !== undefined && patch.branch !== state.preferences.branch) || (patch.density !== undefined && patch.density !== state.preferences.density);
-      const update = (draft: DemoState) => { draft.preferences = { ...draft.preferences, ...clone(patch) }; };
+      const update = (draft: DemoState) => { draft.preferences = clone({ ...draft.preferences, ...patch }); };
       if (meaningfulSettingChanged) commit("Preferences updated", "Employee workspace settings were updated.", update, "neutral");
       else persist(update);
     },

@@ -189,6 +189,21 @@ describe("DemoRepository", () => {
     repository.markNotificationRead(state.notifications[0].id); expect(repository.getState().activities[0]).toMatchObject({ targetType: "system", targetId: "system" });
   });
 
+  it("clears optional route metadata in memory and persisted storage", () => {
+    const storage = memoryStorage(); const repository = createDemoRepository(storage);
+    repository.setPreferences({ activePage: "sales", activeSubview: "deals", activeRecordType: "deal", activeRecordId: "deal-01", activeContextId: "vehicle-01" });
+
+    repository.setPreferences({ activePage: "sales", activeSubview: "sales-log", activeRecordType: undefined, activeRecordId: undefined, activeContextId: undefined });
+
+    expect(repository.getState().preferences).not.toHaveProperty("activeRecordType");
+    expect(repository.getState().preferences).not.toHaveProperty("activeRecordId");
+    expect(repository.getState().preferences).not.toHaveProperty("activeContextId");
+    const persisted = JSON.parse(storage.getItem(STORAGE_KEY) ?? "{}") as { preferences?: Record<string, unknown> };
+    expect(persisted.preferences).not.toHaveProperty("activeRecordType");
+    expect(persisted.preferences).not.toHaveProperty("activeRecordId");
+    expect(persisted.preferences).not.toHaveProperty("activeContextId");
+  });
+
   it("rejects canonical VIN and stock duplicates without mutating state or audit history", () => {
     const repository = createDemoRepository(memoryStorage());
     const before = repository.getState();

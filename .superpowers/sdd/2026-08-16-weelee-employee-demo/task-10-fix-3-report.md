@@ -65,3 +65,11 @@ Verification target after these additions: 30 files and 223 tests, up from 28 fi
 `src/app/App.completion.test.tsx` adds 29 table-driven click-through cases asserting that every grouped route with a real entity opens the exact vehicle/lead/deal/service/task record. Service History explicitly asserts the honest empty state because the deterministic seed has no completed jobs.
 
 Final verification: 32 test files and 273 tests passed; TypeScript, production build, and diff integrity passed.
+
+## Post-review route metadata fix
+
+Preference persistence now applies patches before cloning the completed preference object. Explicit `undefined` navigation fields therefore remove stale `activeRecordType`, `activeRecordId`, and `activeContextId` keys from both live state and persisted JSON while preserving nested view preferences and meaningful settings audits.
+
+`src/app/App.routingMetadata.test.tsx` adds six same-storage remount cases: exact lead/deal/service/task records returning to primary routes, vehicle-context deal creation resolving to the exact created deal, and an unassigned finance context returning to ordinary Inventory. The repository suite adds a direct persisted-JSON metadata-clearing regression case.
+
+Final post-review verification: 33 test files and 280 tests passed; TypeScript, production build, and diff integrity passed.
