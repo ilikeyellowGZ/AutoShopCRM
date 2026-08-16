@@ -81,6 +81,22 @@ describe("DemoRepository", () => {
     expect(() => repository.addVehicle({ ...existing, id: "vehicle-11", stockId: "WEE-0011" })).toThrow("VIN already exists in the active Weelee inventory.");
   });
 
+  it("persists successful vehicle creation with a typed vehicle audit", () => {
+    const storage = memoryStorage(); const repository = createDemoRepository(storage); const vehicle = repository.getState().vehicles[0];
+    repository.addVehicle({ ...vehicle, id: "vehicle-11", vin: "1HGCM82633A004352", stockId: "WEE-2411" });
+    const reloaded = createDemoRepository(storage).getState();
+    expect(reloaded.vehicles.find((item) => item.id === "vehicle-11")?.stockId).toBe("WEE-2411");
+    expect(reloaded.activities[0]).toMatchObject({ action: "Vehicle added", targetType: "vehicle", targetId: "vehicle-11" });
+  });
+
+  it("persists successful vehicle edit with a typed vehicle audit", () => {
+    const storage = memoryStorage(); const repository = createDemoRepository(storage); const vehicle = repository.getState().vehicles[0];
+    repository.updateVehicle(vehicle.id, { price: 4_300_000 });
+    const reloaded = createDemoRepository(storage).getState();
+    expect(reloaded.vehicles[0].price).toBe(4_300_000);
+    expect(reloaded.activities[0]).toMatchObject({ action: "Vehicle updated", targetType: "vehicle", targetId: vehicle.id });
+  });
+
   it("rejects canonical VIN and stock duplicates without mutating state or audit history", () => {
     const repository = createDemoRepository(memoryStorage());
     const before = repository.getState();
