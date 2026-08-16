@@ -37,6 +37,6 @@ describe("MyDayPage", () => {
     await userEvent.type(input, "vehicle-01");
     await userEvent.keyboard("{Enter}");
 
-    expect(onCommandSelect).toHaveBeenCalledWith({ page: "inventory", subview: "vehicle-01" }, expect.objectContaining({ id: "vehicle-01" }));
+    expect(onCommandSelect).toHaveBeenCalledWith(expect.objectContaining({ page: "inventory", subview: "vehicle-01", recordType: "vehicle", recordId: "vehicle-01" }), expect.objectContaining({ id: "vehicle-01" }));
   });
 });

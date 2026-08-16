@@ -18,8 +18,24 @@ export type FinanceDraft = { vehicleId: string; vehiclePrice: number; downPaymen
 export type ServiceJob = { id: string; customerId: string; vehicleId: string; advisor: string; technician: string; status: "Booked" | "Checked In" | "In Progress" | "Waiting for Parts" | "Quality Check" | "Ready" | "Completed"; dueAt: string; note: string };
 export type TaskItem = { id: string; title: string; detail: string; relatedType: "lead" | "deal" | "vehicle" | "service"; relatedId: string; dueAt: string; status: TaskStatus; tone: Tone };
 export type Notification = { id: string; title: string; detail: string; read: boolean; tone: Tone; relatedId: string };
-export type AuditActivity = { id: string; action: string; detail: string; actor: string; occurredAt: string; tone: Tone };
-export type UserPreferences = { branch: string; density: "comfortable" | "compact"; activePage: string; activeSubview: string };
+export type ActivityTargetType = "vehicle" | "customer" | "lead" | "deal" | "service" | "task" | "system";
+export type AuditActivity = { id: string; action: string; detail: string; actor: string; occurredAt: string; tone: Tone; targetType: ActivityTargetType; targetId: string };
+export type InventoryStatusPreference = VehicleStatus | "All";
+export type InventoryViewMode = "cards" | "table";
+export type CustomerStatusPreference = "All" | "Active" | "Prospect";
+export type CustomerViewTab = "overview" | "follow-ups";
+export type SalesStatusPreference = "All" | Deal["status"];
+export type SalesSortPreference = "date" | "profit";
+export type ServiceFilterPreference = "All" | ServiceJob["status"];
+export type ServiceViewMode = "Board" | "Schedule" | "List";
+export type ViewPreferences = {
+  inventory: { query: string; status: InventoryStatusPreference; mode: InventoryViewMode };
+  customers: { query: string; status: CustomerStatusPreference; tab: CustomerViewTab };
+  sales: { query: string; status: SalesStatusPreference; sort: SalesSortPreference };
+  service: { query: string; filter: ServiceFilterPreference; view: ServiceViewMode };
+};
+export type PersistedRecordType = "vehicle" | "customer" | "lead" | "deal" | "service" | "task";
+export type UserPreferences = { branch: string; density: "comfortable" | "compact"; activePage: string; activeSubview: string; activeRecordType?: PersistedRecordType; activeRecordId?: string; activeContextId?: string; viewPreferences: ViewPreferences };
 export type VehicleIntakeDraft = { step: 1 | 2 | 3 | 4; values: Partial<Vehicle> };
 export type FormDrafts = { vehicleIntake: VehicleIntakeDraft | null; lead: Partial<Lead> | null; deal: Partial<Deal> | null; serviceNotes: Record<string, string> };
 export type DemoState = { schemaVersion: 1; vehicles: Vehicle[]; customers: Customer[]; leads: Lead[]; deals: Deal[]; financeDrafts: FinanceDraft[]; serviceJobs: ServiceJob[]; tasks: TaskItem[]; notifications: Notification[]; activities: AuditActivity[]; preferences: UserPreferences; drafts: FormDrafts };

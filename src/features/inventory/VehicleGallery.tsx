@@ -8,6 +8,7 @@ export function VehicleGallery({ vehicle }: { vehicle: Vehicle }) {
   const [imageUnavailable, setImageUnavailable] = useState(false);
   const images = vehicle.gallery.images;
   const active = images[activeIndex];
+  if (!active) return <section className="vehicle-gallery" aria-label="Vehicle gallery"><div className="vehicle-gallery-placeholder" role="img" aria-label="Vehicle gallery unavailable">Vehicle media is unavailable.</div></section>;
   const move = (offset: number) => { setImageUnavailable(false); setActiveIndex((index) => (index + offset + images.length) % images.length); };
   const onKeyDown = (event: KeyboardEvent<HTMLElement>) => { if (event.key === "ArrowLeft") { event.preventDefault(); move(-1); } if (event.key === "ArrowRight") { event.preventDefault(); move(1); } };
   let touchStart = 0;

@@ -1,4 +1,5 @@
-import type { DemoState } from "../domain/models";
+import type { DemoState, PersistedRecordType, ViewPreferences } from "../domain/models";
+import { navigationGroups, primaryNavigation } from "../app/routes";
 
 type RecordValue = Record<string, unknown>;
 type Validator = (value: unknown) => boolean;
@@ -12,6 +13,13 @@ const dealStatuses = ["Closed", "Pending", "Approval"] as const;
 const serviceStatuses = ["Booked", "Checked In", "In Progress", "Waiting for Parts", "Quality Check", "Ready", "Completed"] as const;
 const relatedTypes = ["lead", "deal", "vehicle", "service"] as const;
 const financeTerms = [36, 48, 60, 72] as const;
+export const defaultViewPreferences: ViewPreferences = { inventory: { query: "", status: "All", mode: "cards" }, customers: { query: "", status: "All", tab: "overview" }, sales: { query: "", status: "All", sort: "date" }, service: { query: "", filter: "All", view: "Board" } };
+const customerStatuses = ["All", "Active", "Prospect"] as const;
+const customerTabs = ["overview", "follow-ups"] as const;
+const salesStatuses = ["All", ...dealStatuses] as const;
+const serviceFilters = ["All", ...serviceStatuses] as const;
+const staticRoutes = new Set([...primaryNavigation, ...navigationGroups.flatMap((group) => group.destinations)].map(({ target }) => `${target.page}:${target.subview}`));
+staticRoutes.add("sales:new-deal");
 
 const isRecord = (value: unknown): value is RecordValue => Boolean(value) && typeof value === "object" && !Array.isArray(value);
 const string: Validator = (value) => typeof value === "string";
@@ -67,8 +75,63 @@ const isNotification = (value: unknown) => hasShape(value, {
   id: nonEmptyString, title: nonEmptyString, detail: nonEmptyString, read: boolean, tone: oneOf(tones), relatedId: nonEmptyString,
 });
 const isActivity = (value: unknown) => hasShape(value, {
-  id: nonEmptyString, action: nonEmptyString, detail: nonEmptyString, actor: nonEmptyString, occurredAt: nonEmptyString, tone: oneOf(tones),
+  id: nonEmptyString, action: nonEmptyString, detail: nonEmptyString, actor: nonEmptyString, occurredAt: nonEmptyString, tone: oneOf(tones), targetType: oneOf(["vehicle", "customer", "lead", "deal", "service", "task", "system"]), targetId: nonEmptyString,
 });
+
+const validString = (value: unknown, fallback: string) => typeof value === "string" ? value : fallback;
+const validChoice = <T extends string>(value: unknown, choices: readonly T[], fallback: T): T => choices.includes(value as T) ? value as T : fallback;
+function normalizeViewPreferences(value: unknown): ViewPreferences {
+  const source = isRecord(value) ? value : {};
+  const inventory = isRecord(source.inventory) ? source.inventory : {};
+  const customers = isRecord(source.customers) ? source.customers : {};
+  const sales = isRecord(source.sales) ? source.sales : {};
+  const service = isRecord(source.service) ? source.service : {};
+  return {
+    inventory: { query: validString(inventory.query, ""), status: validChoice(inventory.status, ["All", ...vehicleStatuses], "All"), mode: validChoice(inventory.mode, ["cards", "table"], "cards") },
+    customers: { query: validString(customers.query, ""), status: validChoice(customers.status, customerStatuses, "All"), tab: validChoice(customers.tab, customerTabs, "overview") },
+    sales: { query: validString(sales.query, ""), status: validChoice(sales.status, salesStatuses, "All"), sort: validChoice(sales.sort, ["date", "profit"], "date") },
+    service: { query: validString(service.query, ""), filter: validChoice(service.filter, serviceFilters, "All"), view: validChoice(service.view, ["Board", "Schedule", "List"], "Board") },
+  };
+}
+
+const recordCollection = (state: RecordValue, type: PersistedRecordType): unknown[] => {
+  const keys = { vehicle: "vehicles", customer: "customers", lead: "leads", deal: "deals", service: "serviceJobs", task: "tasks" } as const;
+  const value = state[keys[type]];
+  return Array.isArray(value) ? value : [];
+};
+const recordExists = (state: RecordValue, type: PersistedRecordType, id: string) => recordCollection(state, type).some((record) => isRecord(record) && record.id === id);
+const expectedRecordRoute: Record<PersistedRecordType, readonly [string, string]> = {
+  vehicle: ["inventory", "record"], customer: ["customers", "record"], lead: ["customers", "leads"], deal: ["sales", "deals"], service: ["service", "service-board"], task: ["operations", "tasks"],
+};
+function normalizeRoute(state: RecordValue, preferences: RecordValue): RecordValue {
+  const fallback = { activePage: "my-day", activeSubview: "overview" };
+  const page = preferences.activePage;
+  const subview = preferences.activeSubview;
+  if (typeof page !== "string" || typeof subview !== "string") return fallback;
+  const type = preferences.activeRecordType;
+  const id = preferences.activeRecordId;
+  const contextId = preferences.activeContextId;
+  if (type !== undefined || id !== undefined) {
+    if (!oneOf(["vehicle", "customer", "lead", "deal", "service", "task"])(type) || typeof id !== "string" || !recordExists(state, type as PersistedRecordType, id)) return fallback;
+    const [expectedPage, expectedSubview] = expectedRecordRoute[type as PersistedRecordType];
+    const routeMatches = page === expectedPage && (expectedSubview === "record" ? subview === id : subview === expectedSubview);
+    if (!routeMatches) return fallback;
+    if (contextId !== undefined) {
+      if (type !== "task" || typeof contextId !== "string") return fallback;
+      const task = recordCollection(state, "task").find((record) => isRecord(record) && record.id === id);
+      if (!isRecord(task) || task.relatedId !== contextId) return fallback;
+    }
+    return { activePage: page, activeSubview: subview, activeRecordType: type, activeRecordId: id, ...(contextId ? { activeContextId: contextId } : {}) };
+  }
+  if (contextId !== undefined) {
+    if (page === "sales" && subview === "new-deal" && typeof contextId === "string" && recordExists(state, "vehicle", contextId)) return { activePage: page, activeSubview: subview, activeContextId: contextId };
+    if (page === "finance" && subview === "deal-finance" && typeof contextId === "string" && recordExists(state, "vehicle", contextId)) return { activePage: page, activeSubview: subview, activeContextId: contextId };
+    return fallback;
+  }
+  if (page === "inventory" && recordExists(state, "vehicle", subview)) return { activePage: page, activeSubview: subview, activeRecordType: "vehicle", activeRecordId: subview };
+  if (page === "customers" && recordExists(state, "customer", subview)) return { activePage: page, activeSubview: subview, activeRecordType: "customer", activeRecordId: subview };
+  return staticRoutes.has(`${page}:${subview}`) ? { activePage: page, activeSubview: subview } : fallback;
+}
 
 const partial = (shape: Record<string, Validator>): Validator => (value) => isRecord(value) && Object.entries(value).every(([key, field]) => Boolean(shape[key]) && shape[key](field));
 const isDrafts = (value: unknown) => isRecord(value)
@@ -78,7 +141,7 @@ const isDrafts = (value: unknown) => isRecord(value)
   && isRecord(value.serviceNotes) && Object.values(value.serviceNotes).every(string);
 
 export function isCompatibleDemoState(value: unknown): value is DemoState {
-  if (!isRecord(value) || value.schemaVersion !== 1 || !hasShape(value.preferences, { branch: nonEmptyString, density: oneOf(["comfortable", "compact"]), activePage: nonEmptyString, activeSubview: nonEmptyString }) || !isDrafts(value.drafts)) return false;
+  if (!isRecord(value) || value.schemaVersion !== 1 || !hasShape(value.preferences, { branch: nonEmptyString, density: oneOf(["comfortable", "compact"]), activePage: nonEmptyString, activeSubview: nonEmptyString, viewPreferences: (item) => JSON.stringify(normalizeViewPreferences(item)) === JSON.stringify(item) }) || !isDrafts(value.drafts)) return false;
   const collections = ["vehicles", "customers", "leads", "deals", "financeDrafts", "serviceJobs", "tasks", "notifications", "activities"] as const;
   if (!collections.every((key) => Array.isArray(value[key]))) return false;
 
@@ -111,9 +174,14 @@ export function isCompatibleDemoState(value: unknown): value is DemoState {
     && financeDrafts.every((draft) => vehicleIds.has((draft as RecordValue).vehicleId as string))
     && serviceJobs.every((job) => linked(job as RecordValue))
     && tasks.every((task) => taskHasRelatedRecord(task as RecordValue))
-    && notifications.every((notification) => relatedIds.has((notification as RecordValue).relatedId as string));
+    && notifications.every((notification) => relatedIds.has((notification as RecordValue).relatedId as string))
+    && activities.every((activity) => { const item = activity as RecordValue; const idsByType = { vehicle: vehicleIds, customer: customerIds, lead: leadIds, deal: dealIds, service: serviceIds, task: ids(tasks as RecordValue[]), system: new Set(["system"]) }; return idsByType[item.targetType as keyof typeof idsByType].has(item.targetId as string); });
 }
 
 export function migrateDemoState(value: unknown): DemoState | null {
+  if (isRecord(value) && value.schemaVersion === 1 && isRecord(value.preferences)) {
+    const { activePage: _page, activeSubview: _subview, activeRecordType: _type, activeRecordId: _id, activeContextId: _context, ...stablePreferences } = value.preferences;
+    value = { ...value, preferences: { ...stablePreferences, ...normalizeRoute(value, value.preferences), viewPreferences: normalizeViewPreferences(value.preferences.viewPreferences) } };
+  }
   return isCompatibleDemoState(value) ? value : null;
 }

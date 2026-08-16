@@ -1,5 +1,5 @@
-type WeeleeLogoProps = { className?: string; width?: number; height?: number };
+type WeeleeLogoProps = { className?: string };
 
-export function WeeleeLogo({ className, width = 168, height = 44 }: WeeleeLogoProps) {
-  return <img className={className} src="/media/brand/weelee-logo-transparent.png" width={width} height={height} alt="Weelee" />;
+export function WeeleeLogo({ className }: WeeleeLogoProps) {
+  return <img className={className} src="/media/brand/weelee-logo-transparent.png" width={2172} height={724} alt="Weelee" />;
 }

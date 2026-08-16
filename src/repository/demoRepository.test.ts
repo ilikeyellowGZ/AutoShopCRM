@@ -21,6 +21,15 @@ describe("DemoRepository", () => {
     expect(JSON.parse(storage.getItem(STORAGE_KEY) ?? "{}").schemaVersion).toBe(1);
   });
 
+  it.each([
+    ["legacy activity without targets", (state: Record<string, any>) => { delete state.activities[0].targetType; delete state.activities[0].targetId; }],
+    ["unknown activity target type", (state: Record<string, any>) => { state.activities[0].targetType = "unknown"; }],
+    ["dangling activity target", (state: Record<string, any>) => { state.activities[0].targetId = "vehicle-999"; }],
+  ])("recovers deterministic seed from %s", (_name, corrupt) => {
+    const storage = memoryStorage(); const state = createDemoRepository(storage).getState() as unknown as Record<string, any>; corrupt(state); storage.setItem(STORAGE_KEY, JSON.stringify(state));
+    expect(createDemoRepository(storage).getState().activities).toHaveLength(12);
+  });
+
   it("recovers from nested corrupt records before repository actions can crash", () => {
     const storage = memoryStorage();
     const state = createDemoRepository(storage).getState();
@@ -81,12 +90,142 @@ describe("DemoRepository", () => {
     expect(() => repository.addVehicle({ ...existing, id: "vehicle-11", stockId: "WEE-0011" })).toThrow("VIN already exists in the active Weelee inventory.");
   });
 
-  it("rejects an update that would duplicate a blank VIN", () => {
+  it("rejects duplicate customer emails without persisting a partial customer", () => {
+    const repository = createDemoRepository(memoryStorage());
+    const existing = repository.getState().customers[0];
+
+    expect(() => repository.addCustomer({ ...existing, id: "customer-13", email: ` ${existing.email.toUpperCase()} ` })).toThrow("A customer with this email already exists.");
+    expect(repository.getState().customers).toHaveLength(12);
+  });
+
+  it("rejects lead and deal references that do not belong to the active directory", () => {
+    const repository = createDemoRepository(memoryStorage());
+    const state = repository.getState();
+
+    expect(() => repository.addLead({ ...state.leads[0], id: "lead-99", customerId: "customer-missing" })).toThrow("Customer not found.");
+    expect(() => repository.addDeal({ ...state.deals[0], id: "deal-99", vehicleId: "vehicle-missing" })).toThrow("Vehicle not found.");
+  });
+
+  it("rejects an identical persisted pipeline stage move", () => {
+    const repository = createDemoRepository(memoryStorage());
+    const lead = repository.getState().leads[0];
+
+    expect(() => repository.moveLead(lead.id, lead.stage)).toThrow("Lead is already in this pipeline stage.");
+  });
+
+  it("rejects runtime-invalid lead stages without changing stored state or audit history", () => {
+    const repository = createDemoRepository(memoryStorage());
+    const before = repository.getState();
+
+    expect(() => repository.moveLead(before.leads[0].id, "Lost" as never)).toThrow("Invalid lead stage.");
+    expect(() => repository.addLead({ ...before.leads[0], id: "lead-invalid", stage: "Lost" as never })).toThrow("Invalid lead stage.");
+    expect(repository.getState()).toEqual(before);
+  });
+
+  it("rejects dangling customer vehicle interests on create and update without an audit", () => {
+    const repository = createDemoRepository(memoryStorage());
+    const before = repository.getState();
+    expect(() => repository.addCustomer({ ...before.customers[0], id: "customer-13", email: "new@example.com", vehicleInterestId: "vehicle-missing" })).toThrow("Vehicle interest not found.");
+    expect(() => repository.updateCustomer(before.customers[0].id, { vehicleInterestId: "vehicle-missing" })).toThrow("Vehicle interest not found.");
+    expect(repository.getState()).toEqual(before);
+  });
+
+  it("persists a customer note as a customer-targeted activity across reload", () => {
+    const storage = memoryStorage(); const repository = createDemoRepository(storage); const customer = repository.getState().customers[0];
+    repository.addCustomerNote(customer.id, "Confirm the morning test drive.");
+    const activity = createDemoRepository(storage).getState().activities[0];
+    expect(activity).toMatchObject({ action: "Customer note added", detail: "Confirm the morning test drive.", targetType: "customer", targetId: customer.id });
+  });
+
+  it("persists successful customer lead and deal mutations with typed audits across reload", () => {
+    const storage = memoryStorage(); const repository = createDemoRepository(storage); const state = repository.getState();
+    const customer = { ...state.customers[0], id: "customer-13", email: "reload@example.com" };
+    repository.addCustomer(customer); repository.addLead({ ...state.leads[0], id: "lead-99", customerId: customer.id }); repository.addDeal({ ...state.deals[0], id: "deal-99", customerId: customer.id });
+    const reloaded = createDemoRepository(storage).getState();
+    expect(reloaded.activities.slice(0, 3).map((activity) => activity.targetType)).toEqual(["deal", "lead", "customer"]);
+  });
+
+  it("persists successful vehicle creation with a typed vehicle audit", () => {
+    const storage = memoryStorage(); const repository = createDemoRepository(storage); const vehicle = repository.getState().vehicles[0];
+    repository.addVehicle({ ...vehicle, id: "vehicle-11", vin: "1HGCM82633A004352", stockId: "WEE-2411" });
+    const reloaded = createDemoRepository(storage).getState();
+    expect(reloaded.vehicles.find((item) => item.id === "vehicle-11")?.stockId).toBe("WEE-2411");
+    expect(reloaded.activities[0]).toMatchObject({ action: "Vehicle added", targetType: "vehicle", targetId: "vehicle-11" });
+  });
+
+  it("persists successful vehicle edit with a typed vehicle audit", () => {
+    const storage = memoryStorage(); const repository = createDemoRepository(storage); const vehicle = repository.getState().vehicles[0];
+    repository.updateVehicle(vehicle.id, { price: 4_300_000 });
+    const reloaded = createDemoRepository(storage).getState();
+    expect(reloaded.vehicles[0].price).toBe(4_300_000);
+    expect(reloaded.activities[0]).toMatchObject({ action: "Vehicle updated", targetType: "vehicle", targetId: vehicle.id });
+  });
+
+  it("writes typed targets for task, lead, deal, finance, and service mutations", () => {
+    const repository = createDemoRepository(memoryStorage()); const state = repository.getState();
+    repository.completeTask(state.tasks[0].id); expect(repository.getState().activities[0]).toMatchObject({ targetType: "task", targetId: state.tasks[0].id });
+    repository.moveLead(state.leads[0].id, "Delivery"); expect(repository.getState().activities[0]).toMatchObject({ targetType: "lead", targetId: state.leads[0].id });
+    repository.updateFinanceDraft(state.vehicles[0].id, { downPayment: 1 }); expect(repository.getState().activities[0]).toMatchObject({ targetType: "vehicle", targetId: state.vehicles[0].id });
+    repository.updateServiceJob(state.serviceJobs[0].id, { note: "Checked" }); expect(repository.getState().activities[0]).toMatchObject({ targetType: "service", targetId: state.serviceJobs[0].id });
+  });
+
+  it("writes an explicit audit target matrix for every entity mutation", () => {
+    const repository = createDemoRepository(memoryStorage()); const state = repository.getState();
+    const cases: Array<[string, () => void, string, string, string]> = [
+      ["task complete", () => repository.completeTask(state.tasks[0].id), "Task completed", "task", state.tasks[0].id],
+      ["task reschedule", () => repository.rescheduleTask(state.tasks[0].id, "2026-08-20T09:00:00+02:00"), "Task rescheduled", "task", state.tasks[0].id],
+      ["customer update", () => repository.updateCustomer(state.customers[0].id, { city: "Walvis Bay" }), "Customer updated", "customer", state.customers[0].id],
+      ["lead stage", () => repository.updateLeadStage(state.leads[0].id, "Delivery"), "Lead moved", "lead", state.leads[0].id],
+      ["deal status", () => repository.updateDealStatus(state.deals[0].id, "Closed"), "Deal updated", "deal", state.deals[0].id],
+      ["service state", () => repository.updateServiceState(state.serviceJobs.find((job) => job.status === "Quality Check")!.id, "Ready"), "Service job updated", "service", state.serviceJobs.find((job) => job.status === "Quality Check")!.id],
+    ];
+    for (const [_name, invoke, action, targetType, targetId] of cases) { invoke(); expect(repository.getState().activities[0]).toMatchObject({ action, targetType, targetId }); }
+  });
+
+  it("keeps preferences, drafts, and notifications intentionally system-scoped", () => {
+    const repository = createDemoRepository(memoryStorage()); const state = repository.getState();
+    repository.setPreferences({ branch: "Swakopmund" }); expect(repository.getState().activities[0]).toMatchObject({ targetType: "system", targetId: "system" });
+    repository.updateDraft("lead", { owner: "Alicia Brown" }); expect(repository.getState().activities[0]).toMatchObject({ targetType: "system", targetId: "system" });
+    repository.markNotificationRead(state.notifications[0].id); expect(repository.getState().activities[0]).toMatchObject({ targetType: "system", targetId: "system" });
+  });
+
+  it("clears optional route metadata in memory and persisted storage", () => {
+    const storage = memoryStorage(); const repository = createDemoRepository(storage);
+    repository.setPreferences({ activePage: "sales", activeSubview: "deals", activeRecordType: "deal", activeRecordId: "deal-01", activeContextId: "vehicle-01" });
+
+    repository.setPreferences({ activePage: "sales", activeSubview: "sales-log", activeRecordType: undefined, activeRecordId: undefined, activeContextId: undefined });
+
+    expect(repository.getState().preferences).not.toHaveProperty("activeRecordType");
+    expect(repository.getState().preferences).not.toHaveProperty("activeRecordId");
+    expect(repository.getState().preferences).not.toHaveProperty("activeContextId");
+    const persisted = JSON.parse(storage.getItem(STORAGE_KEY) ?? "{}") as { preferences?: Record<string, unknown> };
+    expect(persisted.preferences).not.toHaveProperty("activeRecordType");
+    expect(persisted.preferences).not.toHaveProperty("activeRecordId");
+    expect(persisted.preferences).not.toHaveProperty("activeContextId");
+  });
+
+  it("rejects canonical VIN and stock duplicates without mutating state or audit history", () => {
+    const repository = createDemoRepository(memoryStorage());
+    const before = repository.getState();
+    const existing = before.vehicles[0];
+    expect(() => repository.addVehicle({ ...existing, id: "vehicle-11", vin: ` ${existing.vin.toLowerCase()} `, stockId: "WEE-9999" })).toThrow("VIN already exists");
+    expect(() => repository.addVehicle({ ...existing, id: "vehicle-11", vin: "1HGCM82633A004352", stockId: ` ${existing.stockId.toLowerCase()} ` })).toThrow("Stock ID already exists");
+    expect(repository.getState().vehicles).toHaveLength(before.vehicles.length);
+    expect(repository.getState().activities).toHaveLength(before.activities.length);
+  });
+
+  it("rejects blank VIN and canonical stock update without mutating the record", () => {
     const repository = createDemoRepository(memoryStorage());
     const [first, second] = repository.getState().vehicles;
-    repository.updateVehicle(first.id, { vin: "" });
+    expect(() => repository.updateVehicle(second.id, { vin: "  " })).toThrow("VIN must contain exactly 17 characters");
+    expect(() => repository.updateVehicle(second.id, { stockId: ` ${first.stockId.toLowerCase()} ` })).toThrow("Stock ID already exists");
+    expect(repository.getState().vehicles.find((vehicle) => vehicle.id === second.id)).toMatchObject({ vin: second.vin, stockId: second.stockId });
+  });
 
-    expect(() => repository.updateVehicle(second.id, { vin: "" })).toThrow("VIN already exists in the active Weelee inventory.");
+  it("rejects blank VIN updates", () => {
+    const repository = createDemoRepository(memoryStorage());
+    const [first, second] = repository.getState().vehicles;
+    expect(() => repository.updateVehicle(first.id, { vin: "" })).toThrow("VIN must contain exactly 17 characters.");
     expect(repository.getState().vehicles.find((vehicle) => vehicle.id === second.id)?.vin).toBe(second.vin);
   });
 
@@ -117,6 +256,57 @@ describe("DemoRepository", () => {
     expect(repository.getState().financeDrafts[0].downPayment).toBe(425_000);
     expect(repository.getState().notifications.find((item) => item.id === notification.id)?.read).toBe(true);
     expect(repository.getState().vehicles).toHaveLength(vehicles.length);
+  });
+
+  it("persists a valid service transition with a typed audit across reload", () => {
+    const storage = memoryStorage();
+    const repository = createDemoRepository(storage);
+    const job = repository.getState().serviceJobs.find((item) => item.status === "Quality Check")!;
+
+    repository.updateServiceState(job.id, "Ready");
+
+    const reloaded = createDemoRepository(storage).getState();
+    expect(reloaded.serviceJobs.find((item) => item.id === job.id)?.status).toBe("Ready");
+    expect(reloaded.activities[0]).toMatchObject({ action: "Service job updated", targetType: "service", targetId: job.id });
+  });
+
+  it("records a finance submission as a local demo simulation across reload", () => {
+    const storage = memoryStorage();
+    const repository = createDemoRepository(storage);
+    const vehicleId = repository.getState().financeDrafts[0].vehicleId;
+
+    repository.submitFinanceApplication(vehicleId);
+
+    expect(createDemoRepository(storage).getState().activities[0]).toMatchObject({
+      action: "Finance demo submitted", targetType: "vehicle", targetId: vehicleId,
+      detail: "A local sandbox finance submission was recorded; no lender was contacted.",
+    });
+  });
+
+  it("rejects an invalid service transition without changing the job or audit history", () => {
+    const repository = createDemoRepository(memoryStorage());
+    const before = repository.getState();
+    const job = before.serviceJobs.find((item) => item.status === "In Progress")!;
+
+    expect(() => repository.updateServiceState(job.id, "Ready")).toThrow("Service job cannot move from In Progress to Ready.");
+    expect(repository.getState()).toEqual(before);
+  });
+
+  it("rejects runtime-invalid service transitions without committing an audit", () => {
+    const repository = createDemoRepository(memoryStorage()); const before = repository.getState(); const job = before.serviceJobs[0];
+    expect(() => repository.updateServiceState(job.id, "Unknown" as never)).toThrow("Invalid service job status.");
+    expect(() => repository.updateServiceJob(job.id, { status: "Unknown" as never })).toThrow("Invalid service job status.");
+    expect(repository.getState()).toEqual(before);
+  });
+
+  it("guards service job customer and vehicle relationships before persistence", () => {
+    const storage = memoryStorage(); const repository = createDemoRepository(storage); const before = repository.getState(); const job = before.serviceJobs[0];
+    expect(() => repository.addServiceJob({ ...job, id: "service-99", customerId: "missing" })).toThrow("Customer not found.");
+    expect(() => repository.updateServiceJob(job.id, { vehicleId: "missing" })).toThrow("Vehicle not found.");
+    expect(repository.getState()).toEqual(before);
+    repository.updateServiceJob(job.id, { note: "Verified by advisor" });
+    const reloaded = createDemoRepository(storage).getState();
+    expect(reloaded.serviceJobs[0].note).toBe("Verified by advisor"); expect(reloaded.activities[0]).toMatchObject({ targetType: "service", targetId: job.id });
   });
 
   it("resets to seed data and records the reset as the latest activity", () => {

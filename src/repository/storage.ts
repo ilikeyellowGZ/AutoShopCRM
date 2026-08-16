@@ -17,7 +17,7 @@ export function loadDemoState(storage: Storage): DemoState {
     const raw = storage.getItem(STORAGE_KEY);
     if (raw) {
       const migrated = migrateDemoState(JSON.parse(raw));
-      if (migrated) return migrated;
+      if (migrated) { saveDemoState(storage, migrated); return migrated; }
     }
   } catch {
     // Fall through to a deterministic, recoverable seed state.
