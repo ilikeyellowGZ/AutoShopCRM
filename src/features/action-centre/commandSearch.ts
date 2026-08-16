@@ -40,7 +40,7 @@ export function searchCommands(state: DemoState, query: string): CommandSearchRe
       type: "customer" as const,
       title: customer.name,
       detail: `${customer.city} · ${customer.crmStatus}`,
-      target: { page: "customers" as const, subview: "directory" },
+      target: { page: "customers" as const, subview: customer.id },
       searchable: [customer.id, customer.name, customer.email, customer.phone, customer.city],
     })),
     ...state.deals.map((deal) => {
