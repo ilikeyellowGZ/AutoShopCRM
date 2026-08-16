@@ -8,6 +8,8 @@ export type AppToast = { id: string; title: string; detail?: string; tone?: Tone
 
 export function useDemoApp(repository: DemoRepository) {
   const snapshot = useRef<DemoState>(repository.getState());
+  const currentRepository = useRef(repository);
+  if (currentRepository.current !== repository) { currentRepository.current = repository; snapshot.current = repository.getState(); }
   const subscribe = useCallback((notify: () => void) => repository.subscribe((next) => { snapshot.current = next; notify(); }), [repository]);
   const getSnapshot = useCallback(() => snapshot.current, []);
   const state = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
