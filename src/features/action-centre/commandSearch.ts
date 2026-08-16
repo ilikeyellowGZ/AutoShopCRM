@@ -14,10 +14,7 @@ type Candidate = CommandSearchResult & { searchable: string[] };
 const normalise = (value: string) => value.trim().toLocaleLowerCase();
 
 function taskTarget(task: TaskItem): NavigationTarget {
-  if (task.relatedType === "vehicle") return { page: "inventory", subview: task.relatedId, recordType: "task", recordId: task.id, contextId: task.relatedId };
-  if (task.relatedType === "deal") return { page: "sales", subview: "deals", recordType: "task", recordId: task.id, contextId: task.relatedId };
-  if (task.relatedType === "lead") return { page: "customers", subview: "leads", recordType: "task", recordId: task.id, contextId: task.relatedId };
-  return { page: "service", subview: "service-board", recordType: "task", recordId: task.id, contextId: task.relatedId };
+  return { page: "operations", subview: "tasks", recordType: "task", recordId: task.id, contextId: task.relatedId };
 }
 
 export function searchCommands(state: DemoState, query: string): CommandSearchResult[] {

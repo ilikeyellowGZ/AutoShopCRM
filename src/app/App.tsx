@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { ActionCentreView } from "../features/action-centre/ActionCentreView";
 import { CommandPalette } from "../features/action-centre/CommandPalette";
 import { CustomerDetail } from "../features/customers/CustomerDetail";
@@ -7,92 +7,70 @@ import { FinancePage } from "../features/finance/FinancePage";
 import { InventoryPage } from "../features/inventory/InventoryPage";
 import { MyDayPage } from "../features/my-day/MyDayPage";
 import { PipelinePage } from "../features/pipeline/PipelinePage";
+import { DealEntry } from "../features/sales/DealEntry";
 import { SalesPage } from "../features/sales/SalesPage";
 import { ServicePage } from "../features/service/ServicePage";
+import { VehicleDetail } from "../features/inventory/VehicleDetail";
 import { Button } from "../components/controls/Button";
 import { ToastRegion } from "../components/feedback/ToastRegion";
 import { Dialog } from "../components/overlays/Dialog";
 import { EmployeeShell } from "../components/navigation/EmployeeShell";
 import type { DemoRepository } from "../repository/demoRepository";
 import { createDemoRepository } from "../repository/demoRepository";
+import type { ViewPreferences } from "../domain/models";
 import { pageKeys, type NavigationTarget, type PageKey } from "./routes";
 import { useDemoApp } from "./useDemoApp";
+import { DomainWorkspace, ExactRecordView } from "./DomainWorkspace";
 
 type ViewTransitionDocument = Document & { startViewTransition?: (callback: () => void) => unknown };
-
 const isPageKey = (value: string): value is PageKey => (pageKeys as readonly string[]).includes(value);
 const browserRepository = () => createDemoRepository(window.localStorage);
-
-const subviewTitles: Record<string, string> = {
-  appraisals: "Vehicle appraisals", "trade-ins": "Trade-ins", recon: "Reconditioning queue", transfers: "Vehicle transfers", pricing: "Pricing review",
-  leads: "CRM leads", "follow-ups": "Customer follow-ups", appointments: "Appointments", "test-drives": "Test drives",
-  deals: "Deals", quotations: "Quotations", approvals: "Sales approvals", deliveries: "Vehicle deliveries", commissions: "Sales commissions",
-  applications: "Finance applications", lenders: "Lender queue", products: "Finance products", documents: "Finance documents",
-  bookings: "Service bookings", "job-cards": "Workshop job cards", "repair-orders": "Repair orders", history: "Service history",
-  employees: "Employees", teams: "Teams", targets: "Team targets", attendance: "Attendance",
-};
-
-function ConnectedSubview({ subview, state, onNavigate }: { subview: string; state: ReturnType<DemoRepository["getState"]>; onNavigate: (target: NavigationTarget) => void }) {
-  const title = subviewTitles[subview] ?? "Connected operations";
-  const records = ["applications", "lenders", "products"].includes(subview) ? state.financeDrafts.map((draft) => ({ id: draft.vehicleId, title: `Finance draft ${draft.vehicleId}`, detail: `${draft.termMonths} months · ${draft.aprPercent}% APR` })) : ["employees", "teams", "targets", "attendance", "tasks"].includes(subview) ? state.tasks.map((task) => ({ id: task.id, title: task.title, detail: `${task.status} · ${task.detail}` })) : subview === "documents" ? state.activities.map((activity) => ({ id: activity.id, title: `Local artifact: ${activity.action}`, detail: activity.detail })) : subviewTitles[subview]?.includes("Customer") || ["leads", "appointments", "test-drives"].includes(subview) ? state.leads.map((lead) => ({ id: lead.id, title: lead.nextAction, detail: lead.stage })) : subviewTitles[subview]?.includes("Service") || ["bookings", "job-cards", "repair-orders", "history"].includes(subview) ? state.serviceJobs.map((job) => ({ id: job.id, title: job.status, detail: job.note })) : ["deals", "quotations", "approvals", "deliveries", "commissions"].includes(subview) ? state.deals.map((deal) => ({ id: deal.id, title: `${deal.status} deal`, detail: deal.salesRep })) : state.vehicles.map((vehicle) => ({ id: vehicle.id, title: `${vehicle.year} ${vehicle.make} ${vehicle.model}`, detail: vehicle.status }));
-  const page = ["applications", "lenders", "products"].includes(subview) ? "finance" : ["employees", "teams", "targets", "attendance", "tasks", "documents"].includes(subview) ? "operations" : subviewTitles[subview]?.includes("Customer") ? "customers" : subviewTitles[subview]?.includes("Service") ? "service" : ["deals", "quotations", "approvals", "deliveries", "commissions"].includes(subview) ? "sales" : "inventory";
-  return <section className="action-centre" aria-labelledby={`${subview}-title`}><header className="action-centre-heading"><p>Connected employee workspace</p><h1 id={`${subview}-title`}>{title}</h1><span>{records.length} connected records</span></header><ul className="action-centre-list">{records.map((record) => <li key={record.id}><div><strong>{record.title}</strong><p>{record.detail}</p></div><Button variant="secondary" onClick={() => onNavigate({ page, subview: record.id })}>Open record</Button></li>)}</ul></section>;
-}
-
-function ExactRecordView({ target, state }: { target: NavigationTarget; state: ReturnType<DemoRepository["getState"]> }) {
-  const id = target.recordId;
-  const notFound = <section className="action-centre" aria-labelledby="record-not-found"><h1 id="record-not-found">Record not found</h1><p>The requested connected record is not available in this demo.</p></section>;
-  if (target.recordType === "vehicle") { const record = state.vehicles.find((item) => item.id === id); return record ? <section className="action-centre"><h1>{record.year} {record.make} {record.model}</h1><p>{record.vin} · {record.status}</p></section> : notFound; }
-  if (target.recordType === "customer") { const record = state.customers.find((item) => item.id === id); return record ? <section className="action-centre"><h1>{record.name}</h1><p>{record.email} · {record.crmStatus}</p></section> : notFound; }
-  if (target.recordType === "lead") { const record = state.leads.find((item) => item.id === id); return record ? <section className="action-centre"><h1>Lead {record.id}</h1><p>{record.stage} · {record.nextAction}</p></section> : notFound; }
-  if (target.recordType === "deal") { const record = state.deals.find((item) => item.id === id); return record ? <section className="action-centre"><h1>Deal {record.id}</h1><p>{record.status} · {record.salesRep}</p></section> : notFound; }
-  if (target.recordType === "service") { const record = state.serviceJobs.find((item) => item.id === id); return record ? <section className="action-centre"><h1>Service job {record.id}</h1><p>{record.status} · {record.note}</p></section> : notFound; }
-  const record = state.tasks.find((item) => item.id === id); return record ? <section className="action-centre"><h1>{record.title}</h1><p>{record.detail} · {record.status}</p></section> : notFound;
-}
-
-function OperationsView({ subview, repository, state, onReset }: { subview: string; repository: DemoRepository; state: ReturnType<DemoRepository["getState"]>; onReset: () => void }) {
-  if (subview === "tasks") return <ActionCentreView state={state} repository={repository} />;
-  if (subview === "calendar") return <section className="action-centre" aria-labelledby="calendar-title"><header className="action-centre-heading"><p>Operations</p><h1 id="calendar-title">Calendar</h1></header><ul className="action-centre-list">{state.tasks.map((task) => <li key={task.id}><div><strong>{task.title}</strong><p>{task.detail}</p></div><time dateTime={task.dueAt}>{new Intl.DateTimeFormat("en-NA", { dateStyle: "medium", timeStyle: "short" }).format(new Date(task.dueAt))}</time></li>)}</ul></section>;
-  if (subview === "audit-trail") return <section className="action-centre" aria-labelledby="audit-title"><header className="action-centre-heading"><p>Operations</p><h1 id="audit-title">Audit trail</h1></header><ul className="action-centre-list">{state.activities.map((activity) => <li key={activity.id}><div><strong>{activity.action}</strong><p>{activity.detail}</p></div><time dateTime={activity.occurredAt}>{new Intl.DateTimeFormat("en-NA", { dateStyle: "medium", timeStyle: "short" }).format(new Date(activity.occurredAt))}</time></li>)}</ul></section>;
-  return <section className="action-centre" aria-labelledby="operations-title"><header className="action-centre-heading"><p>Operations</p><h1 id="operations-title">{subview === "settings" ? "Workspace settings" : "Employee operations"}</h1></header><p>{subview === "settings" ? "Demo preferences are stored only in this browser." : "Use the connected task, calendar, customer and sales workspaces to manage this employee demo."}</p>{subview === "settings" ? <Button variant="secondary" onClick={onReset}>Reset demo data</Button> : <p>Branch: {state.preferences.branch} · Density: {state.preferences.density}</p>}</section>;
-}
+const domainSubviews = {
+  inventory: ["appraisals", "trade-ins", "recon", "transfers", "pricing"],
+  customers: ["leads", "follow-ups", "appointments", "test-drives"],
+  sales: ["deals", "quotations", "approvals", "deliveries", "commissions"],
+  finance: ["applications", "lenders", "products", "documents"],
+  service: ["bookings", "job-cards", "repair-orders", "history"],
+  operations: ["employees", "teams", "targets", "attendance", "tasks", "calendar", "documents", "audit-trail"],
+} as const;
 
 export function App({ repository: providedRepository }: { repository?: DemoRepository }) {
   const repository = useMemo(() => providedRepository ?? browserRepository(), [providedRepository]);
   const app = useDemoApp(repository);
   const target = isPageKey(app.target.page) ? app.target : { page: "my-day" as const, subview: "overview" };
 
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => { if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") { event.preventDefault(); app.setSearchOpen(true); } };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [app.setSearchOpen]);
-
-  const navigate = (next: NavigationTarget) => {
-    const change = () => app.navigate(next);
-    const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-    const transitionDocument = document as ViewTransitionDocument;
-    if (transitionDocument.startViewTransition && !reducedMotion) transitionDocument.startViewTransition(change); else change();
-  };
+  useEffect(() => { const onKeyDown = (event: KeyboardEvent) => { if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") { event.preventDefault(); app.setSearchOpen(true); } }; window.addEventListener("keydown", onKeyDown); return () => window.removeEventListener("keydown", onKeyDown); }, [app.setSearchOpen]);
+  const navigate = (next: NavigationTarget) => { const change = () => app.navigate(next); const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches; const transitionDocument = document as ViewTransitionDocument; if (transitionDocument.startViewTransition && !reducedMotion) transitionDocument.startViewTransition(change); else change(); };
   const notify = (title: string, detail?: string) => app.pushToast({ title, detail, tone: "positive" });
+  const updateView = <K extends keyof ViewPreferences>(key: K, patch: Partial<ViewPreferences[K]>) => repository.setPreferences({ viewPreferences: { ...app.state.preferences.viewPreferences, [key]: { ...app.state.preferences.viewPreferences[key], ...patch } } });
+
   const content = (() => {
-    if (target.recordId && target.recordType && target.recordType !== "vehicle" && target.recordType !== "customer") return <ExactRecordView target={target} state={app.state} />;
-    switch (target.page) {
-      case "my-day":
-        if (target.subview === "action-centre") return <ActionCentreView state={app.state} repository={repository} />;
-        if (target.subview === "notifications") return <ActionCentreView state={app.state} repository={repository} view="notifications" />;
-        return <MyDayPage state={app.state} repository={repository} onNavigate={navigate} onCommandSelect={(_, result) => { navigate(result.target); notify("Opened connected record", result.title); }} />;
-      case "inventory": return ["appraisals", "trade-ins", "recon", "transfers", "pricing"].includes(target.subview) ? <ConnectedSubview subview={target.subview} state={app.state} onNavigate={navigate} /> : <InventoryPage state={app.state} repository={repository} initialSubview={target.subview} viewPreferences={app.state.preferences.viewPreferences.inventory} onViewPreferencesChange={(patch) => repository.setPreferences({ viewPreferences: { ...app.state.preferences.viewPreferences, inventory: { ...app.state.preferences.viewPreferences.inventory, ...patch } } })} onNavigate={(subview) => navigate({ page: "inventory", subview })} />;
-      case "customers": {
-        const customer = app.state.customers.find((item) => item.id === target.subview);
-        return customer ? <CustomerDetail customer={customer} state={app.state} repository={repository} /> : ["leads", "follow-ups", "appointments", "test-drives"].includes(target.subview) ? <ConnectedSubview subview={target.subview} state={app.state} onNavigate={navigate} /> : <CustomersPage state={app.state} repository={repository} onOpenCustomer={(customerId) => navigate({ page: "customers", subview: customerId })} />;
-      }
-      case "pipeline": return <PipelinePage state={app.state} repository={repository} />;
-      case "sales": return ["deals", "quotations", "approvals", "deliveries", "commissions"].includes(target.subview) ? <ConnectedSubview subview={target.subview} state={app.state} onNavigate={navigate} /> : <SalesPage state={app.state} repository={repository} />;
-      case "finance": return ["applications", "lenders", "products", "documents"].includes(target.subview) ? <ConnectedSubview subview={target.subview} state={app.state} onNavigate={navigate} /> : <FinancePage state={app.state} repository={repository} />;
-      case "service": return ["bookings", "job-cards", "repair-orders", "history"].includes(target.subview) ? <ConnectedSubview subview={target.subview} state={app.state} onNavigate={navigate} /> : <ServicePage state={app.state} repository={repository} />;
-      case "operations": return ["employees", "teams", "targets", "attendance", "documents"].includes(target.subview) ? <ConnectedSubview subview={target.subview} state={app.state} onNavigate={navigate} /> : <OperationsView subview={target.subview} repository={repository} state={app.state} onReset={() => app.setActiveOverlay({ kind: "dialog", id: "reset" })} />;
+    if (target.recordType === "vehicle" && target.recordId) { const vehicle = app.state.vehicles.find((item) => item.id === target.recordId); return vehicle ? <VehicleDetail vehicle={vehicle} state={app.state} repository={repository} onBack={() => navigate({ page: "inventory", subview: "list" })} onCreateDeal={() => navigate({ page: "sales", subview: "new-deal", contextId: vehicle.id })} /> : <ExactRecordView target={target} state={app.state} />; }
+    if (target.recordType === "customer" && target.recordId) { const customer = app.state.customers.find((item) => item.id === target.recordId); return customer ? <CustomerDetail customer={customer} state={app.state} repository={repository} /> : <ExactRecordView target={target} state={app.state} />; }
+    if (target.recordType && target.recordId) return <ExactRecordView target={target} state={app.state} />;
+    if (target.page === "my-day") {
+      if (target.subview === "action-centre") return <ActionCentreView state={app.state} repository={repository} />;
+      if (target.subview === "notifications") return <ActionCentreView state={app.state} repository={repository} view="notifications" />;
+      return <MyDayPage state={app.state} repository={repository} onNavigate={navigate} onCommandSelect={(_, result) => { navigate(result.target); notify("Opened connected record", result.title); }} />;
     }
+    if (target.page === "inventory") {
+      if ((domainSubviews.inventory as readonly string[]).includes(target.subview)) return <DomainWorkspace page="inventory" subview={target.subview} state={app.state} onNavigate={navigate} />;
+      return <InventoryPage state={app.state} repository={repository} initialSubview={target.subview} viewPreferences={app.state.preferences.viewPreferences.inventory} onViewPreferencesChange={(patch) => updateView("inventory", patch)} onNavigate={(subview, recordId) => navigate(recordId ? { page: "inventory", subview: recordId, recordType: "vehicle", recordId } : { page: "inventory", subview })} onCreateDeal={(vehicleId) => navigate({ page: "sales", subview: "new-deal", contextId: vehicleId })} />;
+    }
+    if (target.page === "customers") {
+      if ((domainSubviews.customers as readonly string[]).includes(target.subview)) return <DomainWorkspace page="customers" subview={target.subview} state={app.state} onNavigate={navigate} />;
+      return <CustomersPage state={app.state} repository={repository} viewPreferences={app.state.preferences.viewPreferences.customers} onViewPreferencesChange={(patch) => updateView("customers", patch)} onOpenCustomer={(recordId) => navigate({ page: "customers", subview: recordId, recordType: "customer", recordId })} />;
+    }
+    if (target.page === "pipeline") return <PipelinePage state={app.state} repository={repository} />;
+    if (target.page === "sales") {
+      if (target.subview === "new-deal") return <section className="sales-page crm-page"><header className="crm-heading"><div><p className="crm-eyebrow">Sales · connected vehicle</p><h1>New vehicle deal</h1><p>Create a locally persisted deal linked to the selected inventory record.</p></div></header><DealEntry title="Deal details" state={app.state} repository={repository} initialVehicleId={target.contextId} onCreated={(deal) => navigate({ page: "sales", subview: "deals", recordType: "deal", recordId: deal.id })} /></section>;
+      if ((domainSubviews.sales as readonly string[]).includes(target.subview)) return <DomainWorkspace page="sales" subview={target.subview} state={app.state} onNavigate={navigate} />;
+      return <SalesPage state={app.state} repository={repository} viewPreferences={app.state.preferences.viewPreferences.sales} onViewPreferencesChange={(patch) => updateView("sales", patch)} />;
+    }
+    if (target.page === "finance") return (domainSubviews.finance as readonly string[]).includes(target.subview) ? <DomainWorkspace page="finance" subview={target.subview} state={app.state} onNavigate={navigate} /> : <FinancePage state={app.state} repository={repository} />;
+    if (target.page === "service") return (domainSubviews.service as readonly string[]).includes(target.subview) ? <DomainWorkspace page="service" subview={target.subview} state={app.state} onNavigate={navigate} /> : <ServicePage state={app.state} repository={repository} viewPreferences={app.state.preferences.viewPreferences.service} onViewPreferencesChange={(patch) => updateView("service", patch)} />;
+    if (target.subview === "settings") return <section className="action-centre"><header className="action-centre-heading"><p>Operations</p><h1>Workspace settings</h1></header><p>Demo preferences are stored only in this browser.</p><p>Current branch: {app.state.preferences.branch} · Density: {app.state.preferences.density}</p><Button variant="secondary" onClick={() => app.setActiveOverlay({ kind: "dialog", id: "reset" })}>Reset demo data</Button></section>;
+    return <DomainWorkspace page="operations" subview={target.subview} state={app.state} onNavigate={navigate} />;
   })();
 
   return <EmployeeShell activePage={target.page} onNavigate={navigate} branch={app.state.preferences.branch} actionCount={app.state.tasks.filter((task) => task.status !== "Completed").length} notificationCount={app.state.notifications.filter((notification) => !notification.read).length} onSearch={() => app.setSearchOpen(true)} onBranch={() => app.setActiveOverlay({ kind: "dialog", id: "branch" })} onEmployeeMenu={() => app.setActiveOverlay({ kind: "dialog", id: "employee" })}>

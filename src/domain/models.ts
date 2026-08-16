@@ -20,7 +20,20 @@ export type TaskItem = { id: string; title: string; detail: string; relatedType:
 export type Notification = { id: string; title: string; detail: string; read: boolean; tone: Tone; relatedId: string };
 export type ActivityTargetType = "vehicle" | "customer" | "lead" | "deal" | "service" | "task" | "system";
 export type AuditActivity = { id: string; action: string; detail: string; actor: string; occurredAt: string; tone: Tone; targetType: ActivityTargetType; targetId: string };
-export type ViewPreferences = { inventory: { query: string; status: string; mode: "cards" | "table" }; customers: { query: string; status: string; tab: string }; sales: { query: string; status: string; sort: "date" | "profit" }; service: { query: string; filter: string; view: string } };
+export type InventoryStatusPreference = VehicleStatus | "All";
+export type InventoryViewMode = "cards" | "table";
+export type CustomerStatusPreference = "All" | "Active" | "Prospect";
+export type CustomerViewTab = "overview" | "follow-ups";
+export type SalesStatusPreference = "All" | Deal["status"];
+export type SalesSortPreference = "date" | "profit";
+export type ServiceFilterPreference = "All" | ServiceJob["status"];
+export type ServiceViewMode = "Board" | "Schedule" | "List";
+export type ViewPreferences = {
+  inventory: { query: string; status: InventoryStatusPreference; mode: InventoryViewMode };
+  customers: { query: string; status: CustomerStatusPreference; tab: CustomerViewTab };
+  sales: { query: string; status: SalesStatusPreference; sort: SalesSortPreference };
+  service: { query: string; filter: ServiceFilterPreference; view: ServiceViewMode };
+};
 export type PersistedRecordType = "vehicle" | "customer" | "lead" | "deal" | "service" | "task";
 export type UserPreferences = { branch: string; density: "comfortable" | "compact"; activePage: string; activeSubview: string; activeRecordType?: PersistedRecordType; activeRecordId?: string; activeContextId?: string; viewPreferences: ViewPreferences };
 export type VehicleIntakeDraft = { step: 1 | 2 | 3 | 4; values: Partial<Vehicle> };

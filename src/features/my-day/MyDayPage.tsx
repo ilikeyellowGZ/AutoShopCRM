@@ -29,6 +29,13 @@ function TaskRow({ task, onComplete, onReschedule, onNavigate }: { task: TaskIte
   </li>;
 }
 
+export function relatedRecordTarget(task: TaskItem): NavigationTarget {
+  if (task.relatedType === "vehicle") return { page: "inventory", subview: task.relatedId, recordType: "vehicle", recordId: task.relatedId };
+  if (task.relatedType === "deal") return { page: "sales", subview: "deals", recordType: "deal", recordId: task.relatedId };
+  if (task.relatedType === "lead") return { page: "customers", subview: "leads", recordType: "lead", recordId: task.relatedId };
+  return { page: "service", subview: "service-board", recordType: "service", recordId: task.relatedId };
+}
+
 export function MyDayPage({ state, repository, onNavigate, onCommandSelect, clock = demoClock }: MyDayPageProps) {
   const [commandOpen, setCommandOpen] = useState(false);
   const metrics = selectDashboardMetrics(state);
@@ -41,7 +48,7 @@ export function MyDayPage({ state, repository, onNavigate, onCommandSelect, cloc
     <header className="my-day-heading"><p>Employee workspace</p><div className="my-day-heading-row"><div><h1>Good morning, Anele.</h1><time dateTime={clock.now()}>{dateFormat.format(new Date(clock.now()))}</time></div><Button variant="secondary" className="my-day-action-search" aria-haspopup="dialog" aria-expanded={commandOpen} onClick={() => setCommandOpen(true)}>Action Search</Button></div></header>
     <section className="my-day-metrics" aria-label="Today at a glance"><MetricBlock label="Due today" value={metrics.dueTodayTasks} detail="Actions requiring attention" /><MetricBlock label="Active pipeline" value={metrics.activePipelineCount} detail={currency.format(metrics.activePipelineValue)} /><MetricBlock label="Available stock" value={metrics.availableVehicles} detail={`${metrics.inTransitVehicles} in transit`} /><MetricBlock label="Unread updates" value={metrics.unreadNotifications} detail="Branch and customer activity" /></section>
     <section className="my-day-grid">
-      <section aria-labelledby="priority-actions"><div className="my-day-section-heading"><div><p>Focus</p><h2 id="priority-actions">Priority actions</h2></div><Button variant="secondary" onClick={() => onNavigate({ page: "my-day", subview: "action-centre" })}>View all actions</Button></div><ul className="my-day-list">{priorityTasks.length ? priorityTasks.map((task) => <TaskRow key={task.id} task={task} onComplete={() => repository.completeTask(task.id)} onReschedule={() => repository.rescheduleTask(task.id, nextDemoDayAtNine(clock.now(), task.dueAt))} onNavigate={() => onNavigate(task.relatedType === "vehicle" ? { page: "inventory", subview: task.relatedId } : task.relatedType === "deal" ? { page: "sales", subview: "deals" } : task.relatedType === "lead" ? { page: "customers", subview: "leads" } : { page: "service", subview: "service-board" })} />) : <li className="my-day-empty">No priority actions right now.</li>}</ul></section>
+      <section aria-labelledby="priority-actions"><div className="my-day-section-heading"><div><p>Focus</p><h2 id="priority-actions">Priority actions</h2></div><Button variant="secondary" onClick={() => onNavigate({ page: "my-day", subview: "action-centre" })}>View all actions</Button></div><ul className="my-day-list">{priorityTasks.length ? priorityTasks.map((task) => <TaskRow key={task.id} task={task} onComplete={() => repository.completeTask(task.id)} onReschedule={() => repository.rescheduleTask(task.id, nextDemoDayAtNine(clock.now(), task.dueAt))} onNavigate={() => onNavigate(relatedRecordTarget(task))} />) : <li className="my-day-empty">No priority actions right now.</li>}</ul></section>
       <section aria-labelledby="agenda"><div className="my-day-section-heading"><div><p>Schedule</p><h2 id="agenda">Today’s agenda</h2></div></div><ol className="my-day-agenda">{agenda.map((task) => <li key={task.id}><time dateTime={task.dueAt}>{timeFormat.format(new Date(task.dueAt))}</time><div><strong>{task.title}</strong><p>{task.detail}</p></div></li>)}</ol></section>
     </section>
     <section className="my-day-grid">
