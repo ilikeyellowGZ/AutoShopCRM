@@ -5,7 +5,7 @@ import "./styles.css";
 
 if (import.meta.env.DEV && import.meta.env.VITE_DISABLE_REACT_DEVTOOLS !== "1") {
   void import("react-grab").catch(() => undefined);
-  void import("react-scan").catch(() => undefined);
+  void import("react-scan").then(({ scan }) => scan({ enabled: true })).catch(() => undefined);
 }
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
