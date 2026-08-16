@@ -16,10 +16,22 @@ describe("CommandPalette", () => {
     const input = screen.getByRole("combobox", { name: "Search employee records" });
     expect(input).toHaveFocus();
     await userEvent.type(input, "vehicle-01");
+    expect(screen.getByRole("option").querySelector("button")).toBeNull();
     await userEvent.keyboard("{Enter}");
 
     expect(onSelect).toHaveBeenCalledWith(expect.objectContaining({ id: "vehicle-01", type: "vehicle" }));
     expect(onClose).toHaveBeenCalledTimes(1);
+  }, 15_000);
+
+  it("uses type-qualified, collision-safe DOM option identifiers", async () => {
+    const state = createSeedState();
+    state.customers[0] = { ...state.customers[0], id: "vehicle-01", name: "Vehicle collision" };
+    render(<CommandPalette open state={state} onClose={() => {}} onSelect={() => {}} />);
+    const input = screen.getByRole("combobox", { name: "Search employee records" });
+    await userEvent.type(input, "vehicle-01");
+    const options = screen.getAllByRole("option");
+    expect(new Set(options.map((option) => option.id)).size).toBe(options.length);
+    expect(options.map((option) => option.id)).toEqual(expect.arrayContaining([expect.stringMatching(/-vehicle-vehicle-01$/), expect.stringMatching(/-customer-vehicle-01$/)]));
   }, 15_000);
 
   it("supports Arrow keys, Home/End, no results, Escape, and focus return", async () => {
