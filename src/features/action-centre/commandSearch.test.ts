@@ -51,4 +51,10 @@ describe("searchCommands", () => {
     expect(searchCommands(state, "")).toEqual([]);
     expect(searchCommands(state, "no connected employee record")).toEqual([]);
   });
+
+  it("returns exact lead and service targets with typed record context", () => {
+    const state = createSeedState();
+    expect(searchCommands(state, "lead-01")[0]).toMatchObject({ type: "lead", target: { recordType: "lead", recordId: "lead-01" } });
+    expect(searchCommands(state, "service-01")[0]).toMatchObject({ type: "service", target: { recordType: "service", recordId: "service-01" } });
+  });
 });

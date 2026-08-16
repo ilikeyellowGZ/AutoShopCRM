@@ -3,7 +3,7 @@ import type { NavigationTarget } from "../../app/routes";
 
 export type CommandSearchResult = {
   id: string;
-  type: "vehicle" | "customer" | "deal" | "action";
+  type: "vehicle" | "customer" | "lead" | "deal" | "service" | "action";
   title: string;
   detail: string;
   target: NavigationTarget;
@@ -55,6 +55,8 @@ export function searchCommands(state: DemoState, query: string): CommandSearchRe
         searchable: [deal.id, customer?.name ?? "", vehicle?.stockId ?? "", vehicle?.make ?? "", vehicle?.model ?? "", deal.status],
       };
     }),
+    ...state.leads.map((lead) => ({ id: lead.id, type: "lead" as const, title: `Lead ${lead.id}`, detail: `${lead.stage} · ${lead.nextAction}`, target: { page: "customers" as const, subview: "leads", recordType: "lead" as const, recordId: lead.id }, searchable: [lead.id, lead.owner, lead.nextAction, lead.stage] })),
+    ...state.serviceJobs.map((job) => ({ id: job.id, type: "service" as const, title: `Service job ${job.id}`, detail: `${job.status} · ${job.note}`, target: { page: "service" as const, subview: "service-board", recordType: "service" as const, recordId: job.id }, searchable: [job.id, job.advisor, job.technician, job.status, job.note] })),
     ...state.tasks.filter((task) => task.status !== "Completed").map((task) => ({
       id: task.id,
       type: "action" as const,
