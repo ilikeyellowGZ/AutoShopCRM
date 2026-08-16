@@ -38,6 +38,17 @@ export type DemoRepository = {
 const clone = <T,>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
 const maximumActivityNumber = (activities: AuditActivity[]) => activities.reduce((largest, activity) => Math.max(largest, Number(activity.id.match(/(\d+)$/)?.[1]) || 0), 0);
 const activityId = (number: number) => `activity-${String(number).padStart(2, "0")}`;
+export const normalizeVehicleIdentifier = (value: string) => value.trim().toUpperCase();
+
+function validateVehicleIdentifiers(vehicle: Pick<Vehicle, "vin" | "stockId">, vehicles: readonly Vehicle[], excludedId?: string) {
+  const vin = normalizeVehicleIdentifier(vehicle.vin);
+  const stockId = normalizeVehicleIdentifier(vehicle.stockId);
+  if (vin.length !== 17) throw new Error("VIN must contain exactly 17 characters.");
+  if (!stockId) throw new Error("Stock ID is required.");
+  if (vehicles.some((item) => item.id !== excludedId && normalizeVehicleIdentifier(item.vin) === vin)) throw new Error("VIN already exists in the active Weelee inventory.");
+  if (vehicles.some((item) => item.id !== excludedId && normalizeVehicleIdentifier(item.stockId) === stockId)) throw new Error("Stock ID already exists in the active Weelee inventory.");
+  return { vin, stockId };
+}
 
 export function createDemoRepository(storage: Storage): DemoRepository {
   let state = clone(loadDemoState(storage));
@@ -89,17 +100,17 @@ export function createDemoRepository(storage: Storage): DemoRepository {
       draft.tasks[index] = { ...draft.tasks[index], dueAt, status: "Upcoming", tone: "info" };
     }, "info"),
     addVehicle: (vehicle) => {
-      if (state.vehicles.some((item) => item.vin === vehicle.vin)) throw new Error("VIN already exists in the active Weelee inventory.");
-      commit("Vehicle added", `${vehicle.year} ${vehicle.make} ${vehicle.model} was added to inventory.`, (draft) => { draft.vehicles.push(clone(vehicle)); }, "positive");
+      const identifiers = validateVehicleIdentifiers(vehicle, state.vehicles);
+      commit("Vehicle added", `${vehicle.year} ${vehicle.make} ${vehicle.model} was added to inventory.`, (draft) => { draft.vehicles.push({ ...clone(vehicle), ...identifiers }); }, "positive");
     },
-    updateVehicle: (vehicleId, patch) => commit("Vehicle updated", "Vehicle record was updated.", (draft) => {
-      const index = findIndex(draft.vehicles, vehicleId, "Vehicle");
-      if ("vin" in patch) {
-        if (typeof patch.vin !== "string") throw new Error("VIN must be a string.");
-        if (draft.vehicles.some((item) => item.id !== vehicleId && item.vin === patch.vin)) throw new Error("VIN already exists in the active Weelee inventory.");
-      }
-      draft.vehicles[index] = { ...draft.vehicles[index], ...clone(patch) };
-    }),
+    updateVehicle: (vehicleId, patch) => {
+      const current = state.vehicles[findIndex(state.vehicles, vehicleId, "Vehicle")];
+      const identifiers = validateVehicleIdentifiers({ ...current, ...patch }, state.vehicles, vehicleId);
+      commit("Vehicle updated", "Vehicle record was updated.", (draft) => {
+        const index = findIndex(draft.vehicles, vehicleId, "Vehicle");
+        draft.vehicles[index] = { ...draft.vehicles[index], ...clone(patch), ...identifiers };
+      });
+    },
     addCustomer: (customer) => commit("Customer added", `${customer.name} was added to the customer directory.`, (draft) => { draft.customers.push(clone(customer)); }, "positive"),
     addLead: (lead) => commit("Lead added", "A new customer lead was created.", (draft) => { draft.leads.push(clone(lead)); }, "positive"),
     moveLead: (leadId, stage) => commit("Lead moved", `Lead moved to ${stage}.`, (draft) => {

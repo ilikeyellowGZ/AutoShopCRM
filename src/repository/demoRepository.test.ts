@@ -81,12 +81,28 @@ describe("DemoRepository", () => {
     expect(() => repository.addVehicle({ ...existing, id: "vehicle-11", stockId: "WEE-0011" })).toThrow("VIN already exists in the active Weelee inventory.");
   });
 
-  it("rejects an update that would duplicate a blank VIN", () => {
+  it("rejects canonical VIN and stock duplicates without mutating state or audit history", () => {
+    const repository = createDemoRepository(memoryStorage());
+    const before = repository.getState();
+    const existing = before.vehicles[0];
+    expect(() => repository.addVehicle({ ...existing, id: "vehicle-11", vin: ` ${existing.vin.toLowerCase()} `, stockId: "WEE-9999" })).toThrow("VIN already exists");
+    expect(() => repository.addVehicle({ ...existing, id: "vehicle-11", vin: "1HGCM82633A004352", stockId: ` ${existing.stockId.toLowerCase()} ` })).toThrow("Stock ID already exists");
+    expect(repository.getState().vehicles).toHaveLength(before.vehicles.length);
+    expect(repository.getState().activities).toHaveLength(before.activities.length);
+  });
+
+  it("rejects blank VIN and canonical stock update without mutating the record", () => {
     const repository = createDemoRepository(memoryStorage());
     const [first, second] = repository.getState().vehicles;
-    repository.updateVehicle(first.id, { vin: "" });
+    expect(() => repository.updateVehicle(second.id, { vin: "  " })).toThrow("VIN must contain exactly 17 characters");
+    expect(() => repository.updateVehicle(second.id, { stockId: ` ${first.stockId.toLowerCase()} ` })).toThrow("Stock ID already exists");
+    expect(repository.getState().vehicles.find((vehicle) => vehicle.id === second.id)).toMatchObject({ vin: second.vin, stockId: second.stockId });
+  });
 
-    expect(() => repository.updateVehicle(second.id, { vin: "" })).toThrow("VIN already exists in the active Weelee inventory.");
+  it("rejects blank VIN updates", () => {
+    const repository = createDemoRepository(memoryStorage());
+    const [first, second] = repository.getState().vehicles;
+    expect(() => repository.updateVehicle(first.id, { vin: "" })).toThrow("VIN must contain exactly 17 characters.");
     expect(repository.getState().vehicles.find((vehicle) => vehicle.id === second.id)?.vin).toBe(second.vin);
   });
 
