@@ -73,4 +73,11 @@ describe("App", () => {
     expect(screen.getByRole("combobox", { name: "Status" })).toHaveValue("Reserved");
     expect(screen.getByRole("button", { name: "Table" })).toHaveAttribute("aria-pressed", "true");
   });
+
+  it("restores persisted exact record navigation metadata", () => {
+    const storage = memoryStorage(); const repository = createDemoRepository(storage);
+    repository.setPreferences({ activePage: "sales", activeSubview: "deals", activeRecordType: "deal", activeRecordId: "deal-02" });
+    render(<App repository={createDemoRepository(storage)} />);
+    expect(screen.getByRole("heading", { name: "Deal deal-02" })).toBeInTheDocument();
+  });
 });

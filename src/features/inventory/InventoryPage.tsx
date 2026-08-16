@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { DemoState, Vehicle, ViewPreferences } from "../../domain/models";
 import { selectFilteredVehicles } from "../../domain/selectors";
 import type { DemoRepository } from "../../repository/demoRepository";
@@ -20,6 +20,7 @@ export function InventoryPage({ state, repository, initialSubview = "list", onNa
   const [query, setQuery] = useState(viewPreferences?.query ?? "");
   const [status, setStatus] = useState<VehicleFilterStatus>((viewPreferences?.status as VehicleFilterStatus) ?? "All");
   const [mode, setMode] = useState<"cards" | "table">(viewPreferences?.mode ?? "cards");
+  useEffect(() => { const vehicle = state.vehicles.find((item) => item.id === initialSubview); setSelectedId(vehicle?.id ?? null); setSubview(vehicle ? "detail" : initialSubview); }, [initialSubview, state.vehicles]);
   const navigate = (next: string, recordId?: string) => { setSubview(next); onNavigate?.(recordId ?? next); };
   const selected = state.vehicles.find((vehicle) => vehicle.id === selectedId);
   const vehicles = useMemo(() => selectFilteredVehicles(state, query, status), [query, state, status]);
