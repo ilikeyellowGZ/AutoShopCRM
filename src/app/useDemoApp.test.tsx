@@ -17,6 +17,7 @@ describe("useDemoApp", () => {
     expect(result.current.state.preferences.activePage).toBe("my-day");
     rerender({ current: second });
     expect(result.current.state.preferences.activePage).toBe("inventory");
+    expect(result.current.target.page).toBe("inventory");
     expect(first.subscribe).toHaveBeenCalledTimes(1);
   });
 });

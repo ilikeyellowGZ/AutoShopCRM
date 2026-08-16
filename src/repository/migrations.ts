@@ -12,6 +12,7 @@ const dealStatuses = ["Closed", "Pending", "Approval"] as const;
 const serviceStatuses = ["Booked", "Checked In", "In Progress", "Waiting for Parts", "Quality Check", "Ready", "Completed"] as const;
 const relatedTypes = ["lead", "deal", "vehicle", "service"] as const;
 const financeTerms = [36, 48, 60, 72] as const;
+const defaultViewPreferences = { inventory: { query: "", status: "All", mode: "cards" }, customers: { query: "", status: "All", tab: "overview" }, sales: { query: "", status: "All", sort: "date" }, service: { query: "", filter: "All", view: "Board" } };
 
 const isRecord = (value: unknown): value is RecordValue => Boolean(value) && typeof value === "object" && !Array.isArray(value);
 const string: Validator = (value) => typeof value === "string";
@@ -78,7 +79,7 @@ const isDrafts = (value: unknown) => isRecord(value)
   && isRecord(value.serviceNotes) && Object.values(value.serviceNotes).every(string);
 
 export function isCompatibleDemoState(value: unknown): value is DemoState {
-  if (!isRecord(value) || value.schemaVersion !== 1 || !hasShape(value.preferences, { branch: nonEmptyString, density: oneOf(["comfortable", "compact"]), activePage: nonEmptyString, activeSubview: nonEmptyString }) || !isDrafts(value.drafts)) return false;
+  if (!isRecord(value) || value.schemaVersion !== 1 || !hasShape(value.preferences, { branch: nonEmptyString, density: oneOf(["comfortable", "compact"]), activePage: nonEmptyString, activeSubview: nonEmptyString, viewPreferences: isRecord }) || !isDrafts(value.drafts)) return false;
   const collections = ["vehicles", "customers", "leads", "deals", "financeDrafts", "serviceJobs", "tasks", "notifications", "activities"] as const;
   if (!collections.every((key) => Array.isArray(value[key]))) return false;
 
@@ -116,5 +117,6 @@ export function isCompatibleDemoState(value: unknown): value is DemoState {
 }
 
 export function migrateDemoState(value: unknown): DemoState | null {
+  if (isRecord(value) && value.schemaVersion === 1 && isRecord(value.preferences) && !value.preferences.viewPreferences) value = { ...value, preferences: { ...value.preferences, viewPreferences: defaultViewPreferences } };
   return isCompatibleDemoState(value) ? value : null;
 }

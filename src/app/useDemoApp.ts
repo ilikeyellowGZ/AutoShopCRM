@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import type { DemoState, Tone } from "../domain/models";
 import type { DemoRepository } from "../repository/demoRepository";
 import type { NavigationTarget } from "./routes";
@@ -14,6 +14,7 @@ export function useDemoApp(repository: DemoRepository) {
   const getSnapshot = useCallback(() => snapshot.current, []);
   const state = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
   const [target, setTarget] = useState<NavigationTarget>(() => ({ page: state.preferences.activePage as NavigationTarget["page"], subview: state.preferences.activeSubview }));
+  useEffect(() => { setTarget({ page: state.preferences.activePage as NavigationTarget["page"], subview: state.preferences.activeSubview }); }, [repository, state.preferences.activePage, state.preferences.activeSubview]);
   const [activeOverlay, setActiveOverlay] = useState<OverlayTarget>(null);
   const [toasts, setToasts] = useState<AppToast[]>([]);
   const [searchOpen, setSearchOpen] = useState(false);
