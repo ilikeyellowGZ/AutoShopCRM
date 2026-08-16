@@ -113,6 +113,38 @@ describe("DemoRepository", () => {
     expect(() => repository.moveLead(lead.id, lead.stage)).toThrow("Lead is already in this pipeline stage.");
   });
 
+  it("rejects runtime-invalid lead stages without changing stored state or audit history", () => {
+    const repository = createDemoRepository(memoryStorage());
+    const before = repository.getState();
+
+    expect(() => repository.moveLead(before.leads[0].id, "Lost" as never)).toThrow("Invalid lead stage.");
+    expect(() => repository.addLead({ ...before.leads[0], id: "lead-invalid", stage: "Lost" as never })).toThrow("Invalid lead stage.");
+    expect(repository.getState()).toEqual(before);
+  });
+
+  it("rejects dangling customer vehicle interests on create and update without an audit", () => {
+    const repository = createDemoRepository(memoryStorage());
+    const before = repository.getState();
+    expect(() => repository.addCustomer({ ...before.customers[0], id: "customer-13", email: "new@example.com", vehicleInterestId: "vehicle-missing" })).toThrow("Vehicle interest not found.");
+    expect(() => repository.updateCustomer(before.customers[0].id, { vehicleInterestId: "vehicle-missing" })).toThrow("Vehicle interest not found.");
+    expect(repository.getState()).toEqual(before);
+  });
+
+  it("persists a customer note as a customer-targeted activity across reload", () => {
+    const storage = memoryStorage(); const repository = createDemoRepository(storage); const customer = repository.getState().customers[0];
+    repository.addCustomerNote(customer.id, "Confirm the morning test drive.");
+    const activity = createDemoRepository(storage).getState().activities[0];
+    expect(activity).toMatchObject({ action: "Customer note added", detail: "Confirm the morning test drive.", targetType: "customer", targetId: customer.id });
+  });
+
+  it("persists successful customer lead and deal mutations with typed audits across reload", () => {
+    const storage = memoryStorage(); const repository = createDemoRepository(storage); const state = repository.getState();
+    const customer = { ...state.customers[0], id: "customer-13", email: "reload@example.com" };
+    repository.addCustomer(customer); repository.addLead({ ...state.leads[0], id: "lead-99", customerId: customer.id }); repository.addDeal({ ...state.deals[0], id: "deal-99", customerId: customer.id });
+    const reloaded = createDemoRepository(storage).getState();
+    expect(reloaded.activities.slice(0, 3).map((activity) => activity.targetType)).toEqual(["deal", "lead", "customer"]);
+  });
+
   it("persists successful vehicle creation with a typed vehicle audit", () => {
     const storage = memoryStorage(); const repository = createDemoRepository(storage); const vehicle = repository.getState().vehicles[0];
     repository.addVehicle({ ...vehicle, id: "vehicle-11", vin: "1HGCM82633A004352", stockId: "WEE-2411" });

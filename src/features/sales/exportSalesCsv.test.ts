@@ -19,4 +19,9 @@ describe("exportSalesCsv", () => {
 
     expect(csv).toContain('"\'=SUM(1,1) ""quoted""\nnext line"');
   });
+
+  it.each(["=SUM(1,1)", "+1+1", "-12", "@cmd", " \t=SUM(2,2)"])("neutralises formula-like cells beginning with %s", (salesRep) => {
+    const state = createSeedState(); state.deals[0] = { ...state.deals[0], salesRep };
+    expect(exportSalesCsv([state.deals[0]], state)).toContain(`'${salesRep}`);
+  });
 });

@@ -13,6 +13,7 @@ import type {
 } from "../domain/models";
 import { createSeedState, NOW } from "./seed";
 import { loadDemoState, saveDemoState, STORAGE_KEY } from "./storage";
+import { isLeadStage } from "../domain/leadStages";
 
 export { STORAGE_KEY };
 
@@ -28,6 +29,7 @@ export type DemoRepository = {
   updateVehicle(vehicleId: string, patch: Partial<Vehicle>): void;
   addCustomer(customer: Customer): void;
   updateCustomer(customerId: string, patch: Partial<Customer>): void;
+  addCustomerNote(customerId: string, text: string): void;
   addLead(lead: Lead): void;
   updateLeadStage(leadId: string, stage: LeadStage): void;
   moveLead(leadId: string, stage: LeadStage): void;
@@ -62,6 +64,10 @@ function validateCustomer(customer: Customer, customers: readonly Customer[], ex
   if (!email.includes("@")) throw new Error("A valid customer email is required.");
   if (customers.some((item) => item.id !== excludedId && normalizeEmail(item.email) === email)) throw new Error("A customer with this email already exists.");
   return { ...customer, name: customer.name.trim(), email };
+}
+
+function validateCustomerVehicleInterest(vehicleInterestId: string, state: DemoState) {
+  if (vehicleInterestId && !state.vehicles.some((vehicle) => vehicle.id === vehicleInterestId)) throw new Error("Vehicle interest not found.");
 }
 
 function validateCustomerAndVehicle(customerId: string, vehicleId: string, state: DemoState) {
@@ -134,19 +140,32 @@ export function createDemoRepository(storage: Storage): DemoRepository {
     },
     addCustomer: (customer) => {
       const validated = validateCustomer(customer, state.customers);
+      validateCustomerVehicleInterest(validated.vehicleInterestId, state);
       commit("Customer added", `${validated.name} was added to the customer directory.`, (draft) => { draft.customers.push(clone(validated)); }, "positive", "customer", customer.id);
     },
     updateCustomer: (customerId, patch) => {
       const current = state.customers[findIndex(state.customers, customerId, "Customer")];
       const validated = validateCustomer({ ...current, ...patch }, state.customers, customerId);
+      validateCustomerVehicleInterest(validated.vehicleInterestId, state);
       commit("Customer updated", "Customer record was updated.", (draft) => { const index = findIndex(draft.customers, customerId, "Customer"); draft.customers[index] = clone(validated); }, "info", "customer", customerId);
     },
+    addCustomerNote: (customerId, text) => {
+      findIndex(state.customers, customerId, "Customer");
+      const note = text.trim();
+      if (!note) throw new Error("Customer note cannot be blank.");
+      commit("Customer note added", note, (draft) => {
+        const index = findIndex(draft.customers, customerId, "Customer");
+        draft.customers[index] = { ...draft.customers[index], lastActivityAt: NOW };
+      }, "info", "customer", customerId);
+    },
     addLead: (lead) => {
+      if (!isLeadStage(lead.stage)) throw new Error("Invalid lead stage.");
       validateCustomerAndVehicle(lead.customerId, lead.vehicleId, state);
       commit("Lead added", "A new customer lead was created.", (draft) => { draft.leads.push(clone(lead)); }, "positive", "lead", lead.id);
     },
     moveLead: (leadId, stage) => {
       const current = state.leads[findIndex(state.leads, leadId, "Lead")];
+      if (!isLeadStage(stage)) throw new Error("Invalid lead stage.");
       if (current.stage === stage) throw new Error("Lead is already in this pipeline stage.");
       commit("Lead moved", `Lead moved to ${stage}.`, (draft) => {
       const index = findIndex(draft.leads, leadId, "Lead");
@@ -155,6 +174,7 @@ export function createDemoRepository(storage: Storage): DemoRepository {
     },
     updateLeadStage: (leadId, stage) => {
       const current = state.leads[findIndex(state.leads, leadId, "Lead")];
+      if (!isLeadStage(stage)) throw new Error("Invalid lead stage.");
       if (current.stage === stage) throw new Error("Lead is already in this pipeline stage.");
       commit("Lead moved", `Lead moved to ${stage}.`, (draft) => { const index = findIndex(draft.leads, leadId, "Lead"); draft.leads[index] = { ...draft.leads[index], stage }; }, "info", "lead", leadId);
     },

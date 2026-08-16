@@ -2,7 +2,7 @@ import type { Deal, DemoState } from "../../domain/models";
 
 const safeCell = (value: string | number) => {
   const raw = String(value);
-  const formulaSafe = /^[=+\-@]/.test(raw) ? `'${raw}` : raw;
+  const formulaSafe = /^[\s\0-\x1f]*[=+\-@]/.test(raw) ? `'${raw}` : raw;
   return /[",\n\r]/.test(formulaSafe) ? `"${formulaSafe.replace(/"/g, '""')}"` : formulaSafe;
 };
 
