@@ -177,7 +177,7 @@ describe("DemoRepository", () => {
       ["customer update", () => repository.updateCustomer(state.customers[0].id, { city: "Walvis Bay" }), "Customer updated", "customer", state.customers[0].id],
       ["lead stage", () => repository.updateLeadStage(state.leads[0].id, "Delivery"), "Lead moved", "lead", state.leads[0].id],
       ["deal status", () => repository.updateDealStatus(state.deals[0].id, "Closed"), "Deal updated", "deal", state.deals[0].id],
-      ["service state", () => repository.updateServiceState(state.serviceJobs[0].id, "Ready"), "Service job updated", "service", state.serviceJobs[0].id],
+      ["service state", () => repository.updateServiceState(state.serviceJobs.find((job) => job.status === "Quality Check")!.id, "Ready"), "Service job updated", "service", state.serviceJobs.find((job) => job.status === "Quality Check")!.id],
     ];
     for (const [_name, invoke, action, targetType, targetId] of cases) { invoke(); expect(repository.getState().activities[0]).toMatchObject({ action, targetType, targetId }); }
   });
@@ -241,6 +241,40 @@ describe("DemoRepository", () => {
     expect(repository.getState().financeDrafts[0].downPayment).toBe(425_000);
     expect(repository.getState().notifications.find((item) => item.id === notification.id)?.read).toBe(true);
     expect(repository.getState().vehicles).toHaveLength(vehicles.length);
+  });
+
+  it("persists a valid service transition with a typed audit across reload", () => {
+    const storage = memoryStorage();
+    const repository = createDemoRepository(storage);
+    const job = repository.getState().serviceJobs.find((item) => item.status === "Quality Check")!;
+
+    repository.updateServiceState(job.id, "Ready");
+
+    const reloaded = createDemoRepository(storage).getState();
+    expect(reloaded.serviceJobs.find((item) => item.id === job.id)?.status).toBe("Ready");
+    expect(reloaded.activities[0]).toMatchObject({ action: "Service job updated", targetType: "service", targetId: job.id });
+  });
+
+  it("records a finance submission as a local demo simulation across reload", () => {
+    const storage = memoryStorage();
+    const repository = createDemoRepository(storage);
+    const vehicleId = repository.getState().financeDrafts[0].vehicleId;
+
+    repository.submitFinanceApplication(vehicleId);
+
+    expect(createDemoRepository(storage).getState().activities[0]).toMatchObject({
+      action: "Finance demo submitted", targetType: "vehicle", targetId: vehicleId,
+      detail: "A local sandbox finance submission was recorded; no lender was contacted.",
+    });
+  });
+
+  it("rejects an invalid service transition without changing the job or audit history", () => {
+    const repository = createDemoRepository(memoryStorage());
+    const before = repository.getState();
+    const job = before.serviceJobs.find((item) => item.status === "In Progress")!;
+
+    expect(() => repository.updateServiceState(job.id, "Ready")).toThrow("Service job cannot move from In Progress to Ready.");
+    expect(repository.getState()).toEqual(before);
   });
 
   it("resets to seed data and records the reset as the latest activity", () => {

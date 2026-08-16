@@ -14,6 +14,7 @@ import type {
 import { createSeedState, NOW } from "./seed";
 import { loadDemoState, saveDemoState, STORAGE_KEY } from "./storage";
 import { isLeadStage } from "../domain/leadStages";
+import { canTransitionServiceJob } from "../features/service/serviceRules";
 
 export { STORAGE_KEY };
 
@@ -36,6 +37,7 @@ export type DemoRepository = {
   addDeal(deal: Deal): void;
   updateDealStatus(dealId: string, status: Deal["status"]): void;
   updateFinanceDraft(vehicleId: string, patch: Partial<FinanceDraft>): void;
+  submitFinanceApplication(vehicleId: string): void;
   updateServiceJob(jobId: string, patch: Partial<ServiceJob>): void;
   addServiceJob(job: ServiceJob): void;
   updateServiceState(jobId: string, status: ServiceJob["status"]): void;
@@ -192,12 +194,25 @@ export function createDemoRepository(storage: Storage): DemoRepository {
       }
       draft.financeDrafts[index] = { ...draft.financeDrafts[index], ...clone(patch) };
     }, "info", "vehicle", vehicleId),
-    updateServiceJob: (jobId, patch) => commit("Service job updated", "Service job details were updated.", (draft) => {
-      const index = findIndex(draft.serviceJobs, jobId, "Service job");
-      draft.serviceJobs[index] = { ...draft.serviceJobs[index], ...clone(patch) };
-    }, "info", "service", jobId),
+    submitFinanceApplication: (vehicleId) => {
+      findIndex(state.vehicles, vehicleId, "Vehicle");
+      if (!state.financeDrafts.some((draft) => draft.vehicleId === vehicleId)) throw new Error("Finance draft not found.");
+      commit("Finance demo submitted", "A local sandbox finance submission was recorded; no lender was contacted.", () => {}, "info", "vehicle", vehicleId);
+    },
+    updateServiceJob: (jobId, patch) => {
+      const current = state.serviceJobs[findIndex(state.serviceJobs, jobId, "Service job")];
+      if (patch.status && !canTransitionServiceJob(current.status, patch.status)) throw new Error(`Service job cannot move from ${current.status} to ${patch.status}.`);
+      commit("Service job updated", "Service job details were updated.", (draft) => {
+        const index = findIndex(draft.serviceJobs, jobId, "Service job");
+        draft.serviceJobs[index] = { ...draft.serviceJobs[index], ...clone(patch) };
+      }, "info", "service", jobId);
+    },
     addServiceJob: (job) => commit("Service job added", "A service job was created.", (draft) => { draft.serviceJobs.push(clone(job)); }, "positive", "service", job.id),
-    updateServiceState: (jobId, status) => commit("Service job updated", `Service job moved to ${status}.`, (draft) => { const index = findIndex(draft.serviceJobs, jobId, "Service job"); draft.serviceJobs[index] = { ...draft.serviceJobs[index], status }; }, "info", "service", jobId),
+    updateServiceState: (jobId, status) => {
+      const current = state.serviceJobs[findIndex(state.serviceJobs, jobId, "Service job")];
+      if (!canTransitionServiceJob(current.status, status)) throw new Error(`Service job cannot move from ${current.status} to ${status}.`);
+      commit("Service job updated", `Service job moved to ${status}.`, (draft) => { const index = findIndex(draft.serviceJobs, jobId, "Service job"); draft.serviceJobs[index] = { ...draft.serviceJobs[index], status }; }, "info", "service", jobId);
+    },
     markNotificationRead: (notificationId) => commit("Notification read", "A notification was marked as read.", (draft) => {
       const index = findIndex(draft.notifications, notificationId, "Notification");
       draft.notifications[index] = { ...draft.notifications[index], read: true };
