@@ -14,6 +14,7 @@ describe("searchCommands", () => {
 
   it("ranks exact identifiers before title substring matches and caps results", () => {
     const state = createSeedState();
+    state.customers[0] = { ...state.customers[0], name: "vehicle-01 customer" };
     const [exact] = searchCommands(state, "vehicle-01");
 
     expect(exact).toMatchObject({
@@ -22,6 +23,15 @@ describe("searchCommands", () => {
       target: { page: "inventory", subview: "vehicle-01" },
     });
     expect(searchCommands(state, "a")).toHaveLength(8);
+  });
+
+  it("keeps seeded matches in deterministic order and returns explicit type, title, and safe detail", () => {
+    const state = createSeedState();
+    const first = searchCommands(state, "Windhoek").filter((result) => result.type === "customer");
+    const action = searchCommands(state, "Call Amelia").find((result) => result.type === "action");
+
+    expect(first.map((result) => result.id).slice(0, 2)).toEqual(["customer-01", "customer-02"]);
+    expect(action).toEqual(expect.objectContaining({ type: "action", title: "Call Amelia", detail: "Confirm GT3 test drive" }));
   });
 
   it("returns no results for an empty or unmatched query", () => {

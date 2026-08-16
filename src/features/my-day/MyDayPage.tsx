@@ -5,11 +5,13 @@ import { selectDashboardMetrics } from "../../domain/selectors";
 import { MetricBlock } from "../../components/data-display/MetricBlock";
 import { Button } from "../../components/controls/Button";
 import { StatusPill } from "../../components/controls/StatusPill";
+import { demoClock, nextDemoDayAtNine, type DemoClock } from "../../domain/demoClock";
 
 type MyDayPageProps = {
   state: DemoState;
   repository: Pick<DemoRepository, "completeTask" | "rescheduleTask">;
   onNavigate: (target: NavigationTarget) => void;
+  clock?: DemoClock;
 };
 
 const dateFormat = new Intl.DateTimeFormat("en-NA", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
@@ -23,7 +25,7 @@ function TaskRow({ task, onComplete, onReschedule, onNavigate }: { task: TaskIte
   </li>;
 }
 
-export function MyDayPage({ state, repository, onNavigate }: MyDayPageProps) {
+export function MyDayPage({ state, repository, onNavigate, clock = demoClock }: MyDayPageProps) {
   const metrics = selectDashboardMetrics(state);
   const activeTasks = state.tasks.filter((task) => task.status !== "Completed");
   const priorityTasks = [...activeTasks].sort((a, b) => (a.status === "Overdue" ? -1 : 0) - (b.status === "Overdue" ? -1 : 0)).slice(0, 4);
@@ -31,10 +33,10 @@ export function MyDayPage({ state, repository, onNavigate }: MyDayPageProps) {
   const agenda = [...activeTasks].sort((a, b) => a.dueAt.localeCompare(b.dueAt)).slice(0, 5);
 
   return <div className="my-day-page">
-    <header className="my-day-heading"><p>Employee workspace</p><h1>Good morning, Anele.</h1><time dateTime="2026-08-16T08:00:00+02:00">{dateFormat.format(new Date("2026-08-16T08:00:00+02:00"))}</time></header>
+    <header className="my-day-heading"><p>Employee workspace</p><h1>Good morning, Anele.</h1><time dateTime={clock.now()}>{dateFormat.format(new Date(clock.now()))}</time></header>
     <section className="my-day-metrics" aria-label="Today at a glance"><MetricBlock label="Due today" value={metrics.dueTodayTasks} detail="Actions requiring attention" /><MetricBlock label="Active pipeline" value={metrics.activePipelineCount} detail={currency.format(metrics.activePipelineValue)} /><MetricBlock label="Available stock" value={metrics.availableVehicles} detail={`${metrics.inTransitVehicles} in transit`} /><MetricBlock label="Unread updates" value={metrics.unreadNotifications} detail="Branch and customer activity" /></section>
     <section className="my-day-grid">
-      <section aria-labelledby="priority-actions"><div className="my-day-section-heading"><div><p>Focus</p><h2 id="priority-actions">Priority actions</h2></div><Button variant="secondary" onClick={() => onNavigate({ page: "my-day", subview: "action-centre" })}>View all actions</Button></div><ul className="my-day-list">{priorityTasks.length ? priorityTasks.map((task) => <TaskRow key={task.id} task={task} onComplete={() => repository.completeTask(task.id)} onReschedule={() => repository.rescheduleTask(task.id, "2026-08-17T09:00:00+02:00")} onNavigate={() => onNavigate(task.relatedType === "vehicle" ? { page: "inventory", subview: task.relatedId } : task.relatedType === "deal" ? { page: "sales", subview: "deals" } : task.relatedType === "lead" ? { page: "customers", subview: "leads" } : { page: "service", subview: "service-board" })} />) : <li className="my-day-empty">No priority actions right now.</li>}</ul></section>
+      <section aria-labelledby="priority-actions"><div className="my-day-section-heading"><div><p>Focus</p><h2 id="priority-actions">Priority actions</h2></div><Button variant="secondary" onClick={() => onNavigate({ page: "my-day", subview: "action-centre" })}>View all actions</Button></div><ul className="my-day-list">{priorityTasks.length ? priorityTasks.map((task) => <TaskRow key={task.id} task={task} onComplete={() => repository.completeTask(task.id)} onReschedule={() => repository.rescheduleTask(task.id, nextDemoDayAtNine(clock.now(), task.dueAt))} onNavigate={() => onNavigate(task.relatedType === "vehicle" ? { page: "inventory", subview: task.relatedId } : task.relatedType === "deal" ? { page: "sales", subview: "deals" } : task.relatedType === "lead" ? { page: "customers", subview: "leads" } : { page: "service", subview: "service-board" })} />) : <li className="my-day-empty">No priority actions right now.</li>}</ul></section>
       <section aria-labelledby="agenda"><div className="my-day-section-heading"><div><p>Schedule</p><h2 id="agenda">Today’s agenda</h2></div></div><ol className="my-day-agenda">{agenda.map((task) => <li key={task.id}><time dateTime={task.dueAt}>{timeFormat.format(new Date(task.dueAt))}</time><div><strong>{task.title}</strong><p>{task.detail}</p></div></li>)}</ol></section>
     </section>
     <section className="my-day-grid">

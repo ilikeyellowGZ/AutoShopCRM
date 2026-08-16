@@ -14,7 +14,7 @@ export function isTopOverlay(id: symbol) {
   return top?.id === id;
 }
 
-export function useOverlayFocus(open: boolean, container: RefObject<HTMLElement | null>, onClose: () => void, onOverlayKeyDown?: (event: KeyboardEvent) => void) {
+export function useOverlayFocus(open: boolean, container: RefObject<HTMLElement | null>, onClose: () => void, onOverlayKeyDown?: (event: KeyboardEvent) => void, initialFocusRef?: RefObject<HTMLElement | null>) {
   const id = useRef(Symbol("overlay")).current;
   const onCloseRef = useRef(onClose);
   const onOverlayKeyDownRef = useRef(onOverlayKeyDown);
@@ -26,7 +26,7 @@ export function useOverlayFocus(open: boolean, container: RefObject<HTMLElement 
     overlays.push(entry);
     if (lockCount++ === 0) previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    (focusable(container.current ?? document.body)[0] ?? container.current)?.focus();
+    (initialFocusRef?.current ?? focusable(container.current ?? document.body)[0] ?? container.current)?.focus();
     const keydown = (event: KeyboardEvent) => {
       if (!isTopOverlay(id)) return;
       if (event.key === "Escape") { event.preventDefault(); onCloseRef.current(); return; }
