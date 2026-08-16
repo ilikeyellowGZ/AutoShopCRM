@@ -8,30 +8,33 @@ import { validateFinanceDraft, type FinanceValidationErrors } from "./financeVal
 
 const terms = [36, 48, 60, 72] as const;
 
-function initialDraft(state: DemoState): FinanceDraft {
-  return state.financeDrafts[0] ?? { vehicleId: state.vehicles[0]?.id ?? "", vehiclePrice: state.vehicles[0]?.price ?? 0, downPayment: 0, termMonths: 60, aprPercent: 0, tradeAllowance: 0, lienPayoff: 0, serviceContract: 0, gapInsurance: 0 };
+function draftForVehicle(state: DemoState, vehicleId: string): FinanceDraft {
+  const vehicle = state.vehicles.find((item) => item.id === vehicleId);
+  return state.financeDrafts.find((item) => item.vehicleId === vehicleId) ?? { vehicleId, vehiclePrice: vehicle?.price ?? 0, downPayment: 0, termMonths: 60, aprPercent: 0, tradeAllowance: 0, lienPayoff: 0, serviceContract: 0, gapInsurance: 0 };
 }
 
 export function FinancePage({ state, repository }: { state: DemoState; repository: DemoRepository }) {
-  const saved = useMemo(() => initialDraft(state), [state]);
+  const initialVehicleId = useMemo(() => state.financeDrafts[0]?.vehicleId ?? state.vehicles[0]?.id ?? "", [state]);
+  const [selectedVehicleId, setSelectedVehicleId] = useState(initialVehicleId);
+  const saved = useMemo(() => draftForVehicle(state, selectedVehicleId), [state, selectedVehicleId]);
   const [draft, setDraft] = useState(saved);
   const [errors, setErrors] = useState<FinanceValidationErrors>({});
   const [submitted, setSubmitted] = useState(false);
   useEffect(() => setDraft(saved), [saved]);
   const update = <K extends keyof FinanceDraft>(key: K, value: FinanceDraft[K]) => {
     const next = { ...draft, [key]: value };
-    setDraft(next); setSubmitted(false); repository.updateFinanceDraft(next.vehicleId, { [key]: value });
+    setDraft(next); setSubmitted(false); repository.updateFinanceDraft(selectedVehicleId, { [key]: value });
   };
   const submit = () => {
     const nextErrors = validateFinanceDraft(draft); setErrors(nextErrors);
     if (Object.keys(nextErrors).length) return;
-    repository.submitFinanceApplication(draft.vehicleId); setSubmitted(true);
+    repository.submitFinanceApplication(selectedVehicleId); setSubmitted(true);
   };
   return <section className="finance-page" aria-labelledby="finance-title">
     <header className="finance-heading"><div><p className="finance-eyebrow">F&I · local demo workspace</p><h1 id="finance-title">Structure a deal</h1><p>Build an indicative South African Rand repayment plan for a connected vehicle.</p></div></header>
     <div className="finance-layout"><form className="finance-form" onSubmit={(event) => { event.preventDefault(); submit(); }} noValidate>
       <fieldset><legend>Vehicle and customer contribution</legend>
-        <label className="finance-select">Vehicle<select value={draft.vehicleId} onChange={(event) => { const vehicle = state.vehicles.find((item) => item.id === event.target.value); update("vehicleId", event.target.value); if (vehicle) update("vehiclePrice", vehicle.price); }}>{state.vehicles.map((vehicle) => <option key={vehicle.id} value={vehicle.id}>{vehicle.year} {vehicle.make} {vehicle.model}</option>)}</select></label>
+        <label className="finance-select">Vehicle<select value={selectedVehicleId} onChange={(event) => { const vehicleId = event.target.value; const next = draftForVehicle(repository.getState(), vehicleId); setSelectedVehicleId(vehicleId); setDraft(next); setErrors({}); setSubmitted(false); }}>{state.vehicles.map((vehicle) => <option key={vehicle.id} value={vehicle.id}>{vehicle.year} {vehicle.make} {vehicle.model}</option>)}</select></label>
         <Field label="Vehicle price (ZAR)" type="number" min="0" value={draft.vehiclePrice} onChange={(event) => update("vehiclePrice", Number(event.target.value))} error={errors.vehiclePrice} />
         <Field label="Down payment (ZAR)" type="number" min="0" value={draft.downPayment} onChange={(event) => update("downPayment", Number(event.target.value))} error={errors.downPayment} />
         <Field label="Trade allowance (ZAR)" type="number" min="0" value={draft.tradeAllowance} onChange={(event) => update("tradeAllowance", Number(event.target.value))} error={errors.tradeAllowance} />

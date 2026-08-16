@@ -12,6 +12,10 @@ const transitions: Record<ServiceStatus, readonly ServiceStatus[]> = {
   "Completed": [],
 };
 
+export function isServiceStatus(value: unknown): value is ServiceStatus {
+  return typeof value === "string" && Object.prototype.hasOwnProperty.call(transitions, value);
+}
+
 export function canTransitionServiceJob(from: ServiceStatus, to: ServiceStatus): boolean {
-  return transitions[from].includes(to);
+  return isServiceStatus(from) && isServiceStatus(to) && transitions[from].includes(to);
 }

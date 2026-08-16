@@ -277,6 +277,23 @@ describe("DemoRepository", () => {
     expect(repository.getState()).toEqual(before);
   });
 
+  it("rejects runtime-invalid service transitions without committing an audit", () => {
+    const repository = createDemoRepository(memoryStorage()); const before = repository.getState(); const job = before.serviceJobs[0];
+    expect(() => repository.updateServiceState(job.id, "Unknown" as never)).toThrow("Invalid service job status.");
+    expect(() => repository.updateServiceJob(job.id, { status: "Unknown" as never })).toThrow("Invalid service job status.");
+    expect(repository.getState()).toEqual(before);
+  });
+
+  it("guards service job customer and vehicle relationships before persistence", () => {
+    const storage = memoryStorage(); const repository = createDemoRepository(storage); const before = repository.getState(); const job = before.serviceJobs[0];
+    expect(() => repository.addServiceJob({ ...job, id: "service-99", customerId: "missing" })).toThrow("Customer not found.");
+    expect(() => repository.updateServiceJob(job.id, { vehicleId: "missing" })).toThrow("Vehicle not found.");
+    expect(repository.getState()).toEqual(before);
+    repository.updateServiceJob(job.id, { note: "Verified by advisor" });
+    const reloaded = createDemoRepository(storage).getState();
+    expect(reloaded.serviceJobs[0].note).toBe("Verified by advisor"); expect(reloaded.activities[0]).toMatchObject({ targetType: "service", targetId: job.id });
+  });
+
   it("resets to seed data and records the reset as the latest activity", () => {
     const repository = createDemoRepository(memoryStorage());
     repository.completeTask(repository.getState().tasks[0].id);

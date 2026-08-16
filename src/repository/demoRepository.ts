@@ -14,7 +14,7 @@ import type {
 import { createSeedState, NOW } from "./seed";
 import { loadDemoState, saveDemoState, STORAGE_KEY } from "./storage";
 import { isLeadStage } from "../domain/leadStages";
-import { canTransitionServiceJob } from "../features/service/serviceRules";
+import { canTransitionServiceJob, isServiceStatus } from "../features/service/serviceRules";
 
 export { STORAGE_KEY };
 
@@ -201,15 +201,22 @@ export function createDemoRepository(storage: Storage): DemoRepository {
     },
     updateServiceJob: (jobId, patch) => {
       const current = state.serviceJobs[findIndex(state.serviceJobs, jobId, "Service job")];
+      validateCustomerAndVehicle(patch.customerId ?? current.customerId, patch.vehicleId ?? current.vehicleId, state);
+      if (patch.status && !isServiceStatus(patch.status)) throw new Error("Invalid service job status.");
       if (patch.status && !canTransitionServiceJob(current.status, patch.status)) throw new Error(`Service job cannot move from ${current.status} to ${patch.status}.`);
       commit("Service job updated", "Service job details were updated.", (draft) => {
         const index = findIndex(draft.serviceJobs, jobId, "Service job");
         draft.serviceJobs[index] = { ...draft.serviceJobs[index], ...clone(patch) };
       }, "info", "service", jobId);
     },
-    addServiceJob: (job) => commit("Service job added", "A service job was created.", (draft) => { draft.serviceJobs.push(clone(job)); }, "positive", "service", job.id),
+    addServiceJob: (job) => {
+      validateCustomerAndVehicle(job.customerId, job.vehicleId, state);
+      if (!isServiceStatus(job.status)) throw new Error("Invalid service job status.");
+      commit("Service job added", "A service job was created.", (draft) => { draft.serviceJobs.push(clone(job)); }, "positive", "service", job.id);
+    },
     updateServiceState: (jobId, status) => {
       const current = state.serviceJobs[findIndex(state.serviceJobs, jobId, "Service job")];
+      if (!isServiceStatus(status)) throw new Error("Invalid service job status.");
       if (!canTransitionServiceJob(current.status, status)) throw new Error(`Service job cannot move from ${current.status} to ${status}.`);
       commit("Service job updated", `Service job moved to ${status}.`, (draft) => { const index = findIndex(draft.serviceJobs, jobId, "Service job"); draft.serviceJobs[index] = { ...draft.serviceJobs[index], status }; }, "info", "service", jobId);
     },

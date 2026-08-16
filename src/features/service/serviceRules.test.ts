@@ -13,4 +13,9 @@ describe("canTransitionServiceJob", () => {
     expect(canTransitionServiceJob("Booked", "Completed")).toBe(false);
     expect(canTransitionServiceJob("Completed", "Completed")).toBe(false);
   });
+
+  it("returns false rather than throwing for runtime-invalid states", () => {
+    expect(canTransitionServiceJob("Unknown" as never, "Ready")).toBe(false);
+    expect(canTransitionServiceJob("Booked", "Unknown" as never)).toBe(false);
+  });
 });

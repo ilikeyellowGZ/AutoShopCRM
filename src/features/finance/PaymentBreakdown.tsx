@@ -1,7 +1,7 @@
 import { financeBreakdown } from "../../domain/calculations";
 import type { FinanceDraft } from "../../domain/models";
 
-const zar = new Intl.NumberFormat("en-ZA", { style: "currency", currency: "ZAR", maximumFractionDigits: 0 });
+const zar = new Intl.NumberFormat("en-ZA", { style: "currency", currency: "ZAR", minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 export function PaymentBreakdown({ draft }: { draft: FinanceDraft }) {
   const breakdown = financeBreakdown(draft);
