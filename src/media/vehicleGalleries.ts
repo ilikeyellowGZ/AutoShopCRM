@@ -16,6 +16,10 @@ const gallery = (slug: string, vehicle: string): VehicleGallery => ({
   })),
 });
 
+export function createVehicleGallery(slug: string, vehicle: string): VehicleGallery {
+  return gallery(slug, vehicle);
+}
+
 export const vehicleGalleries: Record<string, VehicleGallery> = {
   "vehicle-01": gallery("2024-porsche-911-gt3", "2024 Porsche 911 GT3"),
   "vehicle-02": gallery("2023-bmw-m4-csl", "2023 BMW M4 CSL"),
