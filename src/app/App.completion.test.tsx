@@ -8,7 +8,7 @@ import { memoryStorage } from "../test/memoryStorage";
 
 afterEach(() => { cleanup(); Reflect.deleteProperty(document, "startViewTransition"); });
 
-type RouteCase = { label: string; target: NavigationTarget; heading: string; control: string; row: string };
+type RouteCase = { label: string; target: NavigationTarget; heading: string; control?: string; row: string };
 const primaryCases: RouteCase[] = [
   { label: "primary My Day", target: { page: "my-day", subview: "overview" }, heading: "Good morning, Anele.", control: "Action Search", row: "Call Amelia" },
   { label: "primary Inventory", target: { page: "inventory", subview: "list" }, heading: "Vehicle inventory", control: "Add vehicle", row: "2024 Porsche 911" },
@@ -26,12 +26,12 @@ const groupedCases: RouteCase[] = [
   { label: "CRM / Customers", target: { page: "customers", subview: "directory" }, heading: "Customers", control: "Create customer", row: "Amelia van Wyk" },
   { label: "CRM / Pipeline", target: { page: "pipeline", subview: "board" }, heading: "Pipeline", control: "New lead", row: "Amelia van Wyk" },
   { label: "CRM / Follow-ups", target: { page: "customers", subview: "follow-ups" }, heading: "Customer follow-ups", control: "Open follow-up lead-01", row: "Call customer" },
-  { label: "CRM / Appointments", target: { page: "customers", subview: "appointments" }, heading: "Customer appointments", control: "Open appointment lead-01", row: "Amelia van Wyk" },
+  { label: "CRM / Appointments", target: { page: "customers", subview: "appointments" }, heading: "Customer appointments", control: "Open appointment lead-07", row: "Mia Hamutenya" },
   { label: "CRM / Test Drives", target: { page: "customers", subview: "test-drives" }, heading: "Test drives", control: "Open test drive lead-01", row: "2024 Porsche 911" },
   { label: "Vehicles / Inventory", target: { page: "inventory", subview: "list" }, heading: "Vehicle inventory", control: "Add vehicle", row: "2024 Porsche 911" },
   { label: "Vehicles / Intake", target: { page: "inventory", subview: "intake" }, heading: "Vehicle intake", control: "Continue", row: "1. Identification" },
   { label: "Vehicles / Appraisals", target: { page: "inventory", subview: "appraisals" }, heading: "Vehicle appraisals", control: "Open appraisal vehicle-01", row: "2024 Porsche 911 GT3" },
-  { label: "Vehicles / Trade-ins", target: { page: "inventory", subview: "trade-ins" }, heading: "Trade-ins", control: "Open trade-in vehicle-01", row: "WEE-2401" },
+  { label: "Vehicles / Trade-ins", target: { page: "inventory", subview: "trade-ins" }, heading: "Trade-ins", control: "Open trade-in vehicle-02", row: "WEE-2402" },
   { label: "Vehicles / Recon", target: { page: "inventory", subview: "recon" }, heading: "Reconditioning queue", control: "Open recon vehicle-08", row: "2024 Ford Ranger Raptor" },
   { label: "Vehicles / Transfers", target: { page: "inventory", subview: "transfers" }, heading: "Vehicle transfers", control: "Open transfer vehicle-03", row: "Swakopmund" },
   { label: "Vehicles / Pricing", target: { page: "inventory", subview: "pricing" }, heading: "Pricing review", control: "Open pricing vehicle-01", row: "WEE-2401" },
@@ -40,7 +40,7 @@ const groupedCases: RouteCase[] = [
   { label: "Sales / Quotations", target: { page: "sales", subview: "quotations" }, heading: "Quotations", control: "Open quotation deal-01", row: "Amelia van Wyk" },
   { label: "Sales / Approvals", target: { page: "sales", subview: "approvals" }, heading: "Sales approvals", control: "Open approval deal-02", row: "Jonas Kisting" },
   { label: "Sales / Deliveries", target: { page: "sales", subview: "deliveries" }, heading: "Vehicle deliveries", control: "Open delivery deal-03", row: "Nadine Swart" },
-  { label: "Sales / Commissions", target: { page: "sales", subview: "commissions" }, heading: "Sales commissions", control: "Open commission deal-01", row: "Alicia Brown" },
+  { label: "Sales / Commissions", target: { page: "sales", subview: "commissions" }, heading: "Sales commissions", control: "Open commission deal-06", row: "Marcus Botha" },
   { label: "F&I / Deal Finance", target: { page: "finance", subview: "deal-finance" }, heading: "Structure a deal", control: "Submit demo application", row: "2023 BMW M4" },
   { label: "F&I / Applications", target: { page: "finance", subview: "applications" }, heading: "Finance applications", control: "Open application deal-02", row: "60 months" },
   { label: "F&I / Lenders", target: { page: "finance", subview: "lenders" }, heading: "Lender queue", control: "Open lender review deal-02", row: "11.5% APR" },
@@ -48,13 +48,13 @@ const groupedCases: RouteCase[] = [
   { label: "F&I / Documents", target: { page: "finance", subview: "documents" }, heading: "Finance documents", control: "Open finance document deal-02", row: "Deal contract deal-02" },
   { label: "Aftersales / Service Board", target: { page: "service", subview: "service-board" }, heading: "Service board", control: "Save note", row: "2024 Land Rover Defender" },
   { label: "Aftersales / Bookings", target: { page: "service", subview: "bookings" }, heading: "Service bookings", control: "Open booking service-01", row: "Annual inspection" },
-  { label: "Aftersales / Job Cards", target: { page: "service", subview: "job-cards" }, heading: "Workshop job cards", control: "Open job card service-01", row: "Peter van der Merwe" },
-  { label: "Aftersales / Repair Orders", target: { page: "service", subview: "repair-orders" }, heading: "Repair orders", control: "Open repair order service-01", row: "Marius Louw" },
-  { label: "Aftersales / Service History", target: { page: "service", subview: "history" }, heading: "Service history", control: "Open service history service-01", row: "Booked" },
+  { label: "Aftersales / Job Cards", target: { page: "service", subview: "job-cards" }, heading: "Workshop job cards", control: "Open job card service-02", row: "Sasha Naobes" },
+  { label: "Aftersales / Repair Orders", target: { page: "service", subview: "repair-orders" }, heading: "Repair orders", control: "Open repair order service-03", row: "Marius Louw" },
+  { label: "Aftersales / Service History", target: { page: "service", subview: "history" }, heading: "Service history", row: "No connected records match this operational queue." },
   { label: "Workforce / Employees", target: { page: "operations", subview: "employees" }, heading: "Employees", control: "Open assigned task task-01", row: "Alicia Brown" },
-  { label: "Workforce / Teams", target: { page: "operations", subview: "teams" }, heading: "Teams", control: "Open team task task-01", row: "Sales team" },
-  { label: "Workforce / Targets", target: { page: "operations", subview: "targets" }, heading: "Team targets", control: "Open target task task-01", row: "Pipeline value" },
-  { label: "Workforce / Attendance", target: { page: "operations", subview: "attendance" }, heading: "Attendance", control: "Open attendance task task-01", row: "Latest recorded activity" },
+  { label: "Workforce / Teams", target: { page: "operations", subview: "teams" }, heading: "Teams", control: "Open team task task-01", row: "Connected team" },
+  { label: "Workforce / Targets", target: { page: "operations", subview: "targets" }, heading: "Team targets", control: "Open target deal deal-01", row: "Pipeline value" },
+  { label: "Workforce / Attendance", target: { page: "operations", subview: "attendance" }, heading: "Attendance", control: "Open attendance record vehicle-01", row: "Latest recorded activity" },
   { label: "Operations / Tasks", target: { page: "operations", subview: "tasks" }, heading: "Operations tasks", control: "Open task task-01", row: "Confirm GT3 test drive" },
   { label: "Operations / Calendar", target: { page: "operations", subview: "calendar" }, heading: "Operations calendar", control: "Open calendar task task-01", row: "Call Amelia" },
   { label: "Operations / Documents", target: { page: "operations", subview: "documents" }, heading: "Operations documents", control: "Open audit artifact activity-01", row: "Demo activity 1" },
@@ -69,7 +69,7 @@ describe("rendered employee route matrix", () => {
     render(<App repository={repository} />);
 
     expect(screen.getByRole("heading", { name: heading })).toBeInTheDocument();
-    expect(screen.getAllByRole("button", { name: control }).length).toBeGreaterThan(0);
+    if (control) expect(screen.getAllByRole("button", { name: control }).length).toBeGreaterThan(0);
     expect(screen.getAllByText(row, { exact: false }).length).toBeGreaterThan(0);
   });
 });
@@ -103,6 +103,43 @@ describe("exact connected navigation", () => {
     await user.click(screen.getByRole("button", { name: "Open deal deal-01" }));
     expect(repository.getState().preferences).toMatchObject({ activeRecordType: "deal", activeRecordId: "deal-01" });
     expect(screen.getByRole("heading", { name: "Deal deal-01" })).toBeInTheDocument();
+  });
+
+  it.each([
+    [{ page: "customers", subview: "leads" }, "Open lead lead-01", "Lead lead-01"],
+    [{ page: "customers", subview: "follow-ups" }, "Open follow-up lead-01", "Lead lead-01"],
+    [{ page: "customers", subview: "appointments" }, "Open appointment lead-07", "Lead lead-07"],
+    [{ page: "customers", subview: "test-drives" }, "Open test drive lead-01", "Lead lead-01"],
+    [{ page: "inventory", subview: "appraisals" }, "Open appraisal vehicle-01", "2024 Porsche 911 GT3"],
+    [{ page: "inventory", subview: "trade-ins" }, "Open trade-in vehicle-02", "2023 BMW M4 CSL"],
+    [{ page: "inventory", subview: "recon" }, "Open recon vehicle-08", "2024 Ford Ranger Raptor"],
+    [{ page: "inventory", subview: "transfers" }, "Open transfer vehicle-03", "2024 Audi RS6 Avant"],
+    [{ page: "inventory", subview: "pricing" }, "Open pricing vehicle-01", "2024 Porsche 911 GT3"],
+    [{ page: "sales", subview: "deals" }, "Open deal deal-01", "Deal deal-01"],
+    [{ page: "sales", subview: "quotations" }, "Open quotation deal-01", "Deal deal-01"],
+    [{ page: "sales", subview: "approvals" }, "Open approval deal-02", "Deal deal-02"],
+    [{ page: "sales", subview: "deliveries" }, "Open delivery deal-03", "Deal deal-03"],
+    [{ page: "sales", subview: "commissions" }, "Open commission deal-06", "Deal deal-06"],
+    [{ page: "finance", subview: "applications" }, "Open application deal-02", "Deal deal-02"],
+    [{ page: "finance", subview: "lenders" }, "Open lender review deal-02", "Deal deal-02"],
+    [{ page: "finance", subview: "products" }, "Open products deal-02", "Deal deal-02"],
+    [{ page: "finance", subview: "documents" }, "Open finance document deal-02", "Deal deal-02"],
+    [{ page: "service", subview: "bookings" }, "Open booking service-01", "Service job service-01"],
+    [{ page: "service", subview: "job-cards" }, "Open job card service-02", "Service job service-02"],
+    [{ page: "service", subview: "repair-orders" }, "Open repair order service-03", "Service job service-03"],
+    [{ page: "operations", subview: "employees" }, "Open assigned task task-01", "Task: Call Amelia"],
+    [{ page: "operations", subview: "teams" }, "Open team task task-01", "Task: Call Amelia"],
+    [{ page: "operations", subview: "targets" }, "Open target deal deal-01", "Deal deal-01"],
+    [{ page: "operations", subview: "attendance" }, "Open attendance record vehicle-01", "2024 Porsche 911 GT3"],
+    [{ page: "operations", subview: "tasks" }, "Open task task-01", "Task: Call Amelia"],
+    [{ page: "operations", subview: "calendar" }, "Open calendar task task-01", "Task: Call Amelia"],
+    [{ page: "operations", subview: "documents" }, "Open audit artifact activity-01", "2024 Porsche 911 GT3"],
+    [{ page: "operations", subview: "audit-trail" }, "Open audit vehicle-01", "2024 Porsche 911 GT3"],
+  ] as const)("opens the exact entity from %o / %s", async (target, action, heading) => {
+    const user = userEvent.setup(); const repository = createDemoRepository(memoryStorage());
+    repository.setPreferences({ activePage: target.page, activeSubview: target.subview }); render(<App repository={repository} />);
+    await user.click(screen.getByRole("button", { name: action }));
+    expect(screen.getByRole("heading", { name: heading })).toBeInTheDocument();
   });
 
   it.each([

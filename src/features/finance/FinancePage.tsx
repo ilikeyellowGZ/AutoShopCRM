@@ -13,8 +13,8 @@ function draftForVehicle(state: DemoState, vehicleId: string): FinanceDraft {
   return state.financeDrafts.find((item) => item.vehicleId === vehicleId) ?? { vehicleId, vehiclePrice: vehicle?.price ?? 0, downPayment: 0, termMonths: 60, aprPercent: 0, tradeAllowance: 0, lienPayoff: 0, serviceContract: 0, gapInsurance: 0 };
 }
 
-export function FinancePage({ state, repository }: { state: DemoState; repository: DemoRepository }) {
-  const initialVehicleId = useMemo(() => state.financeDrafts[0]?.vehicleId ?? state.vehicles[0]?.id ?? "", [state]);
+export function FinancePage({ state, repository, initialVehicleId: requestedVehicleId }: { state: DemoState; repository: DemoRepository; initialVehicleId?: string }) {
+  const initialVehicleId = useMemo(() => requestedVehicleId && state.vehicles.some((vehicle) => vehicle.id === requestedVehicleId) ? requestedVehicleId : state.financeDrafts[0]?.vehicleId ?? state.vehicles[0]?.id ?? "", [requestedVehicleId, state]);
   const [selectedVehicleId, setSelectedVehicleId] = useState(initialVehicleId);
   const saved = useMemo(() => draftForVehicle(state, selectedVehicleId), [state, selectedVehicleId]);
   const [draft, setDraft] = useState(saved);

@@ -125,6 +125,7 @@ function normalizeRoute(state: RecordValue, preferences: RecordValue): RecordVal
   }
   if (contextId !== undefined) {
     if (page === "sales" && subview === "new-deal" && typeof contextId === "string" && recordExists(state, "vehicle", contextId)) return { activePage: page, activeSubview: subview, activeContextId: contextId };
+    if (page === "finance" && subview === "deal-finance" && typeof contextId === "string" && recordExists(state, "vehicle", contextId)) return { activePage: page, activeSubview: subview, activeContextId: contextId };
     return fallback;
   }
   if (page === "inventory" && recordExists(state, "vehicle", subview)) return { activePage: page, activeSubview: subview, activeRecordType: "vehicle", activeRecordId: subview };

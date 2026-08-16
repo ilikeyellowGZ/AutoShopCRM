@@ -10,7 +10,6 @@ import { PipelinePage } from "../features/pipeline/PipelinePage";
 import { DealEntry } from "../features/sales/DealEntry";
 import { SalesPage } from "../features/sales/SalesPage";
 import { ServicePage } from "../features/service/ServicePage";
-import { VehicleDetail } from "../features/inventory/VehicleDetail";
 import { Button } from "../components/controls/Button";
 import { ToastRegion } from "../components/feedback/ToastRegion";
 import { Dialog } from "../components/overlays/Dialog";
@@ -45,12 +44,11 @@ export function App({ repository: providedRepository }: { repository?: DemoRepos
   const updateView = <K extends keyof ViewPreferences>(key: K, patch: Partial<ViewPreferences[K]>) => repository.setPreferences({ viewPreferences: { ...app.state.preferences.viewPreferences, [key]: { ...app.state.preferences.viewPreferences[key], ...patch } } });
 
   const content = (() => {
-    if (target.recordType === "vehicle" && target.recordId) { const vehicle = app.state.vehicles.find((item) => item.id === target.recordId); return vehicle ? <VehicleDetail vehicle={vehicle} state={app.state} repository={repository} onBack={() => navigate({ page: "inventory", subview: "list" })} onCreateDeal={() => navigate({ page: "sales", subview: "new-deal", contextId: vehicle.id })} /> : <ExactRecordView target={target} state={app.state} />; }
     if (target.recordType === "customer" && target.recordId) { const customer = app.state.customers.find((item) => item.id === target.recordId); return customer ? <CustomerDetail customer={customer} state={app.state} repository={repository} /> : <ExactRecordView target={target} state={app.state} />; }
-    if (target.recordType && target.recordId) return <ExactRecordView target={target} state={app.state} />;
+    if (target.recordType && target.recordId && target.recordType !== "vehicle") return <ExactRecordView target={target} state={app.state} />;
     if (target.page === "my-day") {
-      if (target.subview === "action-centre") return <ActionCentreView state={app.state} repository={repository} />;
-      if (target.subview === "notifications") return <ActionCentreView state={app.state} repository={repository} view="notifications" />;
+      if (target.subview === "action-centre") return <ActionCentreView state={app.state} repository={repository} onNavigate={navigate} />;
+      if (target.subview === "notifications") return <ActionCentreView state={app.state} repository={repository} view="notifications" onNavigate={navigate} />;
       return <MyDayPage state={app.state} repository={repository} onNavigate={navigate} onCommandSelect={(_, result) => { navigate(result.target); notify("Opened connected record", result.title); }} />;
     }
     if (target.page === "inventory") {
@@ -61,14 +59,14 @@ export function App({ repository: providedRepository }: { repository?: DemoRepos
       if ((domainSubviews.customers as readonly string[]).includes(target.subview)) return <DomainWorkspace page="customers" subview={target.subview} state={app.state} onNavigate={navigate} />;
       return <CustomersPage state={app.state} repository={repository} viewPreferences={app.state.preferences.viewPreferences.customers} onViewPreferencesChange={(patch) => updateView("customers", patch)} onOpenCustomer={(recordId) => navigate({ page: "customers", subview: recordId, recordType: "customer", recordId })} />;
     }
-    if (target.page === "pipeline") return <PipelinePage state={app.state} repository={repository} />;
+    if (target.page === "pipeline") return <PipelinePage state={app.state} repository={repository} onNavigate={navigate} />;
     if (target.page === "sales") {
       if (target.subview === "new-deal") return <section className="sales-page crm-page"><header className="crm-heading"><div><p className="crm-eyebrow">Sales · connected vehicle</p><h1>New vehicle deal</h1><p>Create a locally persisted deal linked to the selected inventory record.</p></div></header><DealEntry title="Deal details" state={app.state} repository={repository} initialVehicleId={target.contextId} onCreated={(deal) => navigate({ page: "sales", subview: "deals", recordType: "deal", recordId: deal.id })} /></section>;
       if ((domainSubviews.sales as readonly string[]).includes(target.subview)) return <DomainWorkspace page="sales" subview={target.subview} state={app.state} onNavigate={navigate} />;
-      return <SalesPage state={app.state} repository={repository} viewPreferences={app.state.preferences.viewPreferences.sales} onViewPreferencesChange={(patch) => updateView("sales", patch)} />;
+      return <SalesPage state={app.state} repository={repository} viewPreferences={app.state.preferences.viewPreferences.sales} onViewPreferencesChange={(patch) => updateView("sales", patch)} onNavigate={navigate} />;
     }
-    if (target.page === "finance") return (domainSubviews.finance as readonly string[]).includes(target.subview) ? <DomainWorkspace page="finance" subview={target.subview} state={app.state} onNavigate={navigate} /> : <FinancePage state={app.state} repository={repository} />;
-    if (target.page === "service") return (domainSubviews.service as readonly string[]).includes(target.subview) ? <DomainWorkspace page="service" subview={target.subview} state={app.state} onNavigate={navigate} /> : <ServicePage state={app.state} repository={repository} viewPreferences={app.state.preferences.viewPreferences.service} onViewPreferencesChange={(patch) => updateView("service", patch)} />;
+    if (target.page === "finance") return (domainSubviews.finance as readonly string[]).includes(target.subview) ? <DomainWorkspace page="finance" subview={target.subview} state={app.state} onNavigate={navigate} /> : <FinancePage state={app.state} repository={repository} initialVehicleId={target.contextId} />;
+    if (target.page === "service") return (domainSubviews.service as readonly string[]).includes(target.subview) ? <DomainWorkspace page="service" subview={target.subview} state={app.state} onNavigate={navigate} /> : <ServicePage state={app.state} repository={repository} viewPreferences={app.state.preferences.viewPreferences.service} onViewPreferencesChange={(patch) => updateView("service", patch)} onNavigate={navigate} />;
     if (target.subview === "settings") return <section className="action-centre"><header className="action-centre-heading"><p>Operations</p><h1>Workspace settings</h1></header><p>Demo preferences are stored only in this browser.</p><p>Current branch: {app.state.preferences.branch} · Density: {app.state.preferences.density}</p><Button variant="secondary" onClick={() => app.setActiveOverlay({ kind: "dialog", id: "reset" })}>Reset demo data</Button></section>;
     return <DomainWorkspace page="operations" subview={target.subview} state={app.state} onNavigate={navigate} />;
   })();

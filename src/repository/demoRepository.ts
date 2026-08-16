@@ -91,6 +91,14 @@ export function createDemoRepository(storage: Storage): DemoRepository {
     listeners.forEach((listener) => listener(clone(state)));
   };
 
+  const persist = (mutate: (draft: DemoState) => void) => {
+    const draft = clone(state);
+    mutate(draft);
+    state = draft;
+    saveDemoState(storage, state);
+    listeners.forEach((listener) => listener(clone(state)));
+  };
+
   const findIndex = <T extends { id: string }>(items: T[], id: string, label: string) => {
     const index = items.findIndex((item) => item.id === id);
     if (index < 0) throw new Error(`${label} not found.`);
@@ -119,7 +127,12 @@ export function createDemoRepository(storage: Storage): DemoRepository {
       saveDemoState(storage, state);
       listeners.forEach((listener) => listener(clone(state)));
     },
-    setPreferences: (patch) => commit("Preferences updated", "Employee workspace preferences were updated.", (draft) => { draft.preferences = { ...draft.preferences, ...patch }; }, "neutral"),
+    setPreferences: (patch) => {
+      const meaningfulSettingChanged = (patch.branch !== undefined && patch.branch !== state.preferences.branch) || (patch.density !== undefined && patch.density !== state.preferences.density);
+      const update = (draft: DemoState) => { draft.preferences = { ...draft.preferences, ...clone(patch) }; };
+      if (meaningfulSettingChanged) commit("Preferences updated", "Employee workspace settings were updated.", update, "neutral");
+      else persist(update);
+    },
     updateDraft: (key, draftValue) => commit("Draft updated", `${key} draft was saved locally.`, (draft) => { draft.drafts[key] = clone(draftValue); }, "neutral"),
     completeTask: (taskId) => commit("Task completed", "A task was marked complete.", (draft) => {
       draft.tasks[findIndex(draft.tasks, taskId, "Task")] = { ...draft.tasks[findIndex(draft.tasks, taskId, "Task")], status: "Completed", tone: "positive" };
