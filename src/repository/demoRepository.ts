@@ -96,11 +96,11 @@ export function createDemoRepository(storage: Storage): DemoRepository {
     updateDraft: (key, draftValue) => commit("Draft updated", `${key} draft was saved locally.`, (draft) => { draft.drafts[key] = clone(draftValue); }, "neutral"),
     completeTask: (taskId) => commit("Task completed", "A task was marked complete.", (draft) => {
       draft.tasks[findIndex(draft.tasks, taskId, "Task")] = { ...draft.tasks[findIndex(draft.tasks, taskId, "Task")], status: "Completed", tone: "positive" };
-    }, "positive"),
+    }, "positive", "task", taskId),
     rescheduleTask: (taskId, dueAt) => commit("Task rescheduled", `Task due date changed to ${dueAt}.`, (draft) => {
       const index = findIndex(draft.tasks, taskId, "Task");
       draft.tasks[index] = { ...draft.tasks[index], dueAt, status: "Upcoming", tone: "info" };
-    }, "info"),
+    }, "info", "task", taskId),
     addVehicle: (vehicle) => {
       const identifiers = validateVehicleIdentifiers(vehicle, state.vehicles);
       commit("Vehicle added", `${vehicle.year} ${vehicle.make} ${vehicle.model} was added to inventory.`, (draft) => { draft.vehicles.push({ ...clone(vehicle), ...identifiers }); }, "positive", "vehicle", vehicle.id);
@@ -113,13 +113,13 @@ export function createDemoRepository(storage: Storage): DemoRepository {
         draft.vehicles[index] = { ...draft.vehicles[index], ...clone(patch), ...identifiers };
       }, "info", "vehicle", vehicleId);
     },
-    addCustomer: (customer) => commit("Customer added", `${customer.name} was added to the customer directory.`, (draft) => { draft.customers.push(clone(customer)); }, "positive"),
-    addLead: (lead) => commit("Lead added", "A new customer lead was created.", (draft) => { draft.leads.push(clone(lead)); }, "positive"),
+    addCustomer: (customer) => commit("Customer added", `${customer.name} was added to the customer directory.`, (draft) => { draft.customers.push(clone(customer)); }, "positive", "customer", customer.id),
+    addLead: (lead) => commit("Lead added", "A new customer lead was created.", (draft) => { draft.leads.push(clone(lead)); }, "positive", "lead", lead.id),
     moveLead: (leadId, stage) => commit("Lead moved", `Lead moved to ${stage}.`, (draft) => {
       const index = findIndex(draft.leads, leadId, "Lead");
       draft.leads[index] = { ...draft.leads[index], stage };
-    }, "info"),
-    addDeal: (deal) => commit("Deal added", "A new deal was created.", (draft) => { draft.deals.push(clone(deal)); }, "positive"),
+    }, "info", "lead", leadId),
+    addDeal: (deal) => commit("Deal added", "A new deal was created.", (draft) => { draft.deals.push(clone(deal)); }, "positive", "deal", deal.id),
     updateFinanceDraft: (vehicleId, patch) => commit("Finance draft updated", "Finance values were saved locally.", (draft) => {
       const index = draft.financeDrafts.findIndex((item) => item.vehicleId === vehicleId);
       if (index < 0) {
@@ -128,11 +128,11 @@ export function createDemoRepository(storage: Storage): DemoRepository {
         return;
       }
       draft.financeDrafts[index] = { ...draft.financeDrafts[index], ...clone(patch) };
-    }, "info"),
+    }, "info", "vehicle", vehicleId),
     updateServiceJob: (jobId, patch) => commit("Service job updated", "Service job details were updated.", (draft) => {
       const index = findIndex(draft.serviceJobs, jobId, "Service job");
       draft.serviceJobs[index] = { ...draft.serviceJobs[index], ...clone(patch) };
-    }, "info"),
+    }, "info", "service", jobId),
     markNotificationRead: (notificationId) => commit("Notification read", "A notification was marked as read.", (draft) => {
       const index = findIndex(draft.notifications, notificationId, "Notification");
       draft.notifications[index] = { ...draft.notifications[index], read: true };

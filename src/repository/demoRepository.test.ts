@@ -21,6 +21,15 @@ describe("DemoRepository", () => {
     expect(JSON.parse(storage.getItem(STORAGE_KEY) ?? "{}").schemaVersion).toBe(1);
   });
 
+  it.each([
+    ["legacy activity without targets", (state: Record<string, any>) => { delete state.activities[0].targetType; delete state.activities[0].targetId; }],
+    ["unknown activity target type", (state: Record<string, any>) => { state.activities[0].targetType = "unknown"; }],
+    ["dangling activity target", (state: Record<string, any>) => { state.activities[0].targetId = "vehicle-999"; }],
+  ])("recovers deterministic seed from %s", (_name, corrupt) => {
+    const storage = memoryStorage(); const state = createDemoRepository(storage).getState() as unknown as Record<string, any>; corrupt(state); storage.setItem(STORAGE_KEY, JSON.stringify(state));
+    expect(createDemoRepository(storage).getState().activities).toHaveLength(12);
+  });
+
   it("recovers from nested corrupt records before repository actions can crash", () => {
     const storage = memoryStorage();
     const state = createDemoRepository(storage).getState();
@@ -95,6 +104,14 @@ describe("DemoRepository", () => {
     const reloaded = createDemoRepository(storage).getState();
     expect(reloaded.vehicles[0].price).toBe(4_300_000);
     expect(reloaded.activities[0]).toMatchObject({ action: "Vehicle updated", targetType: "vehicle", targetId: vehicle.id });
+  });
+
+  it("writes typed targets for task, lead, deal, finance, and service mutations", () => {
+    const repository = createDemoRepository(memoryStorage()); const state = repository.getState();
+    repository.completeTask(state.tasks[0].id); expect(repository.getState().activities[0]).toMatchObject({ targetType: "task", targetId: state.tasks[0].id });
+    repository.moveLead(state.leads[0].id, "Delivery"); expect(repository.getState().activities[0]).toMatchObject({ targetType: "lead", targetId: state.leads[0].id });
+    repository.updateFinanceDraft(state.vehicles[0].id, { downPayment: 1 }); expect(repository.getState().activities[0]).toMatchObject({ targetType: "vehicle", targetId: state.vehicles[0].id });
+    repository.updateServiceJob(state.serviceJobs[0].id, { note: "Checked" }); expect(repository.getState().activities[0]).toMatchObject({ targetType: "service", targetId: state.serviceJobs[0].id });
   });
 
   it("rejects canonical VIN and stock duplicates without mutating state or audit history", () => {
