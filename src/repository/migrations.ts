@@ -67,7 +67,7 @@ const isNotification = (value: unknown) => hasShape(value, {
   id: nonEmptyString, title: nonEmptyString, detail: nonEmptyString, read: boolean, tone: oneOf(tones), relatedId: nonEmptyString,
 });
 const isActivity = (value: unknown) => hasShape(value, {
-  id: nonEmptyString, action: nonEmptyString, detail: nonEmptyString, actor: nonEmptyString, occurredAt: nonEmptyString, tone: oneOf(tones),
+  id: nonEmptyString, action: nonEmptyString, detail: nonEmptyString, actor: nonEmptyString, occurredAt: nonEmptyString, tone: oneOf(tones), targetType: oneOf(["vehicle", "lead", "deal", "service", "system"]), targetId: nonEmptyString,
 });
 
 const partial = (shape: Record<string, Validator>): Validator => (value) => isRecord(value) && Object.entries(value).every(([key, field]) => Boolean(shape[key]) && shape[key](field));
@@ -111,7 +111,8 @@ export function isCompatibleDemoState(value: unknown): value is DemoState {
     && financeDrafts.every((draft) => vehicleIds.has((draft as RecordValue).vehicleId as string))
     && serviceJobs.every((job) => linked(job as RecordValue))
     && tasks.every((task) => taskHasRelatedRecord(task as RecordValue))
-    && notifications.every((notification) => relatedIds.has((notification as RecordValue).relatedId as string));
+    && notifications.every((notification) => relatedIds.has((notification as RecordValue).relatedId as string))
+    && activities.every((activity) => { const item = activity as RecordValue; const idsByType = { vehicle: vehicleIds, lead: leadIds, deal: dealIds, service: serviceIds, system: new Set(["system"]) }; return idsByType[item.targetType as keyof typeof idsByType].has(item.targetId as string); });
 }
 
 export function migrateDemoState(value: unknown): DemoState | null {

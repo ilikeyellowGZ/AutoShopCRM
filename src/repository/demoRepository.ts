@@ -55,10 +55,10 @@ export function createDemoRepository(storage: Storage): DemoRepository {
   let activityNumber = maximumActivityNumber(state.activities);
   const listeners = new Set<(state: DemoState) => void>();
 
-  const commit = (action: string, detail: string, mutate: (draft: DemoState) => void, tone: AuditActivity["tone"] = "info") => {
+  const commit = (action: string, detail: string, mutate: (draft: DemoState) => void, tone: AuditActivity["tone"] = "info", targetType: AuditActivity["targetType"] = "system", targetId = "system") => {
     const draft = clone(state);
     mutate(draft);
-    draft.activities.unshift({ id: activityId(++activityNumber), action, detail, actor: "Weelee Employee", occurredAt: NOW, tone });
+    draft.activities.unshift({ id: activityId(++activityNumber), action, detail, actor: "Weelee Employee", occurredAt: NOW, tone, targetType, targetId });
     state = draft;
     saveDemoState(storage, state);
     listeners.forEach((listener) => listener(clone(state)));
@@ -85,6 +85,8 @@ export function createDemoRepository(storage: Storage): DemoRepository {
         actor: "Weelee Employee",
         occurredAt: NOW,
         tone: "neutral",
+        targetType: "system",
+        targetId: "system",
       });
       state = clone(resetState);
       saveDemoState(storage, state);
@@ -101,7 +103,7 @@ export function createDemoRepository(storage: Storage): DemoRepository {
     }, "info"),
     addVehicle: (vehicle) => {
       const identifiers = validateVehicleIdentifiers(vehicle, state.vehicles);
-      commit("Vehicle added", `${vehicle.year} ${vehicle.make} ${vehicle.model} was added to inventory.`, (draft) => { draft.vehicles.push({ ...clone(vehicle), ...identifiers }); }, "positive");
+      commit("Vehicle added", `${vehicle.year} ${vehicle.make} ${vehicle.model} was added to inventory.`, (draft) => { draft.vehicles.push({ ...clone(vehicle), ...identifiers }); }, "positive", "vehicle", vehicle.id);
     },
     updateVehicle: (vehicleId, patch) => {
       const current = state.vehicles[findIndex(state.vehicles, vehicleId, "Vehicle")];
@@ -109,7 +111,7 @@ export function createDemoRepository(storage: Storage): DemoRepository {
       commit("Vehicle updated", "Vehicle record was updated.", (draft) => {
         const index = findIndex(draft.vehicles, vehicleId, "Vehicle");
         draft.vehicles[index] = { ...draft.vehicles[index], ...clone(patch), ...identifiers };
-      });
+      }, "info", "vehicle", vehicleId);
     },
     addCustomer: (customer) => commit("Customer added", `${customer.name} was added to the customer directory.`, (draft) => { draft.customers.push(clone(customer)); }, "positive"),
     addLead: (lead) => commit("Lead added", "A new customer lead was created.", (draft) => { draft.leads.push(clone(lead)); }, "positive"),
