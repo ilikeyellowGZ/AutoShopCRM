@@ -41,6 +41,12 @@ export function validateDemoState(state: DemoState): SeedIntegrityIssue[] {
   duplicateValue("vehicles", "vin", state.vehicles, (record) => (record as DemoState["vehicles"][number]).vin);
   duplicateValue("vehicles", "stockId", state.vehicles, (record) => (record as DemoState["vehicles"][number]).stockId);
   duplicateValue("customers", "email", state.customers, (record) => (record as DemoState["customers"][number]).email);
+  const draftVehicleIds = new Set<string>();
+  for (const draft of state.financeDrafts) {
+    const candidate = draft.vehicleId.toUpperCase();
+    if (draftVehicleIds.has(candidate)) issues.push({ code: "duplicate-value", collection: "financeDrafts", recordId: draft.vehicleId, field: "vehicleId", targetId: draft.vehicleId, message: `financeDrafts.${draft.vehicleId}.vehicleId duplicates ${draft.vehicleId}.` });
+    draftVehicleIds.add(candidate);
+  }
 
   const reference = (collection: string, recordId: string, field: string, targetId: string | undefined, targetCollection: keyof typeof ids) => {
     if (targetId && !ids[targetCollection].has(targetId)) issues.push({ code: "dangling-reference", collection, recordId, field, targetId, message: `${collection}.${recordId}.${field} points to missing ${targetCollection}.${targetId}.` });
