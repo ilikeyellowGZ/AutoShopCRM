@@ -143,10 +143,12 @@ export function createDemoRepository(storage: Storage): DemoRepository {
     updateVehicleIntakeDraft: (scopeKey, draftValue) => {
       const scope = scopeKey.trim();
       if (!scope) throw new Error("Vehicle-intake draft scope is required.");
-      persist((draft) => {
-        if (draftValue === null) delete draft.drafts.vehicleIntakes[scope];
-        else draft.drafts.vehicleIntakes[scope] = clone(draftValue);
-      });
+      const vehicleIntakes = { ...state.drafts.vehicleIntakes };
+      if (draftValue === null) delete vehicleIntakes[scope];
+      else vehicleIntakes[scope] = clone(draftValue);
+      state = { ...state, drafts: { ...state.drafts, vehicleIntakes } };
+      saveDemoState(storage, state);
+      listeners.forEach((listener) => listener(clone(state)));
     },
     completeTask: (taskId) => commit("Task completed", "A task was marked complete.", (draft) => {
       draft.tasks[findIndex(draft.tasks, taskId, "Task")] = { ...draft.tasks[findIndex(draft.tasks, taskId, "Task")], status: "Completed", tone: "positive" };

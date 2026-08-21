@@ -174,4 +174,27 @@ describe("preference migrations", () => {
     expect(migrated.deals[0].salesRep).toBe("Naledi Ndlovu");
     expect(migrated.serviceJobs[4].advisor).toBe("Sipho Dlamini");
   });
+
+  it("expands an earlier sparse v2 dataset without losing edited core records", () => {
+    const state = stateRecord();
+    for (const key of ["employees", "appointments", "testDrives", "quotes", "payments", "financeApplications", "documents"]) delete state[key];
+    state.customers = (state.customers as UnknownRecord[]).slice(0, 12);
+    state.leads = (state.leads as UnknownRecord[]).slice(0, 16);
+    state.deals = (state.deals as UnknownRecord[]).slice(0, 8);
+    state.serviceJobs = (state.serviceJobs as UnknownRecord[]).slice(0, 6);
+    state.tasks = (state.tasks as UnknownRecord[]).slice(0, 12);
+    state.activities = (state.activities as UnknownRecord[]).slice(0, 12);
+    (state.customers as UnknownRecord[])[0].name = "Edited Amelia";
+
+    const migrated = migrateDemoState(state)!;
+
+    expect(migrated.customers).toHaveLength(48);
+    expect(migrated.customers[0].name).toBe("Edited Amelia");
+    expect(migrated.leads).toHaveLength(64);
+    expect(migrated.deals).toHaveLength(24);
+    expect(migrated.employees).toHaveLength(15);
+    expect(migrated.appointments).toHaveLength(24);
+    expect(migrated.documents).toHaveLength(30);
+    expect(migrated.activities).toHaveLength(40);
+  });
 });

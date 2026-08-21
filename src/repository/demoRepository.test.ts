@@ -17,7 +17,7 @@ describe("DemoRepository", () => {
     const storage = memoryStorage();
     storage.setItem(STORAGE_KEY, JSON.stringify({ schemaVersion: 2, vehicles: [] }));
 
-    expect(createDemoRepository(storage).getState().activities).toHaveLength(12);
+    expect(createDemoRepository(storage).getState().activities).toHaveLength(40);
     expect(JSON.parse(storage.getItem(STORAGE_KEY) ?? "{}").schemaVersion).toBe(2);
   });
 
@@ -27,7 +27,7 @@ describe("DemoRepository", () => {
     ["dangling activity target", (state: Record<string, any>) => { state.activities[0].targetId = "vehicle-999"; }],
   ])("recovers deterministic seed from %s", (_name, corrupt) => {
     const storage = memoryStorage(); const state = createDemoRepository(storage).getState() as unknown as Record<string, any>; corrupt(state); storage.setItem(STORAGE_KEY, JSON.stringify(state));
-    expect(createDemoRepository(storage).getState().activities).toHaveLength(12);
+    expect(createDemoRepository(storage).getState().activities).toHaveLength(40);
   });
 
   it("recovers from nested corrupt records before repository actions can crash", () => {
@@ -94,8 +94,8 @@ describe("DemoRepository", () => {
     const repository = createDemoRepository(memoryStorage());
     const existing = repository.getState().customers[0];
 
-    expect(() => repository.addCustomer({ ...existing, id: "customer-13", email: ` ${existing.email.toUpperCase()} ` })).toThrow("A customer with this email already exists.");
-    expect(repository.getState().customers).toHaveLength(12);
+    expect(() => repository.addCustomer({ ...existing, id: "customer-49", email: ` ${existing.email.toUpperCase()} ` })).toThrow("A customer with this email already exists.");
+    expect(repository.getState().customers).toHaveLength(48);
   });
 
   it("rejects lead and deal references that do not belong to the active directory", () => {
@@ -125,7 +125,7 @@ describe("DemoRepository", () => {
   it("rejects dangling customer vehicle interests on create and update without an audit", () => {
     const repository = createDemoRepository(memoryStorage());
     const before = repository.getState();
-    expect(() => repository.addCustomer({ ...before.customers[0], id: "customer-13", email: "new@example.com", vehicleInterestId: "vehicle-missing" })).toThrow("Vehicle interest not found.");
+    expect(() => repository.addCustomer({ ...before.customers[0], id: "customer-49", email: "new@example.com", vehicleInterestId: "vehicle-missing" })).toThrow("Vehicle interest not found.");
     expect(() => repository.updateCustomer(before.customers[0].id, { vehicleInterestId: "vehicle-missing" })).toThrow("Vehicle interest not found.");
     expect(repository.getState()).toEqual(before);
   });
@@ -139,7 +139,7 @@ describe("DemoRepository", () => {
 
   it("persists successful customer lead and deal mutations with typed audits across reload", () => {
     const storage = memoryStorage(); const repository = createDemoRepository(storage); const state = repository.getState();
-    const customer = { ...state.customers[0], id: "customer-13", email: "reload@example.com" };
+    const customer = { ...state.customers[0], id: "customer-49", email: "reload@example.com" };
     repository.addCustomer(customer); repository.addLead({ ...state.leads[0], id: "lead-99", customerId: customer.id }); repository.addDeal({ ...state.deals[0], id: "deal-99", customerId: customer.id });
     const reloaded = createDemoRepository(storage).getState();
     expect(reloaded.activities.slice(0, 3).map((activity) => activity.targetType)).toEqual(["deal", "lead", "customer"]);
@@ -272,7 +272,7 @@ describe("DemoRepository", () => {
 
     const reloaded = createDemoRepository(storage).getState();
     expect(reloaded.leads.find((item) => item.id === lead.id)?.stage).toBe("Delivery");
-    expect(reloaded.activities[0]).toMatchObject({ id: "activity-13", action: "Lead moved" });
+    expect(reloaded.activities[0]).toMatchObject({ id: "activity-41", action: "Lead moved" });
     expect(listener).toHaveBeenCalledTimes(1);
   });
 
@@ -368,7 +368,7 @@ describe("DemoRepository", () => {
     repository.reset();
 
     expect(repository.getState().activities[0].id).not.toBe(firstId);
-    expect(repository.getState().activities[0].id).toBe("activity-14");
+    expect(repository.getState().activities[0].id).toBe("activity-42");
   });
 
   it("remains usable when browser storage reads and writes fail", () => {

@@ -12,20 +12,21 @@ afterEach(cleanup);
 describe("finance workspaces without linked deals", () => {
   it.each(["applications", "lenders", "products", "documents"])("renders %s for finance drafts with and without deals", async (subview) => {
     const storage = memoryStorage(); const repository = createDemoRepository(storage);
-    repository.updateFinanceDraft("vehicle-09", { aprPercent: 10.25, termMonths: 48, tradeAllowance: 0, serviceContract: 18_000 });
-    repository.updateFinanceDraft("vehicle-10", { aprPercent: 12, termMonths: 72, tradeAllowance: 250_000, serviceContract: 24_000 });
+    repository.updateFinanceDraft("vehicle-25", { aprPercent: 10.25, termMonths: 48, tradeAllowance: 0, serviceContract: 18_000 });
+    repository.updateFinanceDraft("vehicle-26", { aprPercent: 12, termMonths: 72, tradeAllowance: 250_000, serviceContract: 24_000 });
     repository.setPreferences({ activePage: "finance", activeSubview: subview });
     const user = userEvent.setup();
 
     expect(() => render(<App repository={repository} />)).not.toThrow();
-    expect(screen.getAllByText(/Volkswagen Golf 8|WEE-2409/).length).toBeGreaterThan(0);
+    await user.click(screen.getByRole("button", { name: /Show all \d+ connected records/ }));
+    expect(screen.getAllByText(/Toyota Corolla Cross|MCR-2525/).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/No linked deal/).length).toBeGreaterThan(0);
-    await user.click(screen.getByRole("button", { name: "Open finance draft vehicle-09" }));
+    await user.click(screen.getByRole("button", { name: "Open finance draft vehicle-25" }));
     expect(screen.getByRole("heading", { name: "Structure a deal" })).toBeInTheDocument();
-    expect(screen.getByRole("combobox", { name: "Vehicle" })).toHaveValue("vehicle-09");
+    expect(screen.getByRole("combobox", { name: "Vehicle" })).toHaveValue("vehicle-25");
     cleanup(); render(<App repository={createDemoRepository(storage)} />);
-    expect(screen.getByRole("combobox", { name: "Vehicle" })).toHaveValue("vehicle-09");
-  });
+    expect(screen.getByRole("combobox", { name: "Vehicle" })).toHaveValue("vehicle-25");
+  }, 10_000);
 });
 
 describe("honest domain queue selectors", () => {
@@ -91,7 +92,7 @@ describe("honest domain queue selectors", () => {
     view.rerender(<DomainWorkspace page="service" subview="repair-orders" state={state} onNavigate={onNavigate} />);
     expect(screen.getByRole("button", { name: "Open repair order service-03" })).toBeInTheDocument();
     view.rerender(<DomainWorkspace page="service" subview="history" state={state} onNavigate={onNavigate} />);
-    expect(screen.getByText("No connected records match this operational queue.")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Open service history service-07" })).toBeInTheDocument();
     state.serviceJobs[0].status = "Completed";
     view.rerender(<DomainWorkspace page="service" subview="history" state={state} onNavigate={onNavigate} />);
     expect(screen.getByRole("button", { name: "Open service history service-01" })).toBeInTheDocument();

@@ -55,6 +55,27 @@ describe("role and branch record scope", () => {
       if (task.relatedType === "deal") return scoped.deals.some((deal) => deal.id === task.relatedId);
       return false;
     })).toBe(true);
+    expect(scoped.appointments.every((appointment) => scoped.leads.some((lead) => lead.id === appointment.leadId))).toBe(true);
+    expect(scoped.testDrives.every((drive) => scoped.leads.some((lead) => lead.id === drive.leadId))).toBe(true);
+    expect(scoped.quotes.every((quote) => scoped.leads.some((lead) => lead.id === quote.leadId))).toBe(true);
+    expect(scoped.financeDrafts).toEqual([]);
+    expect(scoped.financeApplications).toEqual([]);
+    expect(scoped.payments).toEqual([]);
+    expect(scoped.employees.map((employee) => employee.name)).toEqual([account.name]);
+  });
+
+  it("limits connected employee and operational collections to a manager's selected branch", () => {
+    const state = createSeedState();
+    const account = getDemoAccount("manager");
+    state.preferences.branch = "Midrand";
+
+    const scoped = scopeStateForAccount(state, account);
+    const vehicleIds = new Set(scoped.vehicles.map((vehicle) => vehicle.id));
+
+    expect(scoped.employees.every((employee) => employee.branch === "Midrand")).toBe(true);
+    expect(scoped.appointments.every((appointment) => appointment.branch === "Midrand" && vehicleIds.has(appointment.vehicleId))).toBe(true);
+    expect(scoped.financeApplications.every((application) => vehicleIds.has(application.vehicleId))).toBe(true);
+    expect(scoped.documents.every((document) => !document.vehicleId || vehicleIds.has(document.vehicleId))).toBe(true);
   });
 
   it("shows only the signed-in account and branch vehicle-intake draft", () => {

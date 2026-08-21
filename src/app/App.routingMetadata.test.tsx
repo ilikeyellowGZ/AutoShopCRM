@@ -32,19 +32,19 @@ describe("route metadata clearing across reload", () => {
     render(<App repository={repository} />); await user.click(screen.getByRole("button", { name: "Create deal" }));
     expect(screen.getByRole("combobox", { name: "Vehicle" })).toHaveValue("vehicle-09");
     await user.clear(screen.getByLabelText("Gross profit (ZAR)")); await user.type(screen.getByLabelText("Gross profit (ZAR)"), "125000"); await user.click(screen.getByRole("button", { name: "Save deal" }));
-    expect(screen.getByRole("heading", { name: "Deal deal-09" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Deal deal-25" })).toBeInTheDocument();
 
     cleanup(); const reloaded = createDemoRepository(storage); render(<App repository={reloaded} />);
-    expect(screen.getByRole("heading", { name: "Deal deal-09" })).toBeInTheDocument();
-    expect(reloaded.getState().preferences).toMatchObject({ activeRecordType: "deal", activeRecordId: "deal-09" });
+    expect(screen.getByRole("heading", { name: "Deal deal-25" })).toBeInTheDocument();
+    expect(reloaded.getState().preferences).toMatchObject({ activeRecordType: "deal", activeRecordId: "deal-25" });
     expect(reloaded.getState().preferences).not.toHaveProperty("activeContextId");
   });
 
   it("clears an unassigned finance context when navigating to an ordinary route", async () => {
     const storage = memoryStorage(); const repository = createDemoRepository(storage); const user = userEvent.setup();
-    repository.updateFinanceDraft("vehicle-09", { aprPercent: 10 }); repository.setPreferences({ activePage: "finance", activeSubview: "applications" });
-    render(<App repository={repository} />); await user.click(screen.getByRole("button", { name: "Open finance draft vehicle-09" }));
-    expect(screen.getByRole("combobox", { name: "Vehicle" })).toHaveValue("vehicle-09"); await user.click(screen.getByRole("button", { name: "Inventory" }));
+    repository.updateFinanceDraft("vehicle-25", { aprPercent: 10 }); repository.setPreferences({ activePage: "finance", activeSubview: "applications" });
+    render(<App repository={repository} />); await user.click(screen.getByRole("button", { name: "Show all 21 connected records" })); await user.click(screen.getByRole("button", { name: "Open finance draft vehicle-25" }));
+    expect(screen.getByRole("combobox", { name: "Vehicle" })).toHaveValue("vehicle-25"); await user.click(screen.getByRole("button", { name: "Inventory" }));
 
     cleanup(); const reloaded = createDemoRepository(storage); render(<App repository={reloaded} />);
     expect(screen.getByRole("heading", { name: "Vehicle inventory" })).toBeInTheDocument();

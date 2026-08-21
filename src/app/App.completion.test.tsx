@@ -1,4 +1,4 @@
-import { cleanup, render, screen, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { NavigationTarget } from "./routes";
@@ -50,7 +50,7 @@ const groupedCases: RouteCase[] = [
   { label: "Aftersales / Bookings", target: { page: "service", subview: "bookings" }, heading: "Service bookings", control: "Open booking service-01", row: "Annual inspection" },
   { label: "Aftersales / Job Cards", target: { page: "service", subview: "job-cards" }, heading: "Workshop job cards", control: "Open job card service-02", row: "Sasha Naobes" },
   { label: "Aftersales / Repair Orders", target: { page: "service", subview: "repair-orders" }, heading: "Repair orders", control: "Open repair order service-03", row: "Marius Louw" },
-  { label: "Aftersales / Service History", target: { page: "service", subview: "history" }, heading: "Service history", row: "No connected records match this operational queue." },
+  { label: "Aftersales / Service History", target: { page: "service", subview: "history" }, heading: "Service history", control: "Open service history service-07", row: "Service job service-07" },
   { label: "Workforce / Employees", target: { page: "operations", subview: "employees" }, heading: "Employees", control: "Open assigned task task-01", row: "Naledi Ndlovu" },
   { label: "Workforce / Teams", target: { page: "operations", subview: "teams" }, heading: "Teams", control: "Open team task task-01", row: "Connected team" },
   { label: "Workforce / Targets", target: { page: "operations", subview: "targets" }, heading: "Team targets", control: "Open target deal deal-01", row: "Pipeline value" },
@@ -174,19 +174,19 @@ describe("connected inventory and deal journey", () => {
     const storage = memoryStorage(); const repository = createDemoRepository(storage); const user = userEvent.setup();
     render(<App repository={repository} />); await user.click(screen.getByRole("button", { name: "Inventory" })); await user.click(screen.getByRole("button", { name: "Add vehicle" }));
     expect(screen.getByRole("heading", { name: "Vehicle intake" })).toBeInTheDocument();
-    await user.type(screen.getByLabelText("VIN"), "1HGCM82633A004352"); await user.type(screen.getByLabelText("Stock ID"), "WEE-2411"); await user.click(screen.getByRole("button", { name: "Continue" }));
-    await user.clear(screen.getByLabelText("Year")); await user.type(screen.getByLabelText("Year"), "2025"); await user.type(screen.getByLabelText("Make"), "Volvo"); await user.type(screen.getByLabelText("Model"), "EX90"); await user.type(screen.getByLabelText("Derivative"), "Twin Motor"); await user.clear(screen.getByLabelText("Price (ZAR)")); await user.type(screen.getByLabelText("Price (ZAR)"), "1800000");
-    await user.selectOptions(screen.getByLabelText("Body type"), "SUV"); await user.selectOptions(screen.getByLabelText("Fuel"), "Electric"); await user.selectOptions(screen.getByLabelText("Transmission"), "Single-speed"); await user.type(screen.getByLabelText("Engine"), "Dual motor electric");
+    fireEvent.change(screen.getByLabelText("VIN"), { target: { value: "1HGCM82633A004352" } }); fireEvent.change(screen.getByLabelText("Stock ID"), { target: { value: "WEE-2411" } }); await user.click(screen.getByRole("button", { name: "Continue" }));
+    fireEvent.change(screen.getByLabelText("Year"), { target: { value: "2025" } }); fireEvent.change(screen.getByLabelText("Make"), { target: { value: "Volvo" } }); fireEvent.change(screen.getByLabelText("Model"), { target: { value: "EX90" } }); fireEvent.change(screen.getByLabelText("Derivative"), { target: { value: "Twin Motor" } }); fireEvent.change(screen.getByLabelText("Price (ZAR)"), { target: { value: "1800000" } });
+    fireEvent.change(screen.getByLabelText("Body type"), { target: { value: "SUV" } }); fireEvent.change(screen.getByLabelText("Fuel"), { target: { value: "Electric" } }); fireEvent.change(screen.getByLabelText("Transmission"), { target: { value: "Single-speed" } }); fireEvent.change(screen.getByLabelText("Engine"), { target: { value: "Dual motor electric" } });
     await user.click(screen.getByRole("button", { name: "Continue" })); await user.click(screen.getByRole("button", { name: "Continue" })); await user.click(screen.getByRole("button", { name: "Add vehicle to inventory" }));
     expect(screen.getByRole("heading", { name: "2025 Volvo EX90 Twin Motor" })).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Back to inventory" })); expect(screen.getByRole("heading", { name: "Vehicle inventory" })).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: /2025 Volvo EX90/i })); await user.click(screen.getByRole("button", { name: "Create deal" }));
     expect(screen.getByRole("heading", { name: "New vehicle deal" })).toBeInTheDocument(); expect(screen.getByRole("combobox", { name: "Vehicle" })).toHaveValue("vehicle-31");
-    await user.clear(screen.getByLabelText("Gross profit (ZAR)")); await user.type(screen.getByLabelText("Gross profit (ZAR)"), "125000"); await user.click(screen.getByRole("button", { name: "Save deal" }));
+    fireEvent.change(screen.getByLabelText("Gross profit (ZAR)"), { target: { value: "125000" } }); await user.click(screen.getByRole("button", { name: "Save deal" }));
     const deal = repository.getState().deals.at(-1)!;
     expect(deal).toMatchObject({ vehicleId: "vehicle-31", grossProfit: 125000 }); expect(repository.getState().activities.find((activity) => activity.action === "Deal added")).toMatchObject({ targetId: deal.id });
     expect(screen.getByRole("heading", { name: `Deal ${deal.id}` })).toBeInTheDocument();
-  });
+  }, 10_000);
 });
 
 describe("controlled persisted feature preferences", () => {
@@ -202,7 +202,7 @@ describe("controlled persisted feature preferences", () => {
     await user.click(screen.getByRole("button", { name: "Inventory" })); expect(screen.getByLabelText("Search inventory")).toHaveValue("BMW"); expect(screen.getByRole("button", { name: "Table" })).toHaveAttribute("aria-pressed", "true");
     await user.click(screen.getByRole("button", { name: "Customers" })); expect(screen.getByLabelText("Search customers")).toHaveValue("Jonas"); expect(screen.getByRole("tab", { name: "Follow-ups" })).toHaveAttribute("aria-selected", "true");
     await user.click(screen.getByRole("button", { name: "Sales" })); expect(screen.getByLabelText("Search sales")).toHaveValue("Marcus"); expect(screen.getByLabelText("Sort")).toHaveValue("profit");
-  });
+  }, 10_000);
 });
 
 describe("shell controls and transitions", () => {

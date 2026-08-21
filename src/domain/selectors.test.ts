@@ -49,8 +49,8 @@ describe("demo selectors", () => {
     expect(columns.map((column) => column.stage)).toEqual(["Lead", "Negotiation", "Contract", "Delivery"]);
     expect(columns.find((column) => column.stage === "Contract")).toMatchObject({
       stage: "Contract",
-      count: 5,
-      value: 16_000_000,
+      count: 17,
+      value: 35_199_200,
       leads: expect.arrayContaining([expect.objectContaining({ id: "lead-01", value: 5_000_000 })]),
     });
   });
@@ -61,8 +61,8 @@ describe("demo selectors", () => {
     expect(metrics).toEqual({
       availableVehicles: 15,
       inTransitVehicles: 1,
-      activePipelineCount: 16,
-      activePipelineValue: 38_970_000,
+      activePipelineCount: 64,
+      activePipelineValue: 110_066_600,
       dueTodayTasks: 4,
       unreadNotifications: 4,
     });

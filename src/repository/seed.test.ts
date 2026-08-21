@@ -11,13 +11,13 @@ describe("createSeedState", () => {
 
     expect(state.schemaVersion).toBe(2);
     expect(state.vehicles.map((vehicle) => vehicle.id)).toEqual(Array.from({ length: 30 }, (_, index) => `vehicle-${String(index + 1).padStart(2, "0")}`));
-    expect(state.customers).toHaveLength(12);
-    expect(state.leads).toHaveLength(16);
-    expect(state.deals).toHaveLength(8);
-    expect(state.serviceJobs).toHaveLength(6);
-    expect(state.tasks).toHaveLength(12);
+    expect(state.customers).toHaveLength(48);
+    expect(state.leads).toHaveLength(64);
+    expect(state.deals).toHaveLength(24);
+    expect(state.serviceJobs).toHaveLength(18);
+    expect(state.tasks).toHaveLength(40);
     expect(state.notifications).toHaveLength(6);
-    expect(state.activities).toHaveLength(12);
+    expect(state.activities).toHaveLength(40);
   });
 
   it("creates 30 galleries with the required ordered PNG paths and accessible alt text", () => {

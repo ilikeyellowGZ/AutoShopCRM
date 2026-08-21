@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import type { DemoState, Lead, PersistedRecordType, ServiceJob, TaskItem } from "../domain/models";
 import { Button } from "../components/controls/Button";
 import type { NavigationTarget } from "./routes";
@@ -104,9 +105,12 @@ function workspaceFor(page: NavigationTarget["page"], subview: string, state: De
 }
 
 export function DomainWorkspace({ page, subview, state, onNavigate, canViewFinancials = true }: { page: NavigationTarget["page"]; subview: string; state: DemoState; onNavigate: (target: NavigationTarget) => void; canViewFinancials?: boolean }) {
+  const [expanded, setExpanded] = useState(false);
+  useEffect(() => setExpanded(false), [page, subview]);
   const workspace = workspaceFor(page, subview, state, canViewFinancials);
   if (!workspace) return null;
-  return <section className="action-centre" aria-labelledby={`${page}-${subview}-title`}><header className="action-centre-heading"><p>{workspace.eyebrow}</p><h1 id={`${page}-${subview}-title`}>{workspace.heading}</h1><span>{workspace.rows.length} connected records</span></header><ul className="action-centre-list">{workspace.rows.length === 0 ? <li className="my-day-empty">No connected records match this operational queue.</li> : workspace.rows.map((row) => <li key={row.id}><div><strong>{row.title}</strong><p>{row.detail}</p></div>{row.action && row.target ? <Button variant="secondary" onClick={() => { if (row.target) onNavigate(row.target); }}>{row.action}</Button> : null}</li>)}</ul></section>;
+  const visibleRows = expanded ? workspace.rows : workspace.rows.slice(0, 12);
+  return <section className="action-centre" aria-labelledby={`${page}-${subview}-title`}><header className="action-centre-heading"><p>{workspace.eyebrow}</p><h1 id={`${page}-${subview}-title`}>{workspace.heading}</h1><span>{workspace.rows.length} connected records</span></header><ul className="action-centre-list">{visibleRows.length === 0 ? <li className="my-day-empty">No connected records match this operational queue.</li> : visibleRows.map((row) => <li key={row.id}><div><strong>{row.title}</strong><p>{row.detail}</p></div>{row.action && row.target ? <Button variant="secondary" onClick={() => { if (row.target) onNavigate(row.target); }}>{row.action}</Button> : null}</li>)}</ul>{workspace.rows.length > visibleRows.length ? <Button variant="secondary" onClick={() => setExpanded(true)}>Show all {workspace.rows.length} connected records</Button> : null}</section>;
 }
 
 export function ExactRecordView({ target, state }: { target: NavigationTarget; state: DemoState }) {

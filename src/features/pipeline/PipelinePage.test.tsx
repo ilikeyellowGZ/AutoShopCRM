@@ -15,13 +15,13 @@ describe("PipelinePage", () => {
   });
 
   it("forces a locked lead owner even if the read-only field is manipulated", async () => {
-    const user = userEvent.setup(); const repository = createDemoRepository(memoryStorage()); const state = repository.getState();
+    const repository = createDemoRepository(memoryStorage()); const state = repository.getState();
     render(<PipelinePage state={state} repository={repository} defaultOwner="Naledi Ndlovu" lockOwner />);
-    await user.click(screen.getByRole("button", { name: "New lead" }));
+    fireEvent.click(screen.getByRole("button", { name: "New lead" }));
     const owner = screen.getByLabelText("Owner");
     expect(owner).toHaveAttribute("readonly");
     fireEvent.change(owner, { target: { value: "Marcus Botha" } });
-    await user.click(screen.getByRole("button", { name: "Save lead" }));
+    fireEvent.click(screen.getByRole("button", { name: "Save lead" }));
     expect(repository.getState().leads.at(-1)?.owner).toBe("Naledi Ndlovu");
   });
 });

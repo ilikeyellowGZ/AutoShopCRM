@@ -22,6 +22,16 @@ const dealStatuses = ["Closed", "Pending", "Approval"] as const;
 const serviceStatuses = ["Booked", "Checked In", "In Progress", "Waiting for Parts", "Quality Check", "Ready", "Completed"] as const;
 const relatedTypes = ["lead", "deal", "vehicle", "service"] as const;
 const financeTerms = [36, 48, 60, 72] as const;
+const employeeDepartments = ["Executive", "Sales", "Finance", "Inventory", "Marketing", "Accounts", "Service", "Audit"] as const;
+const appointmentPurposes = ["Consultation", "Finance Review", "Delivery", "Service Handover"] as const;
+const appointmentStatuses = ["Scheduled", "Confirmed", "Completed", "Cancelled"] as const;
+const testDriveStatuses = ["Booked", "Completed", "No Show"] as const;
+const quoteStatuses = ["Draft", "Sent", "Accepted", "Expired"] as const;
+const paymentKinds = ["Deposit", "Balance", "Refund"] as const;
+const paymentStatuses = ["Pending", "Cleared", "Failed"] as const;
+const applicationStatuses = ["Draft", "Submitted", "Approved", "Declined"] as const;
+const documentCategories = ["Identity", "Quote", "Finance", "Contract", "Delivery", "Service"] as const;
+const documentStatuses = ["Required", "Uploaded", "Verified", "Expired"] as const;
 export const defaultViewPreferences: ViewPreferences = { inventory: { query: "", status: "All", mode: "cards" }, customers: { query: "", status: "All", tab: "overview" }, sales: { query: "", status: "All", sort: "date" }, service: { query: "", filter: "All", view: "Board" } };
 const customerStatuses = ["All", "Active", "Prospect"] as const;
 const customerTabs = ["overview", "follow-ups"] as const;
@@ -36,6 +46,7 @@ const nonEmptyString: Validator = (value) => typeof value === "string" && value.
 const number: Validator = (value) => typeof value === "number" && Number.isFinite(value);
 const boolean: Validator = (value) => typeof value === "boolean";
 const oneOf = <T extends readonly (string | number)[]>(values: T): Validator => (value) => values.includes(value as T[number]);
+const optional = (validate: Validator): Validator => (value) => value === undefined || validate(value);
 const hasShape = (value: unknown, shape: Record<string, Validator>) => isRecord(value) && Object.entries(shape).every(([key, validate]) => validate(value[key]));
 const isAssetPath: Validator = (value) => typeof value === "string" && /^\/media\/[\w/-]+\.(?:png|webp)$/u.test(value);
 const isVin: Validator = (value) => typeof value === "string" && /^[A-HJ-NPR-Z0-9]{17}$/u.test(value);
@@ -88,6 +99,13 @@ const isNotification = (value: unknown) => hasShape(value, {
 const isActivity = (value: unknown) => hasShape(value, {
   id: nonEmptyString, action: nonEmptyString, detail: nonEmptyString, actor: nonEmptyString, occurredAt: nonEmptyString, tone: oneOf(tones), targetType: oneOf(["vehicle", "customer", "lead", "deal", "service", "task", "system"]), targetId: nonEmptyString,
 });
+const isEmployee = (value: unknown) => hasShape(value, { id: nonEmptyString, accountId: optional(nonEmptyString), name: nonEmptyString, email: nonEmptyString, title: nonEmptyString, department: oneOf(employeeDepartments), branch: nonEmptyString, managerId: optional(nonEmptyString), status: oneOf(["Active", "Leave"]) });
+const isAppointment = (value: unknown) => hasShape(value, { id: nonEmptyString, customerId: nonEmptyString, leadId: nonEmptyString, vehicleId: nonEmptyString, assignedTo: nonEmptyString, branch: nonEmptyString, scheduledAt: nonEmptyString, purpose: oneOf(appointmentPurposes), status: oneOf(appointmentStatuses) });
+const isTestDrive = (value: unknown) => hasShape(value, { id: nonEmptyString, appointmentId: nonEmptyString, customerId: nonEmptyString, leadId: nonEmptyString, vehicleId: nonEmptyString, host: nonEmptyString, scheduledAt: nonEmptyString, status: oneOf(testDriveStatuses), outcome: string });
+const isQuote = (value: unknown) => hasShape(value, { id: nonEmptyString, customerId: nonEmptyString, leadId: nonEmptyString, vehicleId: nonEmptyString, createdBy: nonEmptyString, amount: number, status: oneOf(quoteStatuses), createdAt: nonEmptyString, expiresAt: nonEmptyString });
+const isPayment = (value: unknown) => hasShape(value, { id: nonEmptyString, dealId: nonEmptyString, customerId: nonEmptyString, amount: number, kind: oneOf(paymentKinds), status: oneOf(paymentStatuses), paidAt: nonEmptyString });
+const isFinanceApplication = (value: unknown) => hasShape(value, { id: nonEmptyString, dealId: nonEmptyString, customerId: nonEmptyString, vehicleId: nonEmptyString, owner: nonEmptyString, requestedAmount: number, status: oneOf(applicationStatuses), updatedAt: nonEmptyString });
+const isDocument = (value: unknown) => hasShape(value, { id: nonEmptyString, customerId: optional(nonEmptyString), leadId: optional(nonEmptyString), dealId: optional(nonEmptyString), vehicleId: optional(nonEmptyString), name: nonEmptyString, category: oneOf(documentCategories), status: oneOf(documentStatuses), updatedAt: nonEmptyString });
 
 const validString = (value: unknown, fallback: string) => typeof value === "string" ? value : fallback;
 const validChoice = <T extends string>(value: unknown, choices: readonly T[], fallback: T): T => choices.includes(value as T) ? value as T : fallback;
@@ -161,7 +179,7 @@ const isDrafts = (value: unknown) => isRecord(value)
 
 export function isCompatibleDemoState(value: unknown): value is DemoState {
   if (!isRecord(value) || value.schemaVersion !== 2 || !hasShape(value.preferences, { branch: nonEmptyString, density: oneOf(["comfortable", "compact"]), activePage: nonEmptyString, activeSubview: nonEmptyString, viewPreferences: (item) => JSON.stringify(normalizeViewPreferences(item)) === JSON.stringify(item) }) || !isDrafts(value.drafts)) return false;
-  const collections = ["vehicles", "customers", "leads", "deals", "financeDrafts", "serviceJobs", "tasks", "notifications", "activities"] as const;
+  const collections = ["vehicles", "customers", "leads", "deals", "financeDrafts", "financeApplications", "serviceJobs", "employees", "appointments", "testDrives", "quotes", "payments", "documents", "tasks", "notifications", "activities"] as const;
   if (!collections.every((key) => Array.isArray(value[key]))) return false;
 
   const vehicles = value.vehicles as unknown[];
@@ -169,11 +187,18 @@ export function isCompatibleDemoState(value: unknown): value is DemoState {
   const leads = value.leads as unknown[];
   const deals = value.deals as unknown[];
   const financeDrafts = value.financeDrafts as unknown[];
+  const financeApplications = value.financeApplications as unknown[];
   const serviceJobs = value.serviceJobs as unknown[];
+  const employees = value.employees as unknown[];
+  const appointments = value.appointments as unknown[];
+  const testDrives = value.testDrives as unknown[];
+  const quotes = value.quotes as unknown[];
+  const payments = value.payments as unknown[];
+  const documents = value.documents as unknown[];
   const tasks = value.tasks as unknown[];
   const notifications = value.notifications as unknown[];
   const activities = value.activities as unknown[];
-  if (!vehicles.every(isVehicle) || !customers.every(isCustomer) || !leads.every(isLead) || !deals.every(isDeal) || !financeDrafts.every(isFinanceDraft) || !serviceJobs.every(isServiceJob) || !tasks.every(isTask) || !notifications.every(isNotification) || !activities.every(isActivity)) return false;
+  if (!vehicles.every(isVehicle) || !customers.every(isCustomer) || !leads.every(isLead) || !deals.every(isDeal) || !financeDrafts.every(isFinanceDraft) || !financeApplications.every(isFinanceApplication) || !serviceJobs.every(isServiceJob) || !employees.every(isEmployee) || !appointments.every(isAppointment) || !testDrives.every(isTestDrive) || !quotes.every(isQuote) || !payments.every(isPayment) || !documents.every(isDocument) || !tasks.every(isTask) || !notifications.every(isNotification) || !activities.every(isActivity)) return false;
 
   const ids = (records: RecordValue[]) => new Set(records.map((record) => record.id as string));
   const vehicleIds = ids(vehicles as RecordValue[]);
@@ -181,6 +206,8 @@ export function isCompatibleDemoState(value: unknown): value is DemoState {
   const leadIds = ids(leads as RecordValue[]);
   const dealIds = ids(deals as RecordValue[]);
   const serviceIds = ids(serviceJobs as RecordValue[]);
+  const appointmentIds = ids(appointments as RecordValue[]);
+  const employeeIds = ids(employees as RecordValue[]);
   const linked = (record: RecordValue) => vehicleIds.has(record.vehicleId as string) && customerIds.has(record.customerId as string);
   const taskHasRelatedRecord = (task: RecordValue) => {
     const idsByType = { lead: leadIds, deal: dealIds, vehicle: vehicleIds, service: serviceIds };
@@ -191,7 +218,14 @@ export function isCompatibleDemoState(value: unknown): value is DemoState {
     && leads.every((lead) => linked(lead as RecordValue))
     && deals.every((deal) => linked(deal as RecordValue))
     && financeDrafts.every((draft) => vehicleIds.has((draft as RecordValue).vehicleId as string))
+    && financeApplications.every((application) => { const item = application as RecordValue; return dealIds.has(item.dealId as string) && customerIds.has(item.customerId as string) && vehicleIds.has(item.vehicleId as string); })
     && serviceJobs.every((job) => linked(job as RecordValue))
+    && employees.every((employee) => { const managerId = (employee as RecordValue).managerId; return managerId === undefined || employeeIds.has(managerId as string); })
+    && appointments.every((appointment) => { const item = appointment as RecordValue; return customerIds.has(item.customerId as string) && leadIds.has(item.leadId as string) && vehicleIds.has(item.vehicleId as string); })
+    && testDrives.every((drive) => { const item = drive as RecordValue; return appointmentIds.has(item.appointmentId as string) && customerIds.has(item.customerId as string) && leadIds.has(item.leadId as string) && vehicleIds.has(item.vehicleId as string); })
+    && quotes.every((quote) => { const item = quote as RecordValue; return customerIds.has(item.customerId as string) && leadIds.has(item.leadId as string) && vehicleIds.has(item.vehicleId as string); })
+    && payments.every((payment) => { const item = payment as RecordValue; return dealIds.has(item.dealId as string) && customerIds.has(item.customerId as string); })
+    && documents.every((document) => { const item = document as RecordValue; return (item.customerId === undefined || customerIds.has(item.customerId as string)) && (item.leadId === undefined || leadIds.has(item.leadId as string)) && (item.dealId === undefined || dealIds.has(item.dealId as string)) && (item.vehicleId === undefined || vehicleIds.has(item.vehicleId as string)); })
     && tasks.every((task) => taskHasRelatedRecord(task as RecordValue))
     && notifications.every((notification) => relatedIds.has((notification as RecordValue).relatedId as string))
     && activities.every((activity) => { const item = activity as RecordValue; const idsByType = { vehicle: vehicleIds, customer: customerIds, lead: leadIds, deal: dealIds, service: serviceIds, task: ids(tasks as RecordValue[]), system: new Set(["system"]) }; return idsByType[item.targetType as keyof typeof idsByType].has(item.targetId as string); });
@@ -261,10 +295,25 @@ function normalizeDemoAssignees(value: RecordValue): RecordValue {
   return { ...value, leads, deals, serviceJobs };
 }
 
+function normalizeConnectedDataset(value: RecordValue): RecordValue {
+  const collectionKeys = ["customers", "leads", "deals", "financeDrafts", "financeApplications", "serviceJobs", "employees", "appointments", "testDrives", "quotes", "payments", "documents", "tasks", "notifications", "activities"] as const;
+  const expectedCounts: Record<(typeof collectionKeys)[number], number> = { customers: 48, leads: 64, deals: 24, financeDrafts: 20, financeApplications: 20, serviceJobs: 18, employees: 15, appointments: 24, testDrives: 16, quotes: 24, payments: 18, documents: 30, tasks: 40, notifications: 6, activities: 40 };
+  if (collectionKeys.every((key) => Array.isArray(value[key]) && value[key].length >= expectedCounts[key])) return value;
+  const seed = createSeedState() as unknown as RecordValue;
+  const normalized: RecordValue = { ...value };
+  for (const key of collectionKeys) {
+    const current = Array.isArray(value[key]) ? value[key] as unknown[] : [];
+    const baseline = seed[key] as unknown[];
+    const currentIds = new Set(current.filter(isRecord).map((record) => String(record.id ?? (key === "financeDrafts" ? record.vehicleId : ""))));
+    normalized[key] = [...current, ...baseline.filter((record) => isRecord(record) && !currentIds.has(String(record.id ?? (key === "financeDrafts" ? record.vehicleId : ""))))];
+  }
+  return normalized;
+}
+
 export function migrateDemoState(value: unknown): DemoState | null {
   if (isRecord(value) && value.schemaVersion === 1) value = migrateVehicleRoster(value);
   if (isRecord(value) && value.schemaVersion === 2 && isRecord(value.preferences)) {
-    const normalized = normalizeDemoAssignees(value);
+    const normalized = normalizeConnectedDataset(normalizeDemoAssignees(value));
     const preferences = isRecord(normalized.preferences) ? normalized.preferences : value.preferences;
     const { activePage: _page, activeSubview: _subview, activeRecordType: _type, activeRecordId: _id, activeContextId: _context, ...stablePreferences } = preferences;
     const drafts = isRecord(normalized.drafts) ? normalized.drafts : {};

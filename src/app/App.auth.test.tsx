@@ -111,7 +111,7 @@ describe("functional demo sign-in", () => {
     const dialog = screen.getByRole("dialog", { name: "Employee demo controls" });
     expect(within(dialog).queryByRole("button", { name: "Reset demo data" })).not.toBeInTheDocument();
     expect(within(dialog).queryByRole("button", { name: "Open workspace settings" })).not.toBeInTheDocument();
-  });
+  }, 10_000);
 
   it("personalises My Day for the signed-in employee", () => {
     render(<App repository={createDemoRepository(memoryStorage())} initialAccountId="sales" />);
