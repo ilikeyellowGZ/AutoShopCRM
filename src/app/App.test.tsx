@@ -23,26 +23,26 @@ describe("App", () => {
     expect(screen.getByRole("heading", { name: "Vehicle inventory" })).toBeInTheDocument();
   });
 
-  it("resolves every primary and grouped employee destination", async () => {
+  it.each(primaryNavigation)("resolves the $label primary destination", async (destination) => {
     const repository = createDemoRepository(memoryStorage());
     const user = userEvent.setup();
     render(<App repository={repository} />);
 
-    for (const destination of primaryNavigation) {
-      await user.click(screen.getByRole("button", { name: destination.label }));
-      expect(repository.getState().preferences).toMatchObject({ activePage: destination.target.page, activeSubview: destination.target.subview });
-    }
+    await user.click(screen.getByRole("button", { name: destination.label }));
+    expect(repository.getState().preferences).toMatchObject({ activePage: destination.target.page, activeSubview: destination.target.subview });
+  });
 
-    for (const group of navigationGroups) {
-      for (const destination of group.destinations) {
-        await user.click(screen.getByRole("button", { name: "More" }));
-        const menu = screen.getByRole("navigation", { name: "Employee destinations" });
-        const groupSection = within(menu).getByRole("heading", { name: group.label }).parentElement!;
-        await user.click(within(groupSection).getByRole("button", { name: destination.label }));
-        expect(repository.getState().preferences).toMatchObject({ activePage: destination.target.page, activeSubview: destination.target.subview });
-      }
-    }
-  }, 15_000);
+  it.each(navigationGroups.flatMap((group) => group.destinations.map((destination) => ({ group, destination }))))("resolves the $group.label / $destination.label employee destination", async ({ group, destination }) => {
+    const repository = createDemoRepository(memoryStorage());
+    const user = userEvent.setup();
+    render(<App repository={repository} />);
+
+    await user.click(screen.getByRole("button", { name: "More" }));
+    const menu = screen.getByRole("navigation", { name: "Employee destinations" });
+    const groupSection = within(menu).getByRole("heading", { name: group.label }).parentElement!;
+    await user.click(within(groupSection).getByRole("button", { name: destination.label }));
+    expect(repository.getState().preferences).toMatchObject({ activePage: destination.target.page, activeSubview: destination.target.subview });
+  });
 
   it("opens a chosen inventory record and returns to the list without remounting", async () => {
     const user = userEvent.setup();

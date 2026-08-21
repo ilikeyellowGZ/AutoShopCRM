@@ -10,6 +10,7 @@ import type {
   ServiceJob,
   UserPreferences,
   Vehicle,
+  VehicleIntakeDraft,
 } from "../domain/models";
 import { createSeedState, NOW } from "./seed";
 import { loadDemoState, saveDemoState, STORAGE_KEY } from "./storage";
@@ -21,9 +22,11 @@ export { STORAGE_KEY };
 export type DemoRepository = {
   getState(): DemoState;
   subscribe(listener: (state: DemoState) => void): () => void;
+  setAuditActor(actor: string): void;
   reset(): void;
   setPreferences(patch: Partial<UserPreferences>): void;
   updateDraft<K extends keyof FormDrafts>(key: K, draft: FormDrafts[K]): void;
+  updateVehicleIntakeDraft(scopeKey: string, draft: VehicleIntakeDraft | null): void;
   completeTask(taskId: string): void;
   rescheduleTask(taskId: string, dueAt: string): void;
   addVehicle(vehicle: Vehicle): void;
@@ -81,12 +84,13 @@ function validateCustomerAndVehicle(customerId: string, vehicleId: string, state
 export function createDemoRepository(storage: Storage): DemoRepository {
   let state = clone(loadDemoState(storage));
   let activityNumber = maximumActivityNumber(state.activities);
+  let auditActor = "Weelee Employee";
   const listeners = new Set<(state: DemoState) => void>();
 
   const commit = (action: string, detail: string, mutate: (draft: DemoState) => void, tone: AuditActivity["tone"] = "info", targetType: AuditActivity["targetType"] = "system", targetId = "system") => {
     const draft = clone(state);
     mutate(draft);
-    draft.activities.unshift({ id: activityId(++activityNumber), action, detail, actor: "Weelee Employee", occurredAt: NOW, tone, targetType, targetId });
+    draft.activities.unshift({ id: activityId(++activityNumber), action, detail, actor: auditActor, occurredAt: NOW, tone, targetType, targetId });
     state = draft;
     saveDemoState(storage, state);
     listeners.forEach((listener) => listener(clone(state)));
@@ -112,13 +116,14 @@ export function createDemoRepository(storage: Storage): DemoRepository {
       listeners.add(listener);
       return () => listeners.delete(listener);
     },
+    setAuditActor: (actor) => { auditActor = actor.trim() || "Weelee Employee"; },
     reset: () => {
       const resetState = createSeedState();
       resetState.activities.unshift({
         id: activityId(++activityNumber),
         action: "Demo data reset",
         detail: "The employee demo was restored to its deterministic seed data.",
-        actor: "Weelee Employee",
+        actor: auditActor,
         occurredAt: NOW,
         tone: "neutral",
         targetType: "system",
@@ -135,6 +140,14 @@ export function createDemoRepository(storage: Storage): DemoRepository {
       else persist(update);
     },
     updateDraft: (key, draftValue) => commit("Draft updated", `${key} draft was saved locally.`, (draft) => { draft.drafts[key] = clone(draftValue); }, "neutral"),
+    updateVehicleIntakeDraft: (scopeKey, draftValue) => {
+      const scope = scopeKey.trim();
+      if (!scope) throw new Error("Vehicle-intake draft scope is required.");
+      persist((draft) => {
+        if (draftValue === null) delete draft.drafts.vehicleIntakes[scope];
+        else draft.drafts.vehicleIntakes[scope] = clone(draftValue);
+      });
+    },
     completeTask: (taskId) => commit("Task completed", "A task was marked complete.", (draft) => {
       draft.tasks[findIndex(draft.tasks, taskId, "Task")] = { ...draft.tasks[findIndex(draft.tasks, taskId, "Task")], status: "Completed", tone: "positive" };
     }, "positive", "task", taskId),

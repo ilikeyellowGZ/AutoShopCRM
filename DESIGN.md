@@ -58,6 +58,14 @@ Primary family: `Arial, Helvetica, sans-serif`. Page titles are 40–48px/700; s
 - **Treatment:** field-background token, one-pixel rules, and the existing 4px spacing scale; selectors do not introduce a new visual language.
 - **Accessibility:** every control has a programmatic label, errors use `aria-invalid` plus `aria-describedby`, and native keyboard/autofill behaviour remains available.
 
+### LoginScreen and RoleGate
+
+- **Structure:** a focused sign-in form, a plainly labelled shared demo access code, and an account directory that lets evaluators choose a role without memorising credentials.
+- **States:** signed out, invalid credentials, signed in, permission denied, and read-only account.
+- **Treatment:** the existing white canvas, black rules, compact controls, and editorial type hierarchy; the login does not introduce an authentication-product visual style.
+- **Accessibility:** email and demo-code controls use persistent native labels and autocomplete metadata, errors use `role="alert"`, account shortcuts are native buttons, and role restrictions remove unavailable actions without removing record context.
+- **Security boundary:** the shared code is intentionally visible and is named a demo access code. The browser session is held in React memory only and is not presented as server authentication.
+
 ## 5. Motion and responsive behaviour
 
 Only opacity and transforms animate. Navigation/flyouts use 160–180ms ease-out; page/content changes use 180–220ms with a vertical transform no greater than 8px. Reduced motion removes non-essential transitions.

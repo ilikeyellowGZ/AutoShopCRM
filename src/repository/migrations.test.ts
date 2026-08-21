@@ -154,4 +154,24 @@ describe("preference migrations", () => {
 
     expect(migrateDemoState(state)?.preferences).toMatchObject({ activePage: "finance", activeSubview: "deal-finance", activeContextId: "vehicle-09" });
   });
+
+  it("upgrades legacy demo assignees and recovers the legacy intake draft for the owner and current branch", () => {
+    const state = stateRecord();
+    const drafts = asRecord(state.drafts);
+    delete drafts.vehicleIntakes;
+    drafts.vehicleIntake = { step: 1, values: { vin: "OWNER", stockId: "LEGACY-DRAFT" } };
+    (state.leads as UnknownRecord[])[0].owner = "Alicia Brown";
+    (state.deals as UnknownRecord[])[0].salesRep = "Alicia Brown";
+    (state.serviceJobs as UnknownRecord[])[4].advisor = "Peter van der Merwe";
+
+    const migrated = migrateDemoState(state)!;
+
+    expect(migrated.drafts.vehicleIntakes["owner:Johannesburg North"]?.values.stockId).toBe("LEGACY-DRAFT");
+    expect(migrated.drafts.vehicleIntake).toBeNull();
+    delete migrated.drafts.vehicleIntakes["owner:Johannesburg North"];
+    expect(migrateDemoState(migrated)?.drafts.vehicleIntakes["owner:Johannesburg North"]).toBeUndefined();
+    expect(migrated.leads[0].owner).toBe("Naledi Ndlovu");
+    expect(migrated.deals[0].salesRep).toBe("Naledi Ndlovu");
+    expect(migrated.serviceJobs[4].advisor).toBe("Sipho Dlamini");
+  });
 });

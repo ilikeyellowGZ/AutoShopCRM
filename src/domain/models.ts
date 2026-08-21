@@ -45,5 +45,5 @@ export type ViewPreferences = {
 export type PersistedRecordType = "vehicle" | "customer" | "lead" | "deal" | "service" | "task";
 export type UserPreferences = { branch: string; density: "comfortable" | "compact"; activePage: string; activeSubview: string; activeRecordType?: PersistedRecordType; activeRecordId?: string; activeContextId?: string; viewPreferences: ViewPreferences };
 export type VehicleIntakeDraft = { step: 1 | 2 | 3 | 4; values: Partial<Vehicle> };
-export type FormDrafts = { vehicleIntake: VehicleIntakeDraft | null; lead: Partial<Lead> | null; deal: Partial<Deal> | null; serviceNotes: Record<string, string> };
+export type FormDrafts = { vehicleIntake: VehicleIntakeDraft | null; vehicleIntakes: Record<string, VehicleIntakeDraft>; lead: Partial<Lead> | null; deal: Partial<Deal> | null; serviceNotes: Record<string, string> };
 export type DemoState = { schemaVersion: 2; vehicles: Vehicle[]; customers: Customer[]; leads: Lead[]; deals: Deal[]; financeDrafts: FinanceDraft[]; serviceJobs: ServiceJob[]; tasks: TaskItem[]; notifications: Notification[]; activities: AuditActivity[]; preferences: UserPreferences; drafts: FormDrafts };

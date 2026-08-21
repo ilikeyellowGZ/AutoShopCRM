@@ -169,6 +169,37 @@ describe("DemoRepository", () => {
     repository.updateServiceJob(state.serviceJobs[0].id, { note: "Checked" }); expect(repository.getState().activities[0]).toMatchObject({ targetType: "service", targetId: state.serviceJobs[0].id });
   });
 
+  it("persists vehicle-intake drafts independently by account and branch", () => {
+    const repository = createDemoRepository(memoryStorage());
+    const initialActivityCount = repository.getState().activities.length;
+
+    repository.updateVehicleIntakeDraft("owner:Johannesburg North", { step: 2, values: { stockId: "OWNER-DRAFT" } });
+    repository.updateVehicleIntakeDraft("stock:Pretoria", { step: 1, values: { stockId: "STOCK-DRAFT" } });
+
+    expect(repository.getState().drafts.vehicleIntakes["owner:Johannesburg North"]?.values.stockId).toBe("OWNER-DRAFT");
+    expect(repository.getState().drafts.vehicleIntakes["stock:Pretoria"]?.values.stockId).toBe("STOCK-DRAFT");
+    repository.updateVehicleIntakeDraft("stock:Pretoria", null);
+    expect(repository.getState().drafts.vehicleIntakes["stock:Pretoria"]).toBeUndefined();
+    expect(repository.getState().drafts.vehicleIntakes["owner:Johannesburg North"]?.values.stockId).toBe("OWNER-DRAFT");
+    expect(repository.getState().activities).toHaveLength(initialActivityCount);
+  });
+
+  it("reloads an incomplete vehicle-intake draft without resetting persisted CRM state", () => {
+    const storage = memoryStorage();
+    const repository = createDemoRepository(storage);
+    repository.setPreferences({ density: "compact" });
+    repository.updateVehicleIntakeDraft("owner:Johannesburg North", {
+      step: 1,
+      values: { vin: "OWNER", stockId: "", year: 2024, make: "", model: "", engine: "", registration: "Unregistered" },
+    });
+
+    const reloaded = createDemoRepository(storage).getState();
+
+    expect(reloaded.preferences.density).toBe("compact");
+    expect(reloaded.vehicles).toHaveLength(30);
+    expect(reloaded.drafts.vehicleIntakes["owner:Johannesburg North"]?.values.vin).toBe("OWNER");
+  });
+
   it("writes an explicit audit target matrix for every entity mutation", () => {
     const repository = createDemoRepository(memoryStorage()); const state = repository.getState();
     const cases: Array<[string, () => void, string, string, string]> = [
@@ -317,6 +348,17 @@ describe("DemoRepository", () => {
 
     expect(repository.getState().tasks[0].status).not.toBe("Completed");
     expect(repository.getState().activities[0].action).toBe("Demo data reset");
+  });
+
+  it("attributes mutations and resets to the active in-memory demo employee", () => {
+    const repository = createDemoRepository(memoryStorage());
+    repository.setAuditActor("Kabelo Molefe · Stock Controller");
+
+    repository.updateVehicle("vehicle-01", { location: "Stock control bay" });
+    expect(repository.getState().activities[0].actor).toBe("Kabelo Molefe · Stock Controller");
+
+    repository.reset();
+    expect(repository.getState().activities[0].actor).toBe("Kabelo Molefe · Stock Controller");
   });
 
   it("keeps reset audit activity IDs increasing within a repository session", () => {

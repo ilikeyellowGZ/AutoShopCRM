@@ -145,8 +145,16 @@ function normalizeRoute(state: RecordValue, preferences: RecordValue): RecordVal
 }
 
 const partial = (shape: Record<string, Validator>): Validator => (value) => isRecord(value) && Object.entries(value).every(([key, field]) => Boolean(shape[key]) && shape[key](field));
+const vehicleIntakeDraftShape = {
+  id: string, stockId: string, vin: string, year: number, make: string, model: string, derivative: string,
+  price: number, purchasePrice: number, mileageKm: number, exterior: string, branch: string, location: string,
+  status: oneOf(vehicleStatuses), daysInStock: number, bodyType: oneOf(vehicleBodyTypes), fuel: oneOf(vehicleFuels),
+  transmission: oneOf(vehicleTransmissions), engine: string, registration: string, gallery: isGallery,
+};
+const isVehicleIntakeDraft = (value: unknown) => hasShape(value, { step: oneOf([1, 2, 3, 4]), values: partial(vehicleIntakeDraftShape) });
 const isDrafts = (value: unknown) => isRecord(value)
-  && (value.vehicleIntake === null || hasShape(value.vehicleIntake, { step: oneOf([1, 2, 3, 4]), values: partial(vehicleShape) }))
+  && (value.vehicleIntake === null || isVehicleIntakeDraft(value.vehicleIntake))
+  && isRecord(value.vehicleIntakes) && Object.values(value.vehicleIntakes).every(isVehicleIntakeDraft)
   && (value.lead === null || partial({ id: nonEmptyString, customerId: nonEmptyString, vehicleId: nonEmptyString, owner: nonEmptyString, stage: oneOf(leadStages), value: number, nextAction: nonEmptyString, dueAt: nonEmptyString, tone: oneOf(tones) })(value.lead))
   && (value.deal === null || partial({ id: nonEmptyString, customerId: nonEmptyString, vehicleId: nonEmptyString, salesRep: nonEmptyString, grossProfit: number, status: oneOf(dealStatuses), date: nonEmptyString })(value.deal))
   && isRecord(value.serviceNotes) && Object.values(value.serviceNotes).every(string);
@@ -233,11 +241,37 @@ function migrateVehicleRoster(value: RecordValue): RecordValue {
   return { ...value, schemaVersion: 2, vehicles, preferences: { ...sourcePreferences, branch: seedBranch } };
 }
 
+function normalizeDemoAssignees(value: RecordValue): RecordValue {
+  const salesAssignees = ["Naledi Ndlovu", "Alicia Brown", "Marcus Botha", "Lindiwe Khumalo"];
+  const leads = Array.isArray(value.leads) ? value.leads.map((item) => {
+    if (!isRecord(item)) return item;
+    const number = Number(String(item.id).match(/lead-(\d+)$/u)?.[1]);
+    if (!Number.isInteger(number) || number < 1 || number > 16) return item;
+    const legacyOwner = number % 2 ? "Alicia Brown" : "Marcus Botha";
+    return item.owner === legacyOwner ? { ...item, owner: salesAssignees[(number - 1) % salesAssignees.length] } : item;
+  }) : value.leads;
+  const deals = Array.isArray(value.deals) ? value.deals.map((item) => {
+    if (!isRecord(item)) return item;
+    const number = Number(String(item.id).match(/deal-(\d+)$/u)?.[1]);
+    if (!Number.isInteger(number) || number < 1 || number > 8) return item;
+    const legacyRep = number % 2 ? "Alicia Brown" : "Marcus Botha";
+    return item.salesRep === legacyRep ? { ...item, salesRep: salesAssignees[(number - 1) % salesAssignees.length] } : item;
+  }) : value.deals;
+  const serviceJobs = Array.isArray(value.serviceJobs) ? value.serviceJobs.map((item) => isRecord(item) && item.id === "service-05" && item.advisor === "Peter van der Merwe" ? { ...item, advisor: "Sipho Dlamini" } : item) : value.serviceJobs;
+  return { ...value, leads, deals, serviceJobs };
+}
+
 export function migrateDemoState(value: unknown): DemoState | null {
   if (isRecord(value) && value.schemaVersion === 1) value = migrateVehicleRoster(value);
   if (isRecord(value) && value.schemaVersion === 2 && isRecord(value.preferences)) {
-    const { activePage: _page, activeSubview: _subview, activeRecordType: _type, activeRecordId: _id, activeContextId: _context, ...stablePreferences } = value.preferences;
-    value = { ...value, preferences: { ...stablePreferences, ...normalizeRoute(value, value.preferences), viewPreferences: normalizeViewPreferences(value.preferences.viewPreferences) } };
+    const normalized = normalizeDemoAssignees(value);
+    const preferences = isRecord(normalized.preferences) ? normalized.preferences : value.preferences;
+    const { activePage: _page, activeSubview: _subview, activeRecordType: _type, activeRecordId: _id, activeContextId: _context, ...stablePreferences } = preferences;
+    const drafts = isRecord(normalized.drafts) ? normalized.drafts : {};
+    const vehicleIntakes = isRecord(drafts.vehicleIntakes) ? { ...drafts.vehicleIntakes } : {};
+    const legacyScope = `owner:${String(preferences.branch)}`;
+    if (isVehicleIntakeDraft(drafts.vehicleIntake) && vehicleIntakes[legacyScope] === undefined) vehicleIntakes[legacyScope] = drafts.vehicleIntake;
+    value = { ...normalized, preferences: { ...stablePreferences, ...normalizeRoute(normalized, preferences), viewPreferences: normalizeViewPreferences(preferences.viewPreferences) }, drafts: { ...drafts, vehicleIntake: null, vehicleIntakes } };
   }
   return isCompatibleDemoState(value) ? value : null;
 }

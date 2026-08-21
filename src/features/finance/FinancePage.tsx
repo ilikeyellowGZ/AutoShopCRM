@@ -13,7 +13,7 @@ function draftForVehicle(state: DemoState, vehicleId: string): FinanceDraft {
   return state.financeDrafts.find((item) => item.vehicleId === vehicleId) ?? { vehicleId, vehiclePrice: vehicle?.price ?? 0, downPayment: 0, termMonths: 60, aprPercent: 0, tradeAllowance: 0, lienPayoff: 0, serviceContract: 0, gapInsurance: 0 };
 }
 
-export function FinancePage({ state, repository, initialVehicleId: requestedVehicleId }: { state: DemoState; repository: DemoRepository; initialVehicleId?: string }) {
+export function FinancePage({ state, repository, initialVehicleId: requestedVehicleId, canWrite = true }: { state: DemoState; repository: DemoRepository; initialVehicleId?: string; canWrite?: boolean }) {
   const initialVehicleId = useMemo(() => requestedVehicleId && state.vehicles.some((vehicle) => vehicle.id === requestedVehicleId) ? requestedVehicleId : state.financeDrafts[0]?.vehicleId ?? state.vehicles[0]?.id ?? "", [requestedVehicleId, state]);
   const [selectedVehicleId, setSelectedVehicleId] = useState(initialVehicleId);
   const saved = useMemo(() => draftForVehicle(state, selectedVehicleId), [state, selectedVehicleId]);
@@ -33,20 +33,20 @@ export function FinancePage({ state, repository, initialVehicleId: requestedVehi
   return <section className="finance-page" aria-labelledby="finance-title">
     <header className="finance-heading"><div><p className="finance-eyebrow">F&I · local demo workspace</p><h1 id="finance-title">Structure a deal</h1><p>Build an indicative South African Rand repayment plan for a connected vehicle.</p></div></header>
     <div className="finance-layout"><form className="finance-form" onSubmit={(event) => { event.preventDefault(); submit(); }} noValidate>
-      <fieldset><legend>Vehicle and customer contribution</legend>
+      <fieldset disabled={!canWrite}><legend>Vehicle and customer contribution</legend>
         <label className="finance-select">Vehicle<select value={selectedVehicleId} onChange={(event) => { const vehicleId = event.target.value; const next = draftForVehicle(repository.getState(), vehicleId); setSelectedVehicleId(vehicleId); setDraft(next); setErrors({}); setSubmitted(false); }}>{state.vehicles.map((vehicle) => <option key={vehicle.id} value={vehicle.id}>{vehicle.year} {vehicle.make} {vehicle.model}</option>)}</select></label>
         <Field label="Vehicle price (ZAR)" type="number" min="0" value={draft.vehiclePrice} onChange={(event) => update("vehiclePrice", Number(event.target.value))} error={errors.vehiclePrice} />
         <Field label="Down payment (ZAR)" type="number" min="0" value={draft.downPayment} onChange={(event) => update("downPayment", Number(event.target.value))} error={errors.downPayment} />
         <Field label="Trade allowance (ZAR)" type="number" min="0" value={draft.tradeAllowance} onChange={(event) => update("tradeAllowance", Number(event.target.value))} error={errors.tradeAllowance} />
         <Field label="Lien payoff (ZAR)" type="number" min="0" value={draft.lienPayoff} onChange={(event) => update("lienPayoff", Number(event.target.value))} error={errors.lienPayoff} />
       </fieldset>
-      <fieldset><legend>Finance and protection</legend>
+      <fieldset disabled={!canWrite}><legend>Finance and protection</legend>
         <label className="finance-select">Term<select value={draft.termMonths} onChange={(event) => update("termMonths", Number(event.target.value) as FinanceDraft["termMonths"])}>{terms.map((term) => <option key={term} value={term}>{term} months</option>)}</select></label>
         <Field label="Interest rate (APR %)" type="number" min="0" max="30" step="0.01" value={draft.aprPercent} onChange={(event) => update("aprPercent", Number(event.target.value))} error={errors.aprPercent} />
         <Field label="Service contract (ZAR)" type="number" min="0" value={draft.serviceContract} onChange={(event) => update("serviceContract", Number(event.target.value))} error={errors.serviceContract} />
         <Field label="GAP insurance (ZAR)" type="number" min="0" value={draft.gapInsurance} onChange={(event) => update("gapInsurance", Number(event.target.value))} error={errors.gapInsurance} />
       </fieldset>
-      <div className="finance-submit"><Button type="submit">Submit demo application</Button><p>Sandbox only — this records a local activity and does not contact a lender.</p></div>
+      <div className="finance-submit">{canWrite ? <Button type="submit">Submit demo application</Button> : null}<p>Sandbox only — this records a local activity and does not contact a lender.</p></div>
       {submitted && <p className="finance-success" role="status">Demo application recorded locally. No lender was contacted.</p>}
     </form><PaymentBreakdown draft={draft} /></div>
   </section>;

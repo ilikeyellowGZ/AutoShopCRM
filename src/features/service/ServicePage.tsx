@@ -1,21 +1,42 @@
 import { useMemo, useState } from "react";
-import type { DemoState, ServiceJob, ViewPreferences } from "../../domain/models";
-import type { DemoRepository } from "../../repository/demoRepository";
+import type { NavigationTarget } from "../../app/routes";
 import { Button } from "../../components/controls/Button";
 import { StatusPill } from "../../components/controls/StatusPill";
 import { Tabs } from "../../components/controls/Tabs";
+import type { DemoState, ServiceJob, ViewPreferences } from "../../domain/models";
+import type { DemoRepository } from "../../repository/demoRepository";
 import { canTransitionServiceJob, type ServiceStatus } from "./serviceRules";
-import type { NavigationTarget } from "../../app/routes";
 
 const statuses: ServiceStatus[] = ["Booked", "Checked In", "In Progress", "Waiting for Parts", "Quality Check", "Ready", "Completed"];
 const tone = (status: ServiceStatus) => status === "Completed" || status === "Ready" ? "positive" : status === "Waiting for Parts" ? "critical" : status === "Quality Check" ? "warning" : "info" as const;
-
 const defaults: ViewPreferences["service"] = { query: "", filter: "All", view: "Board" };
-export function ServicePage({ state, repository, viewPreferences, onViewPreferencesChange, onNavigate }: { state: DemoState; repository: DemoRepository; viewPreferences?: ViewPreferences["service"]; onViewPreferencesChange?: (patch: Partial<ViewPreferences["service"]>) => void; onNavigate?: (target: NavigationTarget) => void }) {
-  const [fallback, setFallback] = useState(defaults); const { view, filter, query } = viewPreferences ?? fallback; const [notes, setNotes] = useState<Record<string, string>>({});
+
+type ServicePageProps = { state: DemoState; repository: DemoRepository; viewPreferences?: ViewPreferences["service"]; onViewPreferencesChange?: (patch: Partial<ViewPreferences["service"]>) => void; onNavigate?: (target: NavigationTarget) => void; canWrite?: boolean };
+
+export function ServicePage({ state, repository, viewPreferences, onViewPreferencesChange, onNavigate, canWrite = true }: ServicePageProps) {
+  const [fallback, setFallback] = useState(defaults);
+  const { view, filter, query } = viewPreferences ?? fallback;
+  const [notes, setNotes] = useState<Record<string, string>>({});
   const changeView = (patch: Partial<ViewPreferences["service"]>) => { if (!viewPreferences) setFallback((current) => ({ ...current, ...patch })); onViewPreferencesChange?.(patch); };
-  const jobs = useMemo(() => state.serviceJobs.filter((job) => { const customer = state.customers.find((item) => item.id === job.customerId); const vehicle = state.vehicles.find((item) => item.id === job.vehicleId); return (filter === "All" || job.status === filter) && `${customer?.name} ${vehicle?.make} ${vehicle?.model} ${job.advisor} ${job.technician}`.toLowerCase().includes(query.toLowerCase()); }), [filter, query, state]);
-  const jobCard = (job: ServiceJob) => { const customer = state.customers.find((item) => item.id === job.customerId); const vehicle = state.vehicles.find((item) => item.id === job.vehicleId); const next = statuses.filter((status) => canTransitionServiceJob(job.status, status)); return <article className="service-card" key={job.id}><header><StatusPill tone={tone(job.status)}>{job.status}</StatusPill><time dateTime={job.dueAt}>Due {new Intl.DateTimeFormat("en-ZA", { dateStyle: "medium", timeStyle: "short" }).format(new Date(job.dueAt))}</time></header><h3>{vehicle ? `${vehicle.year} ${vehicle.make} ${vehicle.model}` : "Vehicle unavailable"}</h3><p>{customer?.name ?? "Customer unavailable"} · Advisor: {job.advisor}</p><p>Technician: {job.technician} · {job.status === "Waiting for Parts" ? "Parts risk: delivery pending" : "Parts risk: clear"}</p><p>Customer approval: {job.status === "Completed" ? "Completed" : "Pending confirmation"}</p><label className="service-notes">Job note<textarea value={notes[job.id] ?? job.note} onChange={(event) => setNotes({ ...notes, [job.id]: event.target.value })} /></label><div className="service-card-actions">{onNavigate ? <Button variant="secondary" onClick={() => onNavigate({ page: "service", subview: "service-board", recordType: "service", recordId: job.id })}>Open service job {job.id}</Button> : null}<Button variant="secondary" onClick={() => repository.updateServiceJob(job.id, { note: notes[job.id] ?? job.note })}>Save note</Button>{next.map((status) => <Button key={status} onClick={() => repository.updateServiceState(job.id, status)}>Move to {status}</Button>)}</div></article>; };
+  const jobs = useMemo(() => state.serviceJobs.filter((job) => {
+    const customer = state.customers.find((item) => item.id === job.customerId);
+    const vehicle = state.vehicles.find((item) => item.id === job.vehicleId);
+    return (filter === "All" || job.status === filter) && `${customer?.name} ${vehicle?.make} ${vehicle?.model} ${job.advisor} ${job.technician}`.toLowerCase().includes(query.toLowerCase());
+  }), [filter, query, state]);
+  const jobCard = (job: ServiceJob) => {
+    const customer = state.customers.find((item) => item.id === job.customerId);
+    const vehicle = state.vehicles.find((item) => item.id === job.vehicleId);
+    const next = statuses.filter((status) => canTransitionServiceJob(job.status, status));
+    return <article className="service-card" key={job.id}>
+      <header><StatusPill tone={tone(job.status)}>{job.status}</StatusPill><time dateTime={job.dueAt}>Due {new Intl.DateTimeFormat("en-ZA", { dateStyle: "medium", timeStyle: "short" }).format(new Date(job.dueAt))}</time></header>
+      <h3>{vehicle ? `${vehicle.year} ${vehicle.make} ${vehicle.model}` : "Vehicle unavailable"}</h3>
+      <p>{customer?.name ?? "Customer unavailable"} · Advisor: {job.advisor}</p>
+      <p>Technician: {job.technician} · {job.status === "Waiting for Parts" ? "Parts risk: delivery pending" : "Parts risk: clear"}</p>
+      <p>Customer approval: {job.status === "Completed" ? "Completed" : "Pending confirmation"}</p>
+      <label className="service-notes">Job note<textarea value={notes[job.id] ?? job.note} readOnly={!canWrite} onChange={(event) => { if (canWrite) setNotes({ ...notes, [job.id]: event.target.value }); }} /></label>
+      <div className="service-card-actions">{onNavigate ? <Button variant="secondary" onClick={() => onNavigate({ page: "service", subview: "service-board", recordType: "service", recordId: job.id })}>Open service job {job.id}</Button> : null}{canWrite ? <><Button variant="secondary" onClick={() => repository.updateServiceJob(job.id, { note: notes[job.id] ?? job.note })}>Save note</Button>{next.map((status) => <Button key={status} onClick={() => repository.updateServiceState(job.id, status)}>Move to {status}</Button>)}</> : null}</div>
+    </article>;
+  };
   const orderedJobs = [...jobs].sort((a, b) => a.dueAt.localeCompare(b.dueAt));
   const schedule = <div className="service-schedule" aria-label="Service schedule">{Object.entries(orderedJobs.reduce<Record<string, ServiceJob[]>>((groups, job) => { const day = job.dueAt.slice(0, 10); (groups[day] ??= []).push(job); return groups; }, {})).map(([day, scheduled]) => <section className="service-schedule-day" key={day}><h2><time dateTime={day}>{new Intl.DateTimeFormat("en-ZA", { weekday: "long", day: "numeric", month: "long" }).format(new Date(`${day}T12:00:00`))}</time></h2><ol>{scheduled.map((job) => <li key={job.id}>{jobCard(job)}</li>)}</ol></section>)}</div>;
   const content = jobs.length === 0 ? <p className="service-empty">No service jobs match these filters. Clear a filter or create a booking from the service desk.</p> : view === "Board" ? <div className="service-board">{statuses.filter((status) => jobs.some((job) => job.status === status)).map((status) => <section className="service-column" key={status} aria-labelledby={`service-${status}`}><h2 id={`service-${status}`}>{status}</h2>{jobs.filter((job) => job.status === status).map(jobCard)}</section>)}</div> : view === "Schedule" ? schedule : <div className="service-list" aria-label="Service job list">{orderedJobs.map(jobCard)}</div>;

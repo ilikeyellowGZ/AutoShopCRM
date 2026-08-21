@@ -19,8 +19,8 @@ function leadRows(state: DemoState, leads: Lead[], action: string): Row[] {
   });
 }
 
-function dealRows(state: DemoState, action: string, predicate: (deal: DemoState["deals"][number]) => boolean): Row[] {
-  return state.deals.filter(predicate).map((deal) => ({ id: deal.id, title: `Deal ${deal.id}`, detail: `${state.customers.find((customer) => customer.id === deal.customerId)?.name ?? "Customer"} · ${deal.salesRep} · ${deal.status} · ${money.format(deal.grossProfit)}`, action: `${action} ${deal.id}`, target: exact("deal", deal.id) }));
+function dealRows(state: DemoState, action: string, predicate: (deal: DemoState["deals"][number]) => boolean, canViewFinancials: boolean): Row[] {
+  return state.deals.filter(predicate).map((deal) => ({ id: deal.id, title: `Deal ${deal.id}`, detail: `${state.customers.find((customer) => customer.id === deal.customerId)?.name ?? "Customer"} · ${deal.salesRep} · ${deal.status}${canViewFinancials ? ` · ${money.format(deal.grossProfit)}` : ""}`, action: `${action} ${deal.id}`, target: exact("deal", deal.id) }));
 }
 
 function serviceRows(state: DemoState, action: string, predicate: (job: ServiceJob) => boolean): Row[] {
@@ -53,7 +53,7 @@ function financeRows(state: DemoState, kind: "applications" | "lenders" | "produ
   });
 }
 
-function workspaceFor(page: NavigationTarget["page"], subview: string, state: DemoState): Workspace | null {
+function workspaceFor(page: NavigationTarget["page"], subview: string, state: DemoState, canViewFinancials: boolean): Workspace | null {
   if (page === "inventory") {
     const appraisalIds = new Set([...state.financeDrafts.map((draft) => draft.vehicleId), ...state.tasks.filter((task) => task.relatedType === "vehicle" && /apprais|trade|price|margin/i.test(`${task.title} ${task.detail}`)).map((task) => task.relatedId)]);
     const tradeIds = new Set(state.financeDrafts.filter((draft) => draft.tradeAllowance > 0).map((draft) => draft.vehicleId));
@@ -74,11 +74,11 @@ function workspaceFor(page: NavigationTarget["page"], subview: string, state: De
     if (subview === "test-drives") return { eyebrow: "CRM", heading: "Test drives", rows: leadRows(state, state.leads.filter((lead) => state.customers.find((customer) => customer.id === lead.customerId)?.vehicleInterestId === lead.vehicleId), "Open test drive") };
   }
   if (page === "sales") {
-    if (subview === "deals") return { eyebrow: "Sales", heading: "Deals", rows: dealRows(state, "Open deal", () => true) };
-    if (subview === "quotations") return { eyebrow: "Sales", heading: "Quotations", rows: dealRows(state, "Open quotation", (deal) => deal.status === "Pending") };
-    if (subview === "approvals") return { eyebrow: "Sales", heading: "Sales approvals", rows: dealRows(state, "Open approval", (deal) => deal.status === "Approval") };
-    if (subview === "deliveries") return { eyebrow: "Sales", heading: "Vehicle deliveries", rows: dealRows(state, "Open delivery", (deal) => deal.status === "Closed") };
-    if (subview === "commissions") return { eyebrow: "Sales", heading: "Sales commissions", rows: dealRows(state, "Open commission", (deal) => deal.status === "Closed" && deal.grossProfit >= 150_000) };
+    if (subview === "deals") return { eyebrow: "Sales", heading: "Deals", rows: dealRows(state, "Open deal", () => true, canViewFinancials) };
+    if (subview === "quotations") return { eyebrow: "Sales", heading: "Quotations", rows: dealRows(state, "Open quotation", (deal) => deal.status === "Pending", canViewFinancials) };
+    if (subview === "approvals") return { eyebrow: "Sales", heading: "Sales approvals", rows: dealRows(state, "Open approval", (deal) => deal.status === "Approval", canViewFinancials) };
+    if (subview === "deliveries") return { eyebrow: "Sales", heading: "Vehicle deliveries", rows: dealRows(state, "Open delivery", (deal) => deal.status === "Closed", canViewFinancials) };
+    if (subview === "commissions") return { eyebrow: "Sales", heading: "Sales commissions", rows: dealRows(state, "Open commission", (deal) => deal.status === "Closed" && deal.grossProfit >= 150_000, canViewFinancials) };
   }
   if (page === "finance" && ["applications", "lenders", "products", "documents"].includes(subview)) {
     const headings = { applications: "Finance applications", lenders: "Lender queue", products: "Finance products", documents: "Finance documents" } as const;
@@ -103,8 +103,8 @@ function workspaceFor(page: NavigationTarget["page"], subview: string, state: De
   return null;
 }
 
-export function DomainWorkspace({ page, subview, state, onNavigate }: { page: NavigationTarget["page"]; subview: string; state: DemoState; onNavigate: (target: NavigationTarget) => void }) {
-  const workspace = workspaceFor(page, subview, state);
+export function DomainWorkspace({ page, subview, state, onNavigate, canViewFinancials = true }: { page: NavigationTarget["page"]; subview: string; state: DemoState; onNavigate: (target: NavigationTarget) => void; canViewFinancials?: boolean }) {
+  const workspace = workspaceFor(page, subview, state, canViewFinancials);
   if (!workspace) return null;
   return <section className="action-centre" aria-labelledby={`${page}-${subview}-title`}><header className="action-centre-heading"><p>{workspace.eyebrow}</p><h1 id={`${page}-${subview}-title`}>{workspace.heading}</h1><span>{workspace.rows.length} connected records</span></header><ul className="action-centre-list">{workspace.rows.length === 0 ? <li className="my-day-empty">No connected records match this operational queue.</li> : workspace.rows.map((row) => <li key={row.id}><div><strong>{row.title}</strong><p>{row.detail}</p></div>{row.action && row.target ? <Button variant="secondary" onClick={() => { if (row.target) onNavigate(row.target); }}>{row.action}</Button> : null}</li>)}</ul></section>;
 }

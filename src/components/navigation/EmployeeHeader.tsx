@@ -20,7 +20,7 @@ export function EmployeeHeader({ branch, employeeName, employeeRole, actionCount
   return <header className="weelee-header">
     <div className="weelee-header-inner">
       <WeeleeLogo className="weelee-logo" />
-      <button type="button" className="weelee-branch" onClick={onBranch} aria-label={`Change branch. Selected branch: ${branch}`}>{branch}</button>
+      <button type="button" className="weelee-branch" onClick={onBranch} disabled={!onBranch} aria-label={`Change branch. Selected branch: ${branch}`}>{branch}</button>
       <button type="button" className="weelee-search" onClick={onSearch} aria-label="Search. Press Control or Command K">Search <kbd>Ctrl K</kbd></button>
       <div className="weelee-header-actions">
         <button type="button" className="weelee-utility" onClick={onActionCentre}>Action Centre <span aria-label={`${actionCount} actions`}>{actionCount}</span></button>

@@ -3,16 +3,16 @@ import type { DemoState } from "../../domain/models";
 import { Dialog } from "../../components/overlays/Dialog";
 import { searchCommands, type CommandSearchResult } from "./commandSearch";
 
-type CommandPaletteProps = { open: boolean; state: DemoState; onClose: () => void; onSelect: (result: CommandSearchResult) => void };
+type CommandPaletteProps = { open: boolean; state: DemoState; onClose: () => void; onSelect: (result: CommandSearchResult) => void; filterResult?: (result: CommandSearchResult) => boolean };
 
 const optionId = (listId: string, result: CommandSearchResult) => `${listId}-${result.type}-${result.id.replace(/[^a-zA-Z0-9_-]/g, "-")}`;
 
-export function CommandPalette({ open, state, onClose, onSelect }: CommandPaletteProps) {
+export function CommandPalette({ open, state, onClose, onSelect, filterResult = () => true }: CommandPaletteProps) {
   const [query, setQuery] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const listId = useId();
-  const results = searchCommands(state, query);
+  const results = searchCommands(state, query).filter(filterResult);
   useEffect(() => { if (open) { setQuery(""); setActiveIndex(0); } }, [open]);
   useEffect(() => { setActiveIndex((index) => Math.min(index, Math.max(0, results.length - 1))); }, [query, results.length]);
   const choose = (result: CommandSearchResult | undefined) => { if (!result) return; onSelect(result); onClose(); };

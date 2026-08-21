@@ -51,7 +51,7 @@ const groupedCases: RouteCase[] = [
   { label: "Aftersales / Job Cards", target: { page: "service", subview: "job-cards" }, heading: "Workshop job cards", control: "Open job card service-02", row: "Sasha Naobes" },
   { label: "Aftersales / Repair Orders", target: { page: "service", subview: "repair-orders" }, heading: "Repair orders", control: "Open repair order service-03", row: "Marius Louw" },
   { label: "Aftersales / Service History", target: { page: "service", subview: "history" }, heading: "Service history", row: "No connected records match this operational queue." },
-  { label: "Workforce / Employees", target: { page: "operations", subview: "employees" }, heading: "Employees", control: "Open assigned task task-01", row: "Alicia Brown" },
+  { label: "Workforce / Employees", target: { page: "operations", subview: "employees" }, heading: "Employees", control: "Open assigned task task-01", row: "Naledi Ndlovu" },
   { label: "Workforce / Teams", target: { page: "operations", subview: "teams" }, heading: "Teams", control: "Open team task task-01", row: "Connected team" },
   { label: "Workforce / Targets", target: { page: "operations", subview: "targets" }, heading: "Team targets", control: "Open target deal deal-01", row: "Pipeline value" },
   { label: "Workforce / Attendance", target: { page: "operations", subview: "attendance" }, heading: "Attendance", control: "Open attendance record vehicle-01", row: "Latest recorded activity" },
@@ -211,12 +211,12 @@ describe("shell controls and transitions", () => {
     const user = userEvent.setup(); const repository = createDemoRepository(memoryStorage()); render(<App repository={repository} />);
     await user.click(screen.getByRole("button", { name: "Inventory" })); expect(transition).toHaveBeenCalledTimes(1); expect(screen.getByRole("heading", { name: "Vehicle inventory" })).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: /Change branch/ })); const branchDialog = screen.getByRole("dialog", { name: "Select branch" }); await user.click(within(branchDialog).getByRole("button", { name: "Sandton" })); expect(repository.getState().preferences.branch).toBe("Sandton");
-    await user.click(screen.getByRole("button", { name: /Anele Dlamini, Sales Executive/ })); expect(screen.getByRole("dialog", { name: "Employee demo controls" })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /Anele Dlamini, Dealership Owner/ })); expect(screen.getByRole("dialog", { name: "Employee demo controls" })).toBeInTheDocument();
   });
 
   it("resets visibly and places the reset audit first on My Day", async () => {
     const user = userEvent.setup(); const repository = createDemoRepository(memoryStorage()); render(<App repository={repository} />);
-    await user.click(screen.getByRole("button", { name: /Anele Dlamini, Sales Executive/ })); await user.click(screen.getByRole("button", { name: "Reset demo data" })); const dialog = screen.getByRole("dialog", { name: "Reset demo data" }); await user.click(within(dialog).getByRole("button", { name: "Reset demo data" }));
+    await user.click(screen.getByRole("button", { name: /Anele Dlamini, Dealership Owner/ })); await user.click(screen.getByRole("button", { name: "Reset demo data" })); const dialog = screen.getByRole("dialog", { name: "Reset demo data" }); await user.click(within(dialog).getByRole("button", { name: "Reset demo data" }));
     expect(screen.getByText("The deterministic demo data was restored.")).toBeInTheDocument(); expect(repository.getState().activities[0].action).toBe("Demo data reset");
     await user.click(screen.getByRole("button", { name: "My Day" })); expect(screen.getAllByText("Demo data reset").length).toBeGreaterThan(0);
   });
