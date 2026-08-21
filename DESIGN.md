@@ -51,6 +51,13 @@ Primary family: `Arial, Helvetica, sans-serif`. Page titles are 40–48px/700; s
 
 - **Asset contract:** renders `/media/brand/weelee-logo-transparent.png` using intrinsic `width` and `height` and `alt="Weelee"`. The asset is provided in the brand-media task; until then the component retains the image slot without redrawing the wordmark.
 
+### FormField and SelectField
+
+- **Structure:** persistent text label, native input/select control, and optional help or error message.
+- **States:** default, focus-visible, invalid, disabled, and browser autofill.
+- **Treatment:** field-background token, one-pixel rules, and the existing 4px spacing scale; selectors do not introduce a new visual language.
+- **Accessibility:** every control has a programmatic label, errors use `aria-invalid` plus `aria-describedby`, and native keyboard/autofill behaviour remains available.
+
 ## 5. Motion and responsive behaviour
 
 Only opacity and transforms animate. Navigation/flyouts use 160–180ms ease-out; page/content changes use 180–220ms with a vertical transform no greater than 8px. Reduced motion removes non-essential transitions.
@@ -59,4 +66,4 @@ At 1280px, show full utilities and primary navigation. From 768px, the navigatio
 
 ## 6. Accepted demo boundary
 
-The shell consumes browser-persisted preferences behind the repository interface. It is an employee demo, not an authentication or authorization implementation.
+The shell consumes browser-persisted data behind the repository interface. Demo login and role-specific views are functional product simulations; they do not claim server-enforced authentication, hardened tenant isolation, or production credential storage.

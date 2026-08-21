@@ -23,7 +23,7 @@ it("replaces a failed inventory card cover with an accessible local fallback", (
   fireEvent.error(cover);
 
   expect(within(cards[0]).getByRole("img", { name: "2024 Porsche 911 GT3 image unavailable" })).toHaveTextContent("Vehicle image unavailable");
-  expect(within(container).queryAllByRole("presentation")).toHaveLength(9);
+  expect(within(container).queryAllByRole("presentation")).toHaveLength(repository.getState().vehicles.length - 1);
 });
 
 it("renders exact linked detail artifacts and an empty document state when links are removed", () => {

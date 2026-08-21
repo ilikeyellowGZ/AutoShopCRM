@@ -1,5 +1,14 @@
-import type { DemoState, PersistedRecordType, ViewPreferences } from "../domain/models";
+import {
+  vehicleBodyTypes,
+  vehicleFuels,
+  vehicleTransmissions,
+  type DemoState,
+  type PersistedRecordType,
+  type Vehicle,
+  type ViewPreferences,
+} from "../domain/models";
 import { navigationGroups, primaryNavigation } from "../app/routes";
+import { createSeedState } from "./seed";
 
 type RecordValue = Record<string, unknown>;
 type Validator = (value: unknown) => boolean;
@@ -29,6 +38,7 @@ const boolean: Validator = (value) => typeof value === "boolean";
 const oneOf = <T extends readonly (string | number)[]>(values: T): Validator => (value) => values.includes(value as T[number]);
 const hasShape = (value: unknown, shape: Record<string, Validator>) => isRecord(value) && Object.entries(shape).every(([key, validate]) => validate(value[key]));
 const isAssetPath: Validator = (value) => typeof value === "string" && /^\/media\/[\w/-]+\.(?:png|webp)$/u.test(value);
+const isVin: Validator = (value) => typeof value === "string" && /^[A-HJ-NPR-Z0-9]{17}$/u.test(value);
 
 const isImage = (value: unknown) => hasShape(value, {
   id: nonEmptyString, angle: oneOf(galleryAngles), label: nonEmptyString, src: isAssetPath, alt: nonEmptyString,
@@ -48,9 +58,10 @@ const isGallery = (value: unknown) => {
 };
 
 const vehicleShape = {
-  id: nonEmptyString, stockId: nonEmptyString, vin: string, year: number, make: nonEmptyString, model: nonEmptyString, derivative: nonEmptyString,
+  id: nonEmptyString, stockId: nonEmptyString, vin: isVin, year: number, make: nonEmptyString, model: nonEmptyString, derivative: nonEmptyString,
   price: number, purchasePrice: number, mileageKm: number, exterior: nonEmptyString, branch: nonEmptyString, location: nonEmptyString,
-  status: oneOf(vehicleStatuses), daysInStock: number, gallery: isGallery,
+  status: oneOf(vehicleStatuses), daysInStock: number, bodyType: oneOf(vehicleBodyTypes), fuel: oneOf(vehicleFuels),
+  transmission: oneOf(vehicleTransmissions), engine: nonEmptyString, registration: nonEmptyString, gallery: isGallery,
 };
 const isVehicle = (value: unknown) => hasShape(value, vehicleShape);
 const isCustomer = (value: unknown) => hasShape(value, {
@@ -141,7 +152,7 @@ const isDrafts = (value: unknown) => isRecord(value)
   && isRecord(value.serviceNotes) && Object.values(value.serviceNotes).every(string);
 
 export function isCompatibleDemoState(value: unknown): value is DemoState {
-  if (!isRecord(value) || value.schemaVersion !== 1 || !hasShape(value.preferences, { branch: nonEmptyString, density: oneOf(["comfortable", "compact"]), activePage: nonEmptyString, activeSubview: nonEmptyString, viewPreferences: (item) => JSON.stringify(normalizeViewPreferences(item)) === JSON.stringify(item) }) || !isDrafts(value.drafts)) return false;
+  if (!isRecord(value) || value.schemaVersion !== 2 || !hasShape(value.preferences, { branch: nonEmptyString, density: oneOf(["comfortable", "compact"]), activePage: nonEmptyString, activeSubview: nonEmptyString, viewPreferences: (item) => JSON.stringify(normalizeViewPreferences(item)) === JSON.stringify(item) }) || !isDrafts(value.drafts)) return false;
   const collections = ["vehicles", "customers", "leads", "deals", "financeDrafts", "serviceJobs", "tasks", "notifications", "activities"] as const;
   if (!collections.every((key) => Array.isArray(value[key]))) return false;
 
@@ -178,8 +189,53 @@ export function isCompatibleDemoState(value: unknown): value is DemoState {
     && activities.every((activity) => { const item = activity as RecordValue; const idsByType = { vehicle: vehicleIds, customer: customerIds, lead: leadIds, deal: dealIds, service: serviceIds, task: ids(tasks as RecordValue[]), system: new Set(["system"]) }; return idsByType[item.targetType as keyof typeof idsByType].has(item.targetId as string); });
 }
 
+const legacyBranch = (branch: unknown, fallback: string) => branch === "Windhoek" || branch === "Swakopmund" ? fallback : validString(branch, fallback);
+
+function migrateVehicleRoster(value: RecordValue): RecordValue {
+  const seed = createSeedState();
+  const seedById = new Map(seed.vehicles.map((vehicle) => [vehicle.id, vehicle]));
+  const sourceVehicles = Array.isArray(value.vehicles) ? value.vehicles : [];
+  const vehicles = sourceVehicles.map((item) => {
+    if (!isRecord(item)) return item;
+    const candidate = typeof item.id === "string" ? seedById.get(item.id) : undefined;
+    const normalizedVin = typeof item.vin === "string" ? item.vin.trim().toUpperCase() : "";
+    const normalizedStockId = typeof item.stockId === "string" ? item.stockId.trim().toUpperCase() : "";
+    const matchesBaseline = candidate && (normalizedVin === candidate.vin || normalizedStockId === candidate.stockId);
+    const baseline = matchesBaseline ? candidate : undefined;
+    return {
+      ...item,
+      vin: isVin(normalizedVin) ? normalizedVin : baseline?.vin ?? item.vin,
+      stockId: normalizedStockId || item.stockId,
+      branch: legacyBranch(item.branch, baseline?.branch ?? "Johannesburg North"),
+      bodyType: validChoice(item.bodyType, vehicleBodyTypes, baseline?.bodyType ?? "Unknown"),
+      fuel: validChoice(item.fuel, vehicleFuels, baseline?.fuel ?? "Unknown"),
+      transmission: validChoice(item.transmission, vehicleTransmissions, baseline?.transmission ?? "Unknown"),
+      engine: validString(item.engine, baseline?.engine ?? "Not captured"),
+      registration: validString(item.registration, baseline?.registration ?? "Not captured"),
+    };
+  });
+  const usedIds = new Set(vehicles.filter(isRecord).map((vehicle) => String(vehicle.id)));
+  const vins = new Set(vehicles.filter(isRecord).map((vehicle) => String(vehicle.vin).toUpperCase()));
+  const stockIds = new Set(vehicles.filter(isRecord).map((vehicle) => String(vehicle.stockId).toUpperCase()));
+  for (const seedVehicle of seed.vehicles) {
+    if (vins.has(seedVehicle.vin) || stockIds.has(seedVehicle.stockId)) continue;
+    let id = seedVehicle.id;
+    let suffix = seed.vehicles.length + 1;
+    while (usedIds.has(id)) id = `vehicle-${String(suffix++).padStart(2, "0")}`;
+    const vehicle: Vehicle = { ...seedVehicle, id, gallery: { ...seedVehicle.gallery, images: seedVehicle.gallery.images.map((image) => ({ ...image })) } };
+    vehicles.push(vehicle);
+    usedIds.add(id);
+    vins.add(vehicle.vin);
+    stockIds.add(vehicle.stockId);
+  }
+  const sourcePreferences = isRecord(value.preferences) ? value.preferences : {};
+  const seedBranch = legacyBranch(sourcePreferences.branch, "Johannesburg North");
+  return { ...value, schemaVersion: 2, vehicles, preferences: { ...sourcePreferences, branch: seedBranch } };
+}
+
 export function migrateDemoState(value: unknown): DemoState | null {
-  if (isRecord(value) && value.schemaVersion === 1 && isRecord(value.preferences)) {
+  if (isRecord(value) && value.schemaVersion === 1) value = migrateVehicleRoster(value);
+  if (isRecord(value) && value.schemaVersion === 2 && isRecord(value.preferences)) {
     const { activePage: _page, activeSubview: _subview, activeRecordType: _type, activeRecordId: _id, activeContextId: _context, ...stablePreferences } = value.preferences;
     value = { ...value, preferences: { ...stablePreferences, ...normalizeRoute(value, value.preferences), viewPreferences: normalizeViewPreferences(value.preferences.viewPreferences) } };
   }

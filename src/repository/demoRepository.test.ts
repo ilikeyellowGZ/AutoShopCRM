@@ -9,8 +9,8 @@ describe("DemoRepository", () => {
 
     const repository = createDemoRepository(storage);
 
-    expect(repository.getState().vehicles).toHaveLength(10);
-    expect(JSON.parse(storage.getItem(STORAGE_KEY) ?? "{}").schemaVersion).toBe(1);
+    expect(repository.getState().vehicles).toHaveLength(30);
+    expect(JSON.parse(storage.getItem(STORAGE_KEY) ?? "{}").schemaVersion).toBe(2);
   });
 
   it("recovers from an incompatible payload and persists the deterministic seed", () => {
@@ -18,7 +18,7 @@ describe("DemoRepository", () => {
     storage.setItem(STORAGE_KEY, JSON.stringify({ schemaVersion: 2, vehicles: [] }));
 
     expect(createDemoRepository(storage).getState().activities).toHaveLength(12);
-    expect(JSON.parse(storage.getItem(STORAGE_KEY) ?? "{}").schemaVersion).toBe(1);
+    expect(JSON.parse(storage.getItem(STORAGE_KEY) ?? "{}").schemaVersion).toBe(2);
   });
 
   it.each([
@@ -65,7 +65,7 @@ describe("DemoRepository", () => {
 
     const recovered = createDemoRepository(storage).getState();
 
-    expect(recovered).toMatchObject({ schemaVersion: 1 });
+    expect(recovered).toMatchObject({ schemaVersion: 2 });
     expect(recovered.vehicles[0]).toMatchObject({ derivative: "GT3", price: 4_250_000 });
     expect(recovered.financeDrafts[0].aprPercent).toBe(11.5);
     expect(recovered.tasks[0].relatedId).toBe("lead-01");
@@ -147,10 +147,10 @@ describe("DemoRepository", () => {
 
   it("persists successful vehicle creation with a typed vehicle audit", () => {
     const storage = memoryStorage(); const repository = createDemoRepository(storage); const vehicle = repository.getState().vehicles[0];
-    repository.addVehicle({ ...vehicle, id: "vehicle-11", vin: "1HGCM82633A004352", stockId: "WEE-2411" });
+    repository.addVehicle({ ...vehicle, id: "vehicle-31", vin: "1HGCM82633A004352", stockId: "WEE-2431" });
     const reloaded = createDemoRepository(storage).getState();
-    expect(reloaded.vehicles.find((item) => item.id === "vehicle-11")?.stockId).toBe("WEE-2411");
-    expect(reloaded.activities[0]).toMatchObject({ action: "Vehicle added", targetType: "vehicle", targetId: "vehicle-11" });
+    expect(reloaded.vehicles.find((item) => item.id === "vehicle-31")?.stockId).toBe("WEE-2431");
+    expect(reloaded.activities[0]).toMatchObject({ action: "Vehicle added", targetType: "vehicle", targetId: "vehicle-31" });
   });
 
   it("persists successful vehicle edit with a typed vehicle audit", () => {
@@ -184,7 +184,7 @@ describe("DemoRepository", () => {
 
   it("keeps preferences, drafts, and notifications intentionally system-scoped", () => {
     const repository = createDemoRepository(memoryStorage()); const state = repository.getState();
-    repository.setPreferences({ branch: "Swakopmund" }); expect(repository.getState().activities[0]).toMatchObject({ targetType: "system", targetId: "system" });
+    repository.setPreferences({ branch: "Sandton" }); expect(repository.getState().activities[0]).toMatchObject({ targetType: "system", targetId: "system" });
     repository.updateDraft("lead", { owner: "Alicia Brown" }); expect(repository.getState().activities[0]).toMatchObject({ targetType: "system", targetId: "system" });
     repository.markNotificationRead(state.notifications[0].id); expect(repository.getState().activities[0]).toMatchObject({ targetType: "system", targetId: "system" });
   });

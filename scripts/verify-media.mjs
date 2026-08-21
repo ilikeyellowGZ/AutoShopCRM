@@ -2,24 +2,9 @@ import { createHash } from "node:crypto";
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { inflateSync } from "node:zlib";
+import { galleryAngles as angleSpecs, vehicleRoster as roster } from "./vehicle-roster.mjs";
 
 const root = process.cwd();
-const roster = [
-  ["vehicle-01", "2024-porsche-911-gt3", "2024 Porsche 911 GT3"],
-  ["vehicle-02", "2023-bmw-m4-csl", "2023 BMW M4 CSL"],
-  ["vehicle-03", "2024-audi-rs6-avant", "2024 Audi RS6 Avant"],
-  ["vehicle-04", "2024-land-rover-defender-110", "2024 Land Rover Defender 110"],
-  ["vehicle-05", "2024-porsche-taycan-turbo-s", "2024 Porsche Taycan Turbo S"],
-  ["vehicle-06", "2024-mercedes-amg-c63-s", "2024 Mercedes-AMG C63 S"],
-  ["vehicle-07", "2023-toyota-gr-supra", "2023 Toyota GR Supra"],
-  ["vehicle-08", "2024-ford-ranger-raptor", "2024 Ford Ranger Raptor"],
-  ["vehicle-09", "2024-volkswagen-golf-8-r", "2024 Volkswagen Golf 8 R"],
-  ["vehicle-10", "2024-bmw-x5-m-competition", "2024 BMW X5 M Competition"],
-];
-const angleSpecs = [
-  ["front", "Front elevation"], ["front-left", "Front-left three-quarter"], ["left", "Left profile"], ["rear-left", "Rear-left three-quarter"],
-  ["rear", "Rear elevation"], ["rear-right", "Rear-right three-quarter"], ["right", "Right profile"], ["front-right", "Front-right three-quarter"],
-];
 const logoPath = "public/media/brand/weelee-logo-transparent.png";
 const logoHash = "e1157737e87a4b38dfd471a2f8b5eb7c65f9b8b819cac0297e0667b65e40add9";
 const manifestPath = join(root, "src", "media", "vehicleGalleryManifest.json");
@@ -137,7 +122,7 @@ assertExactDirectory(join(root, "public", "media", "brand"), ["weelee-logo-trans
 
 const galleryManifest = JSON.parse(readFileSync(manifestPath, "utf8"));
 assertExactKeys(galleryManifest, ["vehicles"], "vehicle gallery manifest");
-if (!Array.isArray(galleryManifest.vehicles) || galleryManifest.vehicles.length !== roster.length) fail("vehicle gallery manifest must contain exactly ten roster entries");
+if (!Array.isArray(galleryManifest.vehicles) || galleryManifest.vehicles.length !== roster.length) fail(`vehicle gallery manifest must contain exactly ${roster.length} roster entries`);
 const ids = new Set();
 const slugs = new Set();
 const imageIds = new Set();
@@ -188,8 +173,9 @@ for (let index = 0; index < expectedAssetPaths.length; index += 1) {
     verifiedVehicleAssets.push(approvedAsset);
   }
 }
-if (vehicleHashes.size !== 80) fail(`expected 80 unique vehicle hashes; found ${vehicleHashes.size}`);
-if (new Set(approved.assets.map((asset) => asset.path)).size !== 81) fail("approved asset paths must be unique");
+const expectedVehicleImageCount = roster.length * angleSpecs.length;
+if (vehicleHashes.size !== expectedVehicleImageCount) fail(`expected ${expectedVehicleImageCount} unique vehicle hashes; found ${vehicleHashes.size}`);
+if (new Set(approved.assets.map((asset) => asset.path)).size !== expectedVehicleImageCount + 1) fail("approved asset paths must be unique");
 
 const logoInfo = pngInfo(logoPath);
 if (logoInfo.width !== 2172 || logoInfo.height !== 724 || logoInfo.bitDepth !== 8 || logoInfo.colorType !== 6) fail("logo must be exactly 2172x724 RGBA");
@@ -213,4 +199,4 @@ similarityHints.sort((left, right) => left.relativeSizeDifference - right.relati
 console.log(`Nonblocking byte-size/dimension similarity hints (${similarityHints.length}; manual review only):`);
 for (const hint of similarityHints) console.log(`- ${(hint.relativeSizeDifference * 100).toFixed(4)}% size difference at identical dimensions: ${hint.a} <> ${hint.b}`);
 console.log("These hints are not pixel/perceptual comparisons and do not establish vehicle identity or camera-angle correctness.");
-console.log("Verified exact roster JSON, strict filesystem shape, approved SHA-256 metadata, 80 unique vehicle files, and frozen transparent Weelee logo checks.");
+console.log(`Verified exact roster JSON, strict filesystem shape, approved SHA-256 metadata, ${expectedVehicleImageCount} unique vehicle files, and frozen transparent Weelee logo checks.`);

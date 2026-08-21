@@ -1,4 +1,11 @@
 export type VehicleStatus = "Available" | "Reserved" | "In Transit" | "Service Hold" | "Recon" | "Photography";
+export const vehicleBodyTypes = ["Unknown", "Coupe", "Sedan", "Hatchback", "SUV", "Double Cab", "Wagon", "MPV"] as const;
+export const vehicleFuels = ["Unknown", "Petrol", "Diesel", "Hybrid", "Plug-in Hybrid", "Electric"] as const;
+export const vehicleTransmissions = ["Unknown", "Manual", "Automatic", "DCT", "CVT", "e-CVT", "Single-speed"] as const;
+export const demoBranches = ["Johannesburg North", "Sandton", "Pretoria", "Midrand"] as const;
+export type VehicleBodyType = (typeof vehicleBodyTypes)[number];
+export type VehicleFuel = (typeof vehicleFuels)[number];
+export type VehicleTransmission = (typeof vehicleTransmissions)[number];
 export type LeadStage = "Lead" | "Negotiation" | "Contract" | "Delivery";
 export type TaskStatus = "Upcoming" | "Due Today" | "Overdue" | "Completed";
 export type Tone = "positive" | "warning" | "info" | "critical" | "neutral";
@@ -9,7 +16,8 @@ export type VehicleGallery = { coverImageId: string; images: VehicleImage[] };
 export type Vehicle = {
   id: string; stockId: string; vin: string; year: number; make: string; model: string; derivative: string;
   price: number; purchasePrice: number; mileageKm: number; exterior: string; branch: string; location: string;
-  status: VehicleStatus; daysInStock: number; gallery: VehicleGallery;
+  status: VehicleStatus; daysInStock: number; bodyType: VehicleBodyType; fuel: VehicleFuel;
+  transmission: VehicleTransmission; engine: string; registration: string; gallery: VehicleGallery;
 };
 export type Customer = { id: string; name: string; email: string; phone: string; city: string; crmStatus: string; vehicleInterestId: string; lastActivityAt: string };
 export type Lead = { id: string; customerId: string; vehicleId: string; owner: string; stage: LeadStage; value: number; nextAction: string; dueAt: string; tone: Tone };
@@ -38,4 +46,4 @@ export type PersistedRecordType = "vehicle" | "customer" | "lead" | "deal" | "se
 export type UserPreferences = { branch: string; density: "comfortable" | "compact"; activePage: string; activeSubview: string; activeRecordType?: PersistedRecordType; activeRecordId?: string; activeContextId?: string; viewPreferences: ViewPreferences };
 export type VehicleIntakeDraft = { step: 1 | 2 | 3 | 4; values: Partial<Vehicle> };
 export type FormDrafts = { vehicleIntake: VehicleIntakeDraft | null; lead: Partial<Lead> | null; deal: Partial<Deal> | null; serviceNotes: Record<string, string> };
-export type DemoState = { schemaVersion: 1; vehicles: Vehicle[]; customers: Customer[]; leads: Lead[]; deals: Deal[]; financeDrafts: FinanceDraft[]; serviceJobs: ServiceJob[]; tasks: TaskItem[]; notifications: Notification[]; activities: AuditActivity[]; preferences: UserPreferences; drafts: FormDrafts };
+export type DemoState = { schemaVersion: 2; vehicles: Vehicle[]; customers: Customer[]; leads: Lead[]; deals: Deal[]; financeDrafts: FinanceDraft[]; serviceJobs: ServiceJob[]; tasks: TaskItem[]; notifications: Notification[]; activities: AuditActivity[]; preferences: UserPreferences; drafts: FormDrafts };

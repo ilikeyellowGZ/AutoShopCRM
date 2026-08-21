@@ -54,6 +54,7 @@ function validateVehicleIdentifiers(vehicle: Pick<Vehicle, "vin" | "stockId">, v
   const vin = normalizeVehicleIdentifier(vehicle.vin);
   const stockId = normalizeVehicleIdentifier(vehicle.stockId);
   if (vin.length !== 17) throw new Error("VIN must contain exactly 17 characters.");
+  if (!/^[A-HJ-NPR-Z0-9]{17}$/u.test(vin)) throw new Error("VIN may only contain valid letters and numbers (excluding I, O and Q).");
   if (!stockId) throw new Error("Stock ID is required.");
   if (vehicles.some((item) => item.id !== excludedId && normalizeVehicleIdentifier(item.vin) === vin)) throw new Error("VIN already exists in the active Weelee inventory.");
   if (vehicles.some((item) => item.id !== excludedId && normalizeVehicleIdentifier(item.stockId) === stockId)) throw new Error("Stock ID already exists in the active Weelee inventory.");

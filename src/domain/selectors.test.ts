@@ -59,7 +59,7 @@ describe("demo selectors", () => {
     const metrics = selectDashboardMetrics(createSeedState());
 
     expect(metrics).toEqual({
-      availableVehicles: 4,
+      availableVehicles: 15,
       inTransitVehicles: 1,
       activePipelineCount: 16,
       activePipelineValue: 38_970_000,

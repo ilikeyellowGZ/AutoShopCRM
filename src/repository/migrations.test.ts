@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createSeedState } from "./seed";
 import { migrateDemoState } from "./migrations";
-import { loadDemoState, STORAGE_KEY } from "./storage";
+import { LEGACY_STORAGE_KEY, loadDemoState, STORAGE_KEY } from "./storage";
 import { memoryStorage } from "../test/memoryStorage";
 
 const defaults = createSeedState().preferences;
@@ -16,6 +16,69 @@ const viewPreferences = (state: UnknownRecord) => asRecord(preferences(state).vi
 const viewGroup = (state: UnknownRecord, group: string) => asRecord(viewPreferences(state)[group]);
 
 describe("preference migrations", () => {
+  it("upgrades a persisted ten-vehicle v1 demo without discarding employee edits", () => {
+    const state = stateRecord();
+    state.schemaVersion = 1;
+    state.vehicles = (state.vehicles as UnknownRecord[]).slice(0, 10).map((vehicle, index) => {
+      const legacy = { ...vehicle };
+      delete legacy.bodyType;
+      delete legacy.fuel;
+      delete legacy.transmission;
+      delete legacy.engine;
+      delete legacy.registration;
+      legacy.branch = index % 2 ? "Swakopmund" : "Windhoek";
+      return legacy;
+    });
+    (state.vehicles as UnknownRecord[])[0].price = 4_300_000;
+
+    const migrated = migrateDemoState(state)!;
+
+    expect(migrated.schemaVersion).toBe(2);
+    expect(migrated.vehicles).toHaveLength(30);
+    expect(migrated.vehicles[0]).toMatchObject({ price: 4_300_000, bodyType: "Coupe", branch: "Johannesburg North" });
+    expect(migrated.vehicles.every((vehicle) => vehicle.engine && vehicle.registration)).toBe(true);
+  });
+
+  it("discovers the legacy storage key and persists its migration under v2", () => {
+    const storage = memoryStorage();
+    const state = stateRecord();
+    state.schemaVersion = 1;
+    storage.setItem(LEGACY_STORAGE_KEY, JSON.stringify(state));
+
+    expect(loadDemoState(storage).schemaVersion).toBe(2);
+    expect(JSON.parse(storage.getItem(STORAGE_KEY)!).schemaVersion).toBe(2);
+  });
+
+  it("does not assign seeded specifications to a legacy user vehicle with a colliding ID", () => {
+    const state = stateRecord();
+    state.schemaVersion = 1;
+    const custom: UnknownRecord = { ...(state.vehicles as UnknownRecord[])[10], vin: "1HGCM82633A004352", stockId: "USER-0011", make: "Honda", model: "Civic", branch: "Windhoek" };
+    delete custom.bodyType;
+    delete custom.fuel;
+    delete custom.transmission;
+    delete custom.engine;
+    delete custom.registration;
+    state.vehicles = [...(state.vehicles as UnknownRecord[]).slice(0, 10), custom];
+
+    const migrated = migrateDemoState(state)!;
+    const userVehicle = migrated.vehicles.find((vehicle) => vehicle.vin === "1HGCM82633A004352")!;
+    const seededGle = migrated.vehicles.find((vehicle) => vehicle.stockId === "MCR-2511")!;
+
+    expect(migrated.vehicles).toHaveLength(31);
+    expect(userVehicle).toMatchObject({ id: "vehicle-11", make: "Honda", bodyType: "Unknown", engine: "Not captured", branch: "Johannesburg North" });
+    expect(seededGle).toMatchObject({ id: "vehicle-31", make: "Mercedes-Benz", bodyType: "SUV" });
+  });
+
+  it("repairs the earlier invalid seeded demo VIN when stock identity matches", () => {
+    const state = stateRecord();
+    state.schemaVersion = 1;
+    (state.vehicles as UnknownRecord[])[10].vin = "MCRMDMO0000000011";
+
+    const migrated = migrateDemoState(state)!;
+
+    expect(migrated.vehicles.find((vehicle) => vehicle.stockId === "MCR-2511")?.vin).toBe("MCRMDMA0000000011");
+  });
+
   it("fills every nested default when view preferences are missing", () => {
     const state = stateRecord();
     delete preferences(state).viewPreferences;
@@ -54,7 +117,7 @@ describe("preference migrations", () => {
     const migrated = migrateDemoState(state)!;
 
     expect((migrated.preferences.viewPreferences[group] as Record<string, unknown>)[field]).toBe(expected);
-    expect(migrated.vehicles).toHaveLength(10);
+    expect(migrated.vehicles).toHaveLength(30);
   });
 
   it.each([

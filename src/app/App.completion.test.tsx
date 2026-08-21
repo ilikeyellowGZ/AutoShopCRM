@@ -33,7 +33,7 @@ const groupedCases: RouteCase[] = [
   { label: "Vehicles / Appraisals", target: { page: "inventory", subview: "appraisals" }, heading: "Vehicle appraisals", control: "Open appraisal vehicle-01", row: "2024 Porsche 911 GT3" },
   { label: "Vehicles / Trade-ins", target: { page: "inventory", subview: "trade-ins" }, heading: "Trade-ins", control: "Open trade-in vehicle-02", row: "WEE-2402" },
   { label: "Vehicles / Recon", target: { page: "inventory", subview: "recon" }, heading: "Reconditioning queue", control: "Open recon vehicle-08", row: "2024 Ford Ranger Raptor" },
-  { label: "Vehicles / Transfers", target: { page: "inventory", subview: "transfers" }, heading: "Vehicle transfers", control: "Open transfer vehicle-03", row: "Swakopmund" },
+  { label: "Vehicles / Transfers", target: { page: "inventory", subview: "transfers" }, heading: "Vehicle transfers", control: "Open transfer vehicle-03", row: "Pretoria" },
   { label: "Vehicles / Pricing", target: { page: "inventory", subview: "pricing" }, heading: "Pricing review", control: "Open pricing vehicle-01", row: "WEE-2401" },
   { label: "Sales / Sales Log", target: { page: "sales", subview: "sales-log" }, heading: "Sales log", control: "New deal", row: "2024 Porsche 911" },
   { label: "Sales / Deals", target: { page: "sales", subview: "deals" }, heading: "Deals", control: "Open deal deal-01", row: "Deal deal-01" },
@@ -59,7 +59,7 @@ const groupedCases: RouteCase[] = [
   { label: "Operations / Calendar", target: { page: "operations", subview: "calendar" }, heading: "Operations calendar", control: "Open calendar task task-01", row: "Call Amelia" },
   { label: "Operations / Documents", target: { page: "operations", subview: "documents" }, heading: "Operations documents", control: "Open audit artifact activity-01", row: "Demo activity 1" },
   { label: "Operations / Audit Trail", target: { page: "operations", subview: "audit-trail" }, heading: "Audit trail", control: "Open audit vehicle-01", row: "Vehicle updated" },
-  { label: "Operations / Settings", target: { page: "operations", subview: "settings" }, heading: "Workspace settings", control: "Reset demo data", row: "Windhoek" },
+  { label: "Operations / Settings", target: { page: "operations", subview: "settings" }, heading: "Workspace settings", control: "Reset demo data", row: "Johannesburg North" },
 ];
 
 describe("rendered employee route matrix", () => {
@@ -176,14 +176,15 @@ describe("connected inventory and deal journey", () => {
     expect(screen.getByRole("heading", { name: "Vehicle intake" })).toBeInTheDocument();
     await user.type(screen.getByLabelText("VIN"), "1HGCM82633A004352"); await user.type(screen.getByLabelText("Stock ID"), "WEE-2411"); await user.click(screen.getByRole("button", { name: "Continue" }));
     await user.clear(screen.getByLabelText("Year")); await user.type(screen.getByLabelText("Year"), "2025"); await user.type(screen.getByLabelText("Make"), "Volvo"); await user.type(screen.getByLabelText("Model"), "EX90"); await user.type(screen.getByLabelText("Derivative"), "Twin Motor"); await user.clear(screen.getByLabelText("Price (ZAR)")); await user.type(screen.getByLabelText("Price (ZAR)"), "1800000");
+    await user.selectOptions(screen.getByLabelText("Body type"), "SUV"); await user.selectOptions(screen.getByLabelText("Fuel"), "Electric"); await user.selectOptions(screen.getByLabelText("Transmission"), "Single-speed"); await user.type(screen.getByLabelText("Engine"), "Dual motor electric");
     await user.click(screen.getByRole("button", { name: "Continue" })); await user.click(screen.getByRole("button", { name: "Continue" })); await user.click(screen.getByRole("button", { name: "Add vehicle to inventory" }));
     expect(screen.getByRole("heading", { name: "2025 Volvo EX90 Twin Motor" })).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Back to inventory" })); expect(screen.getByRole("heading", { name: "Vehicle inventory" })).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: /2025 Volvo EX90/i })); await user.click(screen.getByRole("button", { name: "Create deal" }));
-    expect(screen.getByRole("heading", { name: "New vehicle deal" })).toBeInTheDocument(); expect(screen.getByRole("combobox", { name: "Vehicle" })).toHaveValue("vehicle-11");
+    expect(screen.getByRole("heading", { name: "New vehicle deal" })).toBeInTheDocument(); expect(screen.getByRole("combobox", { name: "Vehicle" })).toHaveValue("vehicle-31");
     await user.clear(screen.getByLabelText("Gross profit (ZAR)")); await user.type(screen.getByLabelText("Gross profit (ZAR)"), "125000"); await user.click(screen.getByRole("button", { name: "Save deal" }));
     const deal = repository.getState().deals.at(-1)!;
-    expect(deal).toMatchObject({ vehicleId: "vehicle-11", grossProfit: 125000 }); expect(repository.getState().activities.find((activity) => activity.action === "Deal added")).toMatchObject({ targetId: deal.id });
+    expect(deal).toMatchObject({ vehicleId: "vehicle-31", grossProfit: 125000 }); expect(repository.getState().activities.find((activity) => activity.action === "Deal added")).toMatchObject({ targetId: deal.id });
     expect(screen.getByRole("heading", { name: `Deal ${deal.id}` })).toBeInTheDocument();
   });
 });
@@ -209,7 +210,7 @@ describe("shell controls and transitions", () => {
     const transition = vi.fn((callback: () => void) => { callback(); return {}; }); (document as unknown as { startViewTransition: typeof transition }).startViewTransition = transition;
     const user = userEvent.setup(); const repository = createDemoRepository(memoryStorage()); render(<App repository={repository} />);
     await user.click(screen.getByRole("button", { name: "Inventory" })); expect(transition).toHaveBeenCalledTimes(1); expect(screen.getByRole("heading", { name: "Vehicle inventory" })).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: /Change branch/ })); const branchDialog = screen.getByRole("dialog", { name: "Select branch" }); await user.click(within(branchDialog).getByRole("button", { name: "Swakopmund" })); expect(repository.getState().preferences.branch).toBe("Swakopmund");
+    await user.click(screen.getByRole("button", { name: /Change branch/ })); const branchDialog = screen.getByRole("dialog", { name: "Select branch" }); await user.click(within(branchDialog).getByRole("button", { name: "Sandton" })); expect(repository.getState().preferences.branch).toBe("Sandton");
     await user.click(screen.getByRole("button", { name: /Anele Dlamini, Sales Executive/ })); expect(screen.getByRole("dialog", { name: "Employee demo controls" })).toBeInTheDocument();
   });
 

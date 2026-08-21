@@ -9,6 +9,7 @@
     "preview": "vite preview",
     "check": "tsc -b --pretty false",
     "test": "vitest run",
+    "media:manifest": "node scripts/update-media-manifests.mjs",
     "verify:media": "node scripts/verify-media.mjs"
   },
   "dependencies": {
@@ -29,5 +30,8 @@
     "react-scan": "^0.5.7",
     "typescript": "latest",
     "vitest": "latest"
+  },
+  "overrides": {
+    "nanoid": "3.3.18"
   }
 }

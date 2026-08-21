@@ -16,7 +16,7 @@ import { Dialog } from "../components/overlays/Dialog";
 import { EmployeeShell } from "../components/navigation/EmployeeShell";
 import type { DemoRepository } from "../repository/demoRepository";
 import { createDemoRepository } from "../repository/demoRepository";
-import type { ViewPreferences } from "../domain/models";
+import { demoBranches, type ViewPreferences } from "../domain/models";
 import { pageKeys, type NavigationTarget, type PageKey } from "./routes";
 import { useDemoApp } from "./useDemoApp";
 import { DomainWorkspace, ExactRecordView } from "./DomainWorkspace";
@@ -75,7 +75,7 @@ export function App({ repository: providedRepository }: { repository?: DemoRepos
     {content}
     <CommandPalette open={app.searchOpen} state={app.state} onClose={() => app.setSearchOpen(false)} onSelect={(result) => { navigate(result.target); notify("Opened connected record", result.title); }} />
     <Dialog open={app.activeOverlay?.id === "reset"} title="Reset demo data" onClose={app.closeOverlay}><p>This restores the deterministic Weelee demonstration data in this browser. This cannot be undone.</p><div className="modal-footer"><Button variant="secondary" onClick={app.closeOverlay}>Cancel</Button><Button onClick={() => { repository.reset(); app.closeOverlay(); notify("Demo data reset", "The deterministic demo data was restored."); }}>Reset demo data</Button></div></Dialog>
-    <Dialog open={app.activeOverlay?.id === "branch"} title="Select branch" onClose={app.closeOverlay}><p>Choose the current employee branch for this local demo.</p>{["Windhoek", "Swakopmund"].map((branch) => <Button key={branch} variant="secondary" onClick={() => { repository.setPreferences({ branch }); app.closeOverlay(); }}>{branch}</Button>)}</Dialog>
+    <Dialog open={app.activeOverlay?.id === "branch"} title="Select branch" onClose={app.closeOverlay}><p>Choose the current employee branch for this local demo.</p>{demoBranches.map((branch) => <Button key={branch} variant="secondary" onClick={() => { repository.setPreferences({ branch }); app.closeOverlay(); }}>{branch}</Button>)}</Dialog>
     <Dialog open={app.activeOverlay?.id === "employee"} title="Employee demo controls" onClose={app.closeOverlay}><p>Anele Dlamini · Sales Executive · Demo mode</p><Button variant="secondary" onClick={() => { app.closeOverlay(); navigate({ page: "operations", subview: "settings" }); }}>Open workspace settings</Button><Button variant="secondary" onClick={() => { app.closeOverlay(); app.setActiveOverlay({ kind: "dialog", id: "reset" }); }}>Reset demo data</Button></Dialog>
     <ToastRegion toasts={app.toasts} onDismiss={app.dismissToast} />
   </EmployeeShell>;

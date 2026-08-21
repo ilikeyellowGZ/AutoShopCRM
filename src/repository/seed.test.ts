@@ -9,8 +9,8 @@ describe("createSeedState", () => {
   it("creates the complete connected demo roster with stable vehicle IDs", () => {
     const state = createSeedState();
 
-    expect(state.schemaVersion).toBe(1);
-    expect(state.vehicles.map((vehicle) => vehicle.id)).toEqual(Array.from({ length: 10 }, (_, index) => `vehicle-${String(index + 1).padStart(2, "0")}`));
+    expect(state.schemaVersion).toBe(2);
+    expect(state.vehicles.map((vehicle) => vehicle.id)).toEqual(Array.from({ length: 30 }, (_, index) => `vehicle-${String(index + 1).padStart(2, "0")}`));
     expect(state.customers).toHaveLength(12);
     expect(state.leads).toHaveLength(16);
     expect(state.deals).toHaveLength(8);
@@ -20,7 +20,7 @@ describe("createSeedState", () => {
     expect(state.activities).toHaveLength(12);
   });
 
-  it("creates ten galleries with the required ordered PNG paths and accessible alt text", () => {
+  it("creates 30 galleries with the required ordered PNG paths and accessible alt text", () => {
     const state = createSeedState();
 
     for (const vehicle of state.vehicles) {
@@ -30,7 +30,7 @@ describe("createSeedState", () => {
       expect(vehicle.gallery.images.every((image) => image.alt.includes(originalMojibakeSeparator) === false)).toBe(true);
       expect(vehicle.gallery.images.every((image) => image.alt.endsWith(`: ${image.label.toLowerCase()}`))).toBe(true);
     }
-    expect(new Set(state.vehicles.flatMap((vehicle) => vehicle.gallery.images.map((image) => image.src))).size).toBe(80);
+    expect(new Set(state.vehicles.flatMap((vehicle) => vehicle.gallery.images.map((image) => image.src))).size).toBe(240);
   });
 
   it("connects every lead, deal, service job, and typed task reference to an existing record", () => {
