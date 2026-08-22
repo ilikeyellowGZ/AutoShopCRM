@@ -54,3 +54,62 @@ export type UserPreferences = { branch: string; density: "comfortable" | "compac
 export type VehicleIntakeDraft = { step: 1 | 2 | 3 | 4; values: Partial<Vehicle> };
 export type FormDrafts = { vehicleIntake: VehicleIntakeDraft | null; vehicleIntakes: Record<string, VehicleIntakeDraft>; lead: Partial<Lead> | null; deal: Partial<Deal> | null; serviceNotes: Record<string, string> };
 export type DemoState = { schemaVersion: 2; vehicles: Vehicle[]; customers: Customer[]; leads: Lead[]; deals: Deal[]; financeDrafts: FinanceDraft[]; financeApplications: FinanceApplication[]; serviceJobs: ServiceJob[]; employees: Employee[]; appointments: Appointment[]; testDrives: TestDrive[]; quotes: Quote[]; payments: Payment[]; documents: CrmDocument[]; tasks: TaskItem[]; notifications: Notification[]; activities: AuditActivity[]; preferences: UserPreferences; drafts: FormDrafts };
+
+
+// ============================================================================
+// Authentication Interfaces for Production-Ready Language-Learning Application
+// Re-exported from auth.ts for backward compatibility
+// ============================================================================
+
+export type {
+  AuthProvider,
+  MFAMethod,
+  Credentials,
+  OAuthCredentials,
+  EmailCredentials,
+  TokenCredentials,
+  BiometricCredentials,
+  Permission,
+  AuthSession,
+  UserMetadata,
+  MFAConfig,
+  AuthService,
+  AuthErrorCode,
+  AuthError,
+  AuthResult,
+  AuthConfig,
+  AuthState,
+  AuthEvent,
+  AuthEventHandler,
+  AuthServiceFactory
+} from './auth';
+
+
+// ============================================================================
+// Progress Tracking Interfaces for Language-Learning Application
+// Re-exported from progress-models.ts for backward compatibility
+// ============================================================================
+
+export type {
+  LearningActivityType,
+  DifficultyLevel,
+  SpacedRepetitionInterval,
+  LearningActivity,
+  DailyGoal,
+  Achievement,
+  SpacedRepetitionItem,
+  Progress,
+  ProgressUpdate,
+  Schedule,
+  SyncResult,
+  ProgressTracker
+} from './progress-models';
+
+export {
+  DIFFICULTY_MULTIPLIERS,
+  DEFAULT_SPACED_REPETITION_INTERVALS,
+  STREAK_RESET_HOURS,
+  calculateActivityXP,
+  shouldMaintainStreak,
+  calculateNextInterval
+} from './progress-models';
