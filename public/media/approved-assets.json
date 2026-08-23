@@ -568,6 +568,1126 @@
       "width": 1672,
       "height": 941,
       "size": 1583654
+    },
+    {
+      "path": "public/media/vehicles/2023-mercedes-benz-gle-53-coupe/01-front.png",
+      "sha256": "43d63f04cb34b10c12ae43b8d85a33f3be63b18dfcd441e5b91d10969c9a43bf",
+      "width": 1536,
+      "height": 1024,
+      "size": 1138679
+    },
+    {
+      "path": "public/media/vehicles/2023-mercedes-benz-gle-53-coupe/02-front-left.png",
+      "sha256": "b8150349079e6d0ad8d757ff49d14411a999f85636c4ab5e970bd2111bca1652",
+      "width": 1536,
+      "height": 1024,
+      "size": 1312698
+    },
+    {
+      "path": "public/media/vehicles/2023-mercedes-benz-gle-53-coupe/03-left.png",
+      "sha256": "0aa22341018ce12af2011b84d7a275ffaea0998474863a7bf25efd8487ffccb4",
+      "width": 1536,
+      "height": 1024,
+      "size": 1087480
+    },
+    {
+      "path": "public/media/vehicles/2023-mercedes-benz-gle-53-coupe/04-rear-left.png",
+      "sha256": "4f425bfc42d66fa67318f44b167336acde212157888ecbc3293cf259611c5111",
+      "width": 1536,
+      "height": 1024,
+      "size": 1180672
+    },
+    {
+      "path": "public/media/vehicles/2023-mercedes-benz-gle-53-coupe/05-rear.png",
+      "sha256": "4a53f8d1abf36579be2e4df7ec5f368b89963eb11e9607082a4cd467cd1690a3",
+      "width": 1536,
+      "height": 1024,
+      "size": 1005567
+    },
+    {
+      "path": "public/media/vehicles/2023-mercedes-benz-gle-53-coupe/06-rear-right.png",
+      "sha256": "fb9d1770ed3792b02f0c0b24b7011b6dce276b89e155d23c6a705d693ec3d54e",
+      "width": 1536,
+      "height": 1024,
+      "size": 1252182
+    },
+    {
+      "path": "public/media/vehicles/2023-mercedes-benz-gle-53-coupe/07-right.png",
+      "sha256": "851d4af611c4ae839057dc7cbe1f03b84b69b2b20bf609058258ca14a2f6e303",
+      "width": 1536,
+      "height": 1024,
+      "size": 1107778
+    },
+    {
+      "path": "public/media/vehicles/2023-mercedes-benz-gle-53-coupe/08-front-right.png",
+      "sha256": "f27a11ea0c90cde32238302e5cdbe4a7926b03c60f02f27bc89b83fbf8642e8e",
+      "width": 1536,
+      "height": 1024,
+      "size": 1265349
+    },
+    {
+      "path": "public/media/vehicles/2024-toyota-land-cruiser-300-zx/01-front.png",
+      "sha256": "dc9371dd44abff3d8463766ac70e336a40e31eacf6b13fe96c489266d4f30d7b",
+      "width": 1536,
+      "height": 1024,
+      "size": 1357366
+    },
+    {
+      "path": "public/media/vehicles/2024-toyota-land-cruiser-300-zx/02-front-left.png",
+      "sha256": "bd4fa67f102830363c40d4dc65f1d040db3acfc4e9552b737dbc0678f1538e7c",
+      "width": 1536,
+      "height": 1024,
+      "size": 1666434
+    },
+    {
+      "path": "public/media/vehicles/2024-toyota-land-cruiser-300-zx/03-left.png",
+      "sha256": "ef2a397f49eaac225b2b5ba55aef5dfa3cda6a2e0e05d2c250f291bf2c1bc04d",
+      "width": 1536,
+      "height": 1024,
+      "size": 1325169
+    },
+    {
+      "path": "public/media/vehicles/2024-toyota-land-cruiser-300-zx/04-rear-left.png",
+      "sha256": "c8c993e2e3f6d883ada7c4f76aef3fe61f6f9780cfce475070d5b21f35a70031",
+      "width": 1536,
+      "height": 1024,
+      "size": 1578293
+    },
+    {
+      "path": "public/media/vehicles/2024-toyota-land-cruiser-300-zx/05-rear.png",
+      "sha256": "5aab1e4e3d4e5d2a5f69be73bad33220ff52520d978a3766666d53dce3f09af8",
+      "width": 1536,
+      "height": 1024,
+      "size": 1815850
+    },
+    {
+      "path": "public/media/vehicles/2024-toyota-land-cruiser-300-zx/06-rear-right.png",
+      "sha256": "b62e4c96659b6bbd5aeef882e8237ee8955f0ec4d0bab6252bbd65c54520c086",
+      "width": 1536,
+      "height": 1024,
+      "size": 1644783
+    },
+    {
+      "path": "public/media/vehicles/2024-toyota-land-cruiser-300-zx/07-right.png",
+      "sha256": "c454df8f122e4a58ace47f89acfc55d9bd71bb90ce1b16b61ef01062ca7085b5",
+      "width": 1536,
+      "height": 1024,
+      "size": 1345318
+    },
+    {
+      "path": "public/media/vehicles/2024-toyota-land-cruiser-300-zx/08-front-right.png",
+      "sha256": "1010bb84363f87dd791f2c4df9d86c84c1a65a57e71ed70ad73492d9c8162876",
+      "width": 1536,
+      "height": 1024,
+      "size": 1607933
+    },
+    {
+      "path": "public/media/vehicles/2023-hyundai-tucson-n-line/01-front.png",
+      "sha256": "7d662295c5f0a962c284456741265de16eceba1f3a8e5f15b5c6282aef390a08",
+      "width": 1536,
+      "height": 1024,
+      "size": 1430033
+    },
+    {
+      "path": "public/media/vehicles/2023-hyundai-tucson-n-line/02-front-left.png",
+      "sha256": "579c4e81bbde633782389183a92d0e54667f1967a23f7e94cb28f027ae2c96b5",
+      "width": 1536,
+      "height": 1024,
+      "size": 1691515
+    },
+    {
+      "path": "public/media/vehicles/2023-hyundai-tucson-n-line/03-left.png",
+      "sha256": "beb33567e7d07254be18ec4325ce924f057f23fa642bba199a975e32fe224449",
+      "width": 1536,
+      "height": 1024,
+      "size": 1494840
+    },
+    {
+      "path": "public/media/vehicles/2023-hyundai-tucson-n-line/04-rear-left.png",
+      "sha256": "58ce5d0e6edd40beb7f5890b9961e857db63d95757b18220e0599cf0579555bf",
+      "width": 1536,
+      "height": 1024,
+      "size": 1782251
+    },
+    {
+      "path": "public/media/vehicles/2023-hyundai-tucson-n-line/05-rear.png",
+      "sha256": "87bb42081d37710af4e25c895d71606ccb1323e47709a77655f164eeb84253ec",
+      "width": 1536,
+      "height": 1024,
+      "size": 1357828
+    },
+    {
+      "path": "public/media/vehicles/2023-hyundai-tucson-n-line/06-rear-right.png",
+      "sha256": "5dc72b6588984ed6bbdfd5aaaf144489127a7a67c1067500084328a2ab012b72",
+      "width": 1536,
+      "height": 1024,
+      "size": 1772040
+    },
+    {
+      "path": "public/media/vehicles/2023-hyundai-tucson-n-line/07-right.png",
+      "sha256": "26c513761af30497b84a3b25ce84725c3e1106a1675a319abba007fb9ed1ff0f",
+      "width": 1536,
+      "height": 1024,
+      "size": 1471748
+    },
+    {
+      "path": "public/media/vehicles/2023-hyundai-tucson-n-line/08-front-right.png",
+      "sha256": "beb5f1db5f89dc062964c8656ac6da70346123d49b49fc6ee4af2ef3eefa5fed",
+      "width": 1536,
+      "height": 1024,
+      "size": 1617761
+    },
+    {
+      "path": "public/media/vehicles/2024-kia-sportage-gt-line/01-front.png",
+      "sha256": "77712304812790826dc21e6d19181aca29a8553cc5e7e72a84c55a4ecbc70457",
+      "width": 1536,
+      "height": 1024,
+      "size": 1566554
+    },
+    {
+      "path": "public/media/vehicles/2024-kia-sportage-gt-line/02-front-left.png",
+      "sha256": "9043f41723f1a290e1e667dc10e8bb913dec3eacd32379e57937c6ae6a7ffab1",
+      "width": 1536,
+      "height": 1024,
+      "size": 1772885
+    },
+    {
+      "path": "public/media/vehicles/2024-kia-sportage-gt-line/03-left.png",
+      "sha256": "38c5fc793c13b210860b079ab8315045be769c605816168a6fc0d027b86ea49b",
+      "width": 1536,
+      "height": 1024,
+      "size": 1467498
+    },
+    {
+      "path": "public/media/vehicles/2024-kia-sportage-gt-line/04-rear-left.png",
+      "sha256": "43d20b2e1fceedba6e5e887ee2991af20824f361aeb20a6184026dbbd5b2312d",
+      "width": 1536,
+      "height": 1024,
+      "size": 1691219
+    },
+    {
+      "path": "public/media/vehicles/2024-kia-sportage-gt-line/05-rear.png",
+      "sha256": "cebb267adc202bd2ec006205e047111a2fc6d0a714903cb7b4264f96e414d677",
+      "width": 1536,
+      "height": 1024,
+      "size": 1370174
+    },
+    {
+      "path": "public/media/vehicles/2024-kia-sportage-gt-line/06-rear-right.png",
+      "sha256": "6a13b5bc273b8981f9cc48a9a47eab2f6cd2fd50da599095b2a5e88a79900d30",
+      "width": 1536,
+      "height": 1024,
+      "size": 1738849
+    },
+    {
+      "path": "public/media/vehicles/2024-kia-sportage-gt-line/07-right.png",
+      "sha256": "374d2140472bc922dfc660ba2bb6ca9d5fe65fd01744ea51ebf37c5a8e538a8c",
+      "width": 1536,
+      "height": 1024,
+      "size": 1419526
+    },
+    {
+      "path": "public/media/vehicles/2024-kia-sportage-gt-line/08-front-right.png",
+      "sha256": "c8ccfc64b499cbbfbc39d80a9f4667c11b911e5094dc46f0cd8facbf4697d250",
+      "width": 1536,
+      "height": 1024,
+      "size": 1603622
+    },
+    {
+      "path": "public/media/vehicles/2024-suzuki-jimny-5-door-glx/01-front.png",
+      "sha256": "0985303e13c0d039f9e04266e1ad58579d4f43ae57087b0d53f608e635889659",
+      "width": 1536,
+      "height": 1024,
+      "size": 1556016
+    },
+    {
+      "path": "public/media/vehicles/2024-suzuki-jimny-5-door-glx/02-front-left.png",
+      "sha256": "9097222e0f2b2f5c67a1b02d1e7acc5138b0480728f7103a899071c950595023",
+      "width": 1536,
+      "height": 1024,
+      "size": 1966394
+    },
+    {
+      "path": "public/media/vehicles/2024-suzuki-jimny-5-door-glx/03-left.png",
+      "sha256": "6c8d09d52699ceee4876b15890cee613c4c7bf24e5982c603e57f7e096d6570b",
+      "width": 1536,
+      "height": 1024,
+      "size": 1465988
+    },
+    {
+      "path": "public/media/vehicles/2024-suzuki-jimny-5-door-glx/04-rear-left.png",
+      "sha256": "3624d206fc910c4d3c2110d308d1f82b4439a4636e1373c641f375ad157000ca",
+      "width": 1536,
+      "height": 1024,
+      "size": 1897343
+    },
+    {
+      "path": "public/media/vehicles/2024-suzuki-jimny-5-door-glx/05-rear.png",
+      "sha256": "f26269b786831d7d44d861b3b5a13f1c77483d3691a8212f161be35eacc87a37",
+      "width": 1536,
+      "height": 1024,
+      "size": 1478013
+    },
+    {
+      "path": "public/media/vehicles/2024-suzuki-jimny-5-door-glx/06-rear-right.png",
+      "sha256": "991a5a7f0c18519e3c0b56ce2098be265ba71cee052ca6bf8edd50ef8bb4d6ee",
+      "width": 1536,
+      "height": 1024,
+      "size": 1949288
+    },
+    {
+      "path": "public/media/vehicles/2024-suzuki-jimny-5-door-glx/07-right.png",
+      "sha256": "308bfa82cbcd0be33774372edc3a12639ac78b6e717a54afa61e73d22430777c",
+      "width": 1536,
+      "height": 1024,
+      "size": 1500224
+    },
+    {
+      "path": "public/media/vehicles/2024-suzuki-jimny-5-door-glx/08-front-right.png",
+      "sha256": "3089b1c1d602c58a020c5795f9b3c6bc129ccea06e8eb0ec076b9c7db8cefbed",
+      "width": 1536,
+      "height": 1024,
+      "size": 1854881
+    },
+    {
+      "path": "public/media/vehicles/2023-nissan-navara-pro-4x/01-front.png",
+      "sha256": "a03ae2c106bbf6931f7b7d95e22364b4063916f064f9bb8e42e47a148e5ad2ed",
+      "width": 1536,
+      "height": 1024,
+      "size": 1625652
+    },
+    {
+      "path": "public/media/vehicles/2023-nissan-navara-pro-4x/02-front-left.png",
+      "sha256": "24adde8f9c3166e8600ffe7e45458528eb49bda9aa0fbcef0c2533ced8b3ab4e",
+      "width": 1536,
+      "height": 1024,
+      "size": 1894407
+    },
+    {
+      "path": "public/media/vehicles/2023-nissan-navara-pro-4x/03-left.png",
+      "sha256": "0da1e2377e04af7803d26a4e53ac5b8f9fe510d42c55fc83584d17e104357069",
+      "width": 1536,
+      "height": 1024,
+      "size": 1514098
+    },
+    {
+      "path": "public/media/vehicles/2023-nissan-navara-pro-4x/04-rear-left.png",
+      "sha256": "ce1ba040284641be37d0613eba2a6ecf7a0a164cc9050a293e28a2176dab1920",
+      "width": 1536,
+      "height": 1024,
+      "size": 1693346
+    },
+    {
+      "path": "public/media/vehicles/2023-nissan-navara-pro-4x/05-rear.png",
+      "sha256": "d3aae2ceb3efec3cbad1def8e8f103442662f8746d01aff76e3cfc1a97b71703",
+      "width": 1536,
+      "height": 1024,
+      "size": 1377668
+    },
+    {
+      "path": "public/media/vehicles/2023-nissan-navara-pro-4x/06-rear-right.png",
+      "sha256": "41e5075aba43de3bc577d8da2ed9dc3114ebb60713ab0285df35c38e53c259e5",
+      "width": 1536,
+      "height": 1024,
+      "size": 1781954
+    },
+    {
+      "path": "public/media/vehicles/2023-nissan-navara-pro-4x/07-right.png",
+      "sha256": "603276c9ad0db166ac013db0696e8d0acef070fe03438937e39878269701715f",
+      "width": 1536,
+      "height": 1024,
+      "size": 1574771
+    },
+    {
+      "path": "public/media/vehicles/2023-nissan-navara-pro-4x/08-front-right.png",
+      "sha256": "737241a73462f3597ef9b1bbd4794da276e8a87b1372fc02615ca954f1cceecb",
+      "width": 1536,
+      "height": 1024,
+      "size": 1834129
+    },
+    {
+      "path": "public/media/vehicles/2024-mazda-cx-60-takumi/01-front.png",
+      "sha256": "2ed383fffda0a3f0b76bffa986e9be5dc60ba7807c050efca87d093a237a652a",
+      "width": 1536,
+      "height": 1024,
+      "size": 1705296
+    },
+    {
+      "path": "public/media/vehicles/2024-mazda-cx-60-takumi/02-front-left.png",
+      "sha256": "b4f52d6a427c15d12b9ce455ee9bcc13728ef7327a76de87d933b94458a0ad08",
+      "width": 1536,
+      "height": 1024,
+      "size": 2027205
+    },
+    {
+      "path": "public/media/vehicles/2024-mazda-cx-60-takumi/03-left.png",
+      "sha256": "ff33d9a603a0a41bd0d03fb6f27840aef9a9b9f9f108be93b4fb8c2cfdcd0713",
+      "width": 1536,
+      "height": 1024,
+      "size": 1701825
+    },
+    {
+      "path": "public/media/vehicles/2024-mazda-cx-60-takumi/04-rear-left.png",
+      "sha256": "02914081bbf1fc79feba53c26f2b3e5de3d36381f50f5f3c6a4e7405d6958d76",
+      "width": 1536,
+      "height": 1024,
+      "size": 1844452
+    },
+    {
+      "path": "public/media/vehicles/2024-mazda-cx-60-takumi/05-rear.png",
+      "sha256": "6ca51090f527ce9f8bb971e5461cb90adb2c437738df3149088188b3f0700d73",
+      "width": 1536,
+      "height": 1024,
+      "size": 1524032
+    },
+    {
+      "path": "public/media/vehicles/2024-mazda-cx-60-takumi/06-rear-right.png",
+      "sha256": "0b7210b6c7d5abb40b7f790506a5db2f3c9ae6ca9ae272dfbdfe7c147d012fed",
+      "width": 1536,
+      "height": 1024,
+      "size": 1921021
+    },
+    {
+      "path": "public/media/vehicles/2024-mazda-cx-60-takumi/07-right.png",
+      "sha256": "c88300f9dfcc04038236cd3e0ceb80bfd0b511ca2d6b226bbd8cd41cb57d1d37",
+      "width": 1536,
+      "height": 1024,
+      "size": 1660738
+    },
+    {
+      "path": "public/media/vehicles/2024-mazda-cx-60-takumi/08-front-right.png",
+      "sha256": "2edb637aa0b20ec758c4ee80d7d65ef5335d6618026da4ceffe53d76ae5d282e",
+      "width": 1536,
+      "height": 1024,
+      "size": 1915504
+    },
+    {
+      "path": "public/media/vehicles/2023-volvo-xc60-recharge/01-front.png",
+      "sha256": "3b52b9d2198df0e7faf74334c276ab3307cbff5733bdf816bb30db650e1a0b86",
+      "width": 1536,
+      "height": 1024,
+      "size": 1345067
+    },
+    {
+      "path": "public/media/vehicles/2023-volvo-xc60-recharge/02-front-left.png",
+      "sha256": "a9972f77b0bf02ce2a9f0242da7fa727af44e0193de8813941a59a3850488d2b",
+      "width": 1536,
+      "height": 1024,
+      "size": 1673954
+    },
+    {
+      "path": "public/media/vehicles/2023-volvo-xc60-recharge/03-left.png",
+      "sha256": "c3f479164149ded9624c263ddb6e416e9f3f34de7259b22b86734ed3f1d38eac",
+      "width": 1536,
+      "height": 1024,
+      "size": 1289830
+    },
+    {
+      "path": "public/media/vehicles/2023-volvo-xc60-recharge/04-rear-left.png",
+      "sha256": "f49ebe95a4623b3c09978b316f8c6677693d2027f7f069d9bc4469a386ed9200",
+      "width": 1536,
+      "height": 1024,
+      "size": 1508630
+    },
+    {
+      "path": "public/media/vehicles/2023-volvo-xc60-recharge/05-rear.png",
+      "sha256": "4f2b5cc9d22b810ace88c575f9db1bbbedd9450af34110da37b0c6095bc700f3",
+      "width": 1536,
+      "height": 1024,
+      "size": 1275747
+    },
+    {
+      "path": "public/media/vehicles/2023-volvo-xc60-recharge/06-rear-right.png",
+      "sha256": "0430d9f7b33c3289c3769454834114bde6978fd7d8f7f956c4f9c6b1ddab20e3",
+      "width": 1536,
+      "height": 1024,
+      "size": 1491001
+    },
+    {
+      "path": "public/media/vehicles/2023-volvo-xc60-recharge/07-right.png",
+      "sha256": "b623d96c008c71bd442bfff31ba3231aa093b4b9f6c9b2496abc737a3ac4582d",
+      "width": 1536,
+      "height": 1024,
+      "size": 1266230
+    },
+    {
+      "path": "public/media/vehicles/2023-volvo-xc60-recharge/08-front-right.png",
+      "sha256": "d23eb58432a40112808f09dc0e05622ff340f42c2bb9b24d6a67badb3637ebe2",
+      "width": 1536,
+      "height": 1024,
+      "size": 1599500
+    },
+    {
+      "path": "public/media/vehicles/2024-range-rover-sport-d350/01-front.png",
+      "sha256": "416027556b4f4e0dc616f01dae5414f67739f65552d91284b36c1c3c166009b4",
+      "width": 1536,
+      "height": 1024,
+      "size": 1395855
+    },
+    {
+      "path": "public/media/vehicles/2024-range-rover-sport-d350/02-front-left.png",
+      "sha256": "9b041126769a4bb75bb965f1dfbcacd6ef1df80e49acbc88425d13fa234f9529",
+      "width": 1536,
+      "height": 1024,
+      "size": 1533956
+    },
+    {
+      "path": "public/media/vehicles/2024-range-rover-sport-d350/03-left.png",
+      "sha256": "4abe626f39a12d07481c5d356e0004e6eb32ef12c68eee4cc6923de0d0a84d68",
+      "width": 1536,
+      "height": 1024,
+      "size": 1237492
+    },
+    {
+      "path": "public/media/vehicles/2024-range-rover-sport-d350/04-rear-left.png",
+      "sha256": "845e72ff73cda8baede9a87653823b3f7df546bbaeb71b96a55bc37e3fa14d78",
+      "width": 1536,
+      "height": 1024,
+      "size": 1420575
+    },
+    {
+      "path": "public/media/vehicles/2024-range-rover-sport-d350/05-rear.png",
+      "sha256": "aae66b85e5eca6ba4287772fc9cd19ffdb85da179057f936ecebbb25e39a6235",
+      "width": 1536,
+      "height": 1024,
+      "size": 1227781
+    },
+    {
+      "path": "public/media/vehicles/2024-range-rover-sport-d350/06-rear-right.png",
+      "sha256": "2350f873a75067285b6c690cb4ffffd32c7f69463713cef74bd57c12279040bd",
+      "width": 1536,
+      "height": 1024,
+      "size": 1490138
+    },
+    {
+      "path": "public/media/vehicles/2024-range-rover-sport-d350/07-right.png",
+      "sha256": "bc6e94d8e5db1349ad64fc44eafaa5ce0d260c44c67f0b6c793a13ff6715774e",
+      "width": 1536,
+      "height": 1024,
+      "size": 1255699
+    },
+    {
+      "path": "public/media/vehicles/2024-range-rover-sport-d350/08-front-right.png",
+      "sha256": "2f942d034de4bbc939c8f1d08519de4766f851a515f98c24f13acc760991884f",
+      "width": 1536,
+      "height": 1024,
+      "size": 1522423
+    },
+    {
+      "path": "public/media/vehicles/2024-volkswagen-amarok-aventura/01-front.png",
+      "sha256": "9daa58406c4f057f86e7b974d85c855ad77c1310f08f5f6636b20cb9bc6cdd05",
+      "width": 1536,
+      "height": 1024,
+      "size": 1503000
+    },
+    {
+      "path": "public/media/vehicles/2024-volkswagen-amarok-aventura/02-front-left.png",
+      "sha256": "108f8508e977729bcd122cfc88524305f2c9042453b4ace9f14fd834f0d9b1a9",
+      "width": 1536,
+      "height": 1024,
+      "size": 1925577
+    },
+    {
+      "path": "public/media/vehicles/2024-volkswagen-amarok-aventura/03-left.png",
+      "sha256": "8f109fe5573501e3cbb4881b9d36224bdedddccd3e461075834d0d5717fba111",
+      "width": 1536,
+      "height": 1024,
+      "size": 1407489
+    },
+    {
+      "path": "public/media/vehicles/2024-volkswagen-amarok-aventura/04-rear-left.png",
+      "sha256": "b2dbfbae5eaae95c13af2b7725895774472b16302d67f408164bdbb2900a3e57",
+      "width": 1536,
+      "height": 1024,
+      "size": 1691763
+    },
+    {
+      "path": "public/media/vehicles/2024-volkswagen-amarok-aventura/05-rear.png",
+      "sha256": "8fe8a8c737b6d4b73b99b5f46a9c0e55913298e584d119399a550f49adedb595",
+      "width": 1536,
+      "height": 1024,
+      "size": 1341299
+    },
+    {
+      "path": "public/media/vehicles/2024-volkswagen-amarok-aventura/06-rear-right.png",
+      "sha256": "472fd74de98beedbcb7ef7e500206eab721b3f1c415ccce7ac5ad4bf8c8e51d1",
+      "width": 1536,
+      "height": 1024,
+      "size": 1771614
+    },
+    {
+      "path": "public/media/vehicles/2024-volkswagen-amarok-aventura/07-right.png",
+      "sha256": "65cbbf6b300e3052f97b1e4222da52b3d3d7ed9e962c7978fee56b65bd123de2",
+      "width": 1536,
+      "height": 1024,
+      "size": 1465534
+    },
+    {
+      "path": "public/media/vehicles/2024-volkswagen-amarok-aventura/08-front-right.png",
+      "sha256": "01b188d95ed48f9eb3f3e7b21b5c8b2deee107d311bd6ec6db0e0eefc9f783cc",
+      "width": 1536,
+      "height": 1024,
+      "size": 1784503
+    },
+    {
+      "path": "public/media/vehicles/2024-ford-everest-platinum/01-front.png",
+      "sha256": "d900c7680e47237ee39418c12aea0f1e994d159fe17fd717df075965de203b44",
+      "width": 1536,
+      "height": 1024,
+      "size": 1613957
+    },
+    {
+      "path": "public/media/vehicles/2024-ford-everest-platinum/02-front-left.png",
+      "sha256": "b888ac08d318e3f1cae67e1bdb8ef7139bb9f2f8cc7f115e8257db0c750bbe8d",
+      "width": 1536,
+      "height": 1024,
+      "size": 1852636
+    },
+    {
+      "path": "public/media/vehicles/2024-ford-everest-platinum/03-left.png",
+      "sha256": "d74f9d9f2a01158f35257e4da17686ff0e362a2f96e3b68211a0a50d5b7f0027",
+      "width": 1536,
+      "height": 1024,
+      "size": 1420095
+    },
+    {
+      "path": "public/media/vehicles/2024-ford-everest-platinum/04-rear-left.png",
+      "sha256": "c0979895f6d93f523adc0c0143c7c85c992a36b202c322d3644da54034497164",
+      "width": 1536,
+      "height": 1024,
+      "size": 1770547
+    },
+    {
+      "path": "public/media/vehicles/2024-ford-everest-platinum/05-rear.png",
+      "sha256": "168fe69124fd6614e01030a02fd9bc9ee4fd8deabf491c82d632edd87f3c15cf",
+      "width": 1536,
+      "height": 1024,
+      "size": 1298585
+    },
+    {
+      "path": "public/media/vehicles/2024-ford-everest-platinum/06-rear-right.png",
+      "sha256": "3858ae46bff6e7638f39972c1db89c198cfd125f45f4631e0ace536f7832fa31",
+      "width": 1536,
+      "height": 1024,
+      "size": 1751511
+    },
+    {
+      "path": "public/media/vehicles/2024-ford-everest-platinum/07-right.png",
+      "sha256": "531432ab499f5aeab03232e29cbbfc998b5f29bef7a5ab367df2f45ab375fd3d",
+      "width": 1536,
+      "height": 1024,
+      "size": 1426176
+    },
+    {
+      "path": "public/media/vehicles/2024-ford-everest-platinum/08-front-right.png",
+      "sha256": "a39f9214d97b283bedc78e45c18038c3515c1fc4524e34aab682b5f7d0049984",
+      "width": 1536,
+      "height": 1024,
+      "size": 1819780
+    },
+    {
+      "path": "public/media/vehicles/2023-audi-q5-sportback-45-tfsi/01-front.png",
+      "sha256": "65641ba79226a40313c95ce0a7123b3de2a0b900db4cb3a8714c7079e9aafe29",
+      "width": 1536,
+      "height": 1024,
+      "size": 1573662
+    },
+    {
+      "path": "public/media/vehicles/2023-audi-q5-sportback-45-tfsi/02-front-left.png",
+      "sha256": "85523a7b3358322adceb66e460ce6f455477a2fcb7b59434507da2e3b04bca89",
+      "width": 1536,
+      "height": 1024,
+      "size": 1751922
+    },
+    {
+      "path": "public/media/vehicles/2023-audi-q5-sportback-45-tfsi/03-left.png",
+      "sha256": "067cfe90da416bd2b992f7da9212c6e125f9cbdc71784a481af645aeef3d24c6",
+      "width": 1536,
+      "height": 1024,
+      "size": 1462895
+    },
+    {
+      "path": "public/media/vehicles/2023-audi-q5-sportback-45-tfsi/04-rear-left.png",
+      "sha256": "e9bfb9e167bd7162a945f843dce186c836a404591657ead4dc3b26f88c055daf",
+      "width": 1536,
+      "height": 1024,
+      "size": 1623430
+    },
+    {
+      "path": "public/media/vehicles/2023-audi-q5-sportback-45-tfsi/05-rear.png",
+      "sha256": "0a5dcbb797e606242a94cbb55b89313569facaea9051d549d5499debc16e24ac",
+      "width": 1536,
+      "height": 1024,
+      "size": 1392450
+    },
+    {
+      "path": "public/media/vehicles/2023-audi-q5-sportback-45-tfsi/06-rear-right.png",
+      "sha256": "5a06a8907412123a1eeffb4747bf5403f68031181c7b6cd288e768558f078f84",
+      "width": 1536,
+      "height": 1024,
+      "size": 1747138
+    },
+    {
+      "path": "public/media/vehicles/2023-audi-q5-sportback-45-tfsi/07-right.png",
+      "sha256": "d8b963e7be045144b6265ce85e4508cda59026539ef3b5fff36a0afffaee213a",
+      "width": 1536,
+      "height": 1024,
+      "size": 1483155
+    },
+    {
+      "path": "public/media/vehicles/2023-audi-q5-sportback-45-tfsi/08-front-right.png",
+      "sha256": "617b5f3cfeb1c62ab1b0ca70d9ca8cdf3c1927d0016b5e63a33286b7c20d1f20",
+      "width": 1536,
+      "height": 1024,
+      "size": 1716216
+    },
+    {
+      "path": "public/media/vehicles/2022-bmw-320i-m-sport/01-front.png",
+      "sha256": "8b648bf6eff17c6c8f794f8a5c104c28b16523ba74995920c755bed92ed0e228",
+      "width": 1536,
+      "height": 1024,
+      "size": 1652061
+    },
+    {
+      "path": "public/media/vehicles/2022-bmw-320i-m-sport/02-front-left.png",
+      "sha256": "3969c0dce53fd3575fb125d2cff0f03cd3dadc5729fea33c351d1c428b8e26f8",
+      "width": 1536,
+      "height": 1024,
+      "size": 1732968
+    },
+    {
+      "path": "public/media/vehicles/2022-bmw-320i-m-sport/03-left.png",
+      "sha256": "1608144e62c269078be21b21ea0ea38ff1b0266ed05da23f113a8ee5e059c8aa",
+      "width": 1536,
+      "height": 1024,
+      "size": 1436181
+    },
+    {
+      "path": "public/media/vehicles/2022-bmw-320i-m-sport/04-rear-left.png",
+      "sha256": "8bc1b32be81d991c779226cf9407be25680b235505a3291b2f81bd4b1db607b5",
+      "width": 1536,
+      "height": 1024,
+      "size": 1578121
+    },
+    {
+      "path": "public/media/vehicles/2022-bmw-320i-m-sport/05-rear.png",
+      "sha256": "3d460bebabab8a6993dc82d4492cc6cb3f263feb082343b842741d9d00fa8fe7",
+      "width": 1536,
+      "height": 1024,
+      "size": 1377286
+    },
+    {
+      "path": "public/media/vehicles/2022-bmw-320i-m-sport/06-rear-right.png",
+      "sha256": "7971375a6a5dc883e0d10804e689ae5a0a824eefa93f209880bb1191e58422d0",
+      "width": 1536,
+      "height": 1024,
+      "size": 1659620
+    },
+    {
+      "path": "public/media/vehicles/2022-bmw-320i-m-sport/07-right.png",
+      "sha256": "74d51a7805c95e2174ed3d91633d985f0780fa02e54124dbb2ea785ed876f9d5",
+      "width": 1536,
+      "height": 1024,
+      "size": 1463126
+    },
+    {
+      "path": "public/media/vehicles/2022-bmw-320i-m-sport/08-front-right.png",
+      "sha256": "b335a77cce5e63544bd9ccf3bb1680c4e0484aed4ef0d00694c47905e01e5f5f",
+      "width": 1536,
+      "height": 1024,
+      "size": 1647036
+    },
+    {
+      "path": "public/media/vehicles/2023-mercedes-benz-v-class-v300d/01-front.png",
+      "sha256": "5bb033324b960d27c9f38501f6618dc49a99cb65e4679bff0fa01e14aa9b7585",
+      "width": 1536,
+      "height": 1024,
+      "size": 1538242
+    },
+    {
+      "path": "public/media/vehicles/2023-mercedes-benz-v-class-v300d/02-front-left.png",
+      "sha256": "0315a4e18791884b976622fca45f75dab2b25911a4eed6bb4865390e8edaf8eb",
+      "width": 1536,
+      "height": 1024,
+      "size": 1838998
+    },
+    {
+      "path": "public/media/vehicles/2023-mercedes-benz-v-class-v300d/03-left.png",
+      "sha256": "3755f2752d1b21a5874d8fdae8fc28c73e5ed8a2be2a5fd7f7e6c545e6d678d1",
+      "width": 1536,
+      "height": 1024,
+      "size": 1389608
+    },
+    {
+      "path": "public/media/vehicles/2023-mercedes-benz-v-class-v300d/04-rear-left.png",
+      "sha256": "1a14adfd348f3c352e481970000148388027ec277e9105a8cdd46577cd243906",
+      "width": 1536,
+      "height": 1024,
+      "size": 1573793
+    },
+    {
+      "path": "public/media/vehicles/2023-mercedes-benz-v-class-v300d/05-rear.png",
+      "sha256": "5638017467b0d571c51f27003e5fd1232bada88b150b26755af999710d9acd92",
+      "width": 1536,
+      "height": 1024,
+      "size": 1151988
+    },
+    {
+      "path": "public/media/vehicles/2023-mercedes-benz-v-class-v300d/06-rear-right.png",
+      "sha256": "2f87e9327495e57cf71b14d65bb174c1631f9a9402f77a35d9aa5f91419321e9",
+      "width": 1536,
+      "height": 1024,
+      "size": 1656368
+    },
+    {
+      "path": "public/media/vehicles/2023-mercedes-benz-v-class-v300d/07-right.png",
+      "sha256": "3d63a214449cf774d0b637e91835e029fc7f28d2aa30f8dfe22d2d6ce94602a6",
+      "width": 1536,
+      "height": 1024,
+      "size": 1414787
+    },
+    {
+      "path": "public/media/vehicles/2023-mercedes-benz-v-class-v300d/08-front-right.png",
+      "sha256": "cd6bc44ab9a7a04fc0e79492dc0d68933f31184eb5de04b87c14509c45d973f6",
+      "width": 1536,
+      "height": 1024,
+      "size": 1740213
+    },
+    {
+      "path": "public/media/vehicles/2024-toyota-corolla-cross-gr-s/01-front.png",
+      "sha256": "9cb8c3dce0b5dcf451583ea8f7553b86ced0a418fcd43c4acb8cbcca2bb9fdea",
+      "width": 1536,
+      "height": 1024,
+      "size": 1443559
+    },
+    {
+      "path": "public/media/vehicles/2024-toyota-corolla-cross-gr-s/02-front-left.png",
+      "sha256": "c6ca9edc6d89503ee0cfa6fa087ab9bea5e3101364b8b95c0ef7079bdb7f8d12",
+      "width": 1536,
+      "height": 1024,
+      "size": 1661580
+    },
+    {
+      "path": "public/media/vehicles/2024-toyota-corolla-cross-gr-s/03-left.png",
+      "sha256": "d19f23228c312f86590e805e45c2571c4f6ea9ca72ed0ad1161abaf0fa0d7700",
+      "width": 1536,
+      "height": 1024,
+      "size": 1350843
+    },
+    {
+      "path": "public/media/vehicles/2024-toyota-corolla-cross-gr-s/04-rear-left.png",
+      "sha256": "08f030fb90a162f2dc0f1f7d5dd86272c6650647fb3c4e33a55c971e85fdd6a8",
+      "width": 1536,
+      "height": 1024,
+      "size": 1562390
+    },
+    {
+      "path": "public/media/vehicles/2024-toyota-corolla-cross-gr-s/05-rear.png",
+      "sha256": "0b009b6f159e7c953ff1a265bdfedba360d84d4ba31b1661f89a988ab1233c7f",
+      "width": 1536,
+      "height": 1024,
+      "size": 1381280
+    },
+    {
+      "path": "public/media/vehicles/2024-toyota-corolla-cross-gr-s/06-rear-right.png",
+      "sha256": "f143d4c9869c5042e9f2a96d1f8bdbc6e92b08e117d7fc9344aab3413c5bfef2",
+      "width": 1536,
+      "height": 1024,
+      "size": 1591685
+    },
+    {
+      "path": "public/media/vehicles/2024-toyota-corolla-cross-gr-s/07-right.png",
+      "sha256": "4173f14346e48c2397c158639f17cf4e9eea6bf659431d4e4bb1ed82c2eb4b83",
+      "width": 1536,
+      "height": 1024,
+      "size": 1321796
+    },
+    {
+      "path": "public/media/vehicles/2024-toyota-corolla-cross-gr-s/08-front-right.png",
+      "sha256": "bf65a66b90dcef80d1d021e643f5d641e61c2c92fad4fa6f31602cbb41517f3c",
+      "width": 1536,
+      "height": 1024,
+      "size": 1614780
+    },
+    {
+      "path": "public/media/vehicles/2022-hyundai-i20-n/01-front.png",
+      "sha256": "5c44e527af56515203dde2b4eecb3f5d4a8fc7613e8af2e517f511d1f07519b2",
+      "width": 1536,
+      "height": 1024,
+      "size": 1340964
+    },
+    {
+      "path": "public/media/vehicles/2022-hyundai-i20-n/02-front-left.png",
+      "sha256": "5520439be52d125bd5fa07a6a7ef0e340dde61407f54731ad4378935e647de35",
+      "width": 1536,
+      "height": 1024,
+      "size": 1671385
+    },
+    {
+      "path": "public/media/vehicles/2022-hyundai-i20-n/03-left.png",
+      "sha256": "34fcd4c82b08c98b2a82f2486ea96b3f277ccdead65ee620d3ca13463589a6d4",
+      "width": 1536,
+      "height": 1024,
+      "size": 1364974
+    },
+    {
+      "path": "public/media/vehicles/2022-hyundai-i20-n/04-rear-left.png",
+      "sha256": "4d856a5323e8362beda8aa62c203150cb5b761171f9e6077aa5b4620ae6e4645",
+      "width": 1536,
+      "height": 1024,
+      "size": 1560302
+    },
+    {
+      "path": "public/media/vehicles/2022-hyundai-i20-n/05-rear.png",
+      "sha256": "04f1e329e78a65dab70af9600c7053198df898480f7b9e0500a275dd6a796f91",
+      "width": 1536,
+      "height": 1024,
+      "size": 1235948
+    },
+    {
+      "path": "public/media/vehicles/2022-hyundai-i20-n/06-rear-right.png",
+      "sha256": "5e0e4617c48fa108f5bdc0abfbe3798b306059f0baf0bcfe609c3c3c0b805c7e",
+      "width": 1536,
+      "height": 1024,
+      "size": 1579266
+    },
+    {
+      "path": "public/media/vehicles/2022-hyundai-i20-n/07-right.png",
+      "sha256": "1d0e9f0fa2457141a49cb26173749e87b1cd017f00c544fa9f7d385d7e6fb37b",
+      "width": 1536,
+      "height": 1024,
+      "size": 1348317
+    },
+    {
+      "path": "public/media/vehicles/2022-hyundai-i20-n/08-front-right.png",
+      "sha256": "b6144515b1f986a18c9dcaa1d28f8b3a246c520f51dbdeb86f543c5072290b70",
+      "width": 1536,
+      "height": 1024,
+      "size": 1646161
+    },
+    {
+      "path": "public/media/vehicles/2023-kia-sorento-sxl-awd/01-front.png",
+      "sha256": "ff110b1766598239917b4c13fef0758b7df0b8c7e7d19720746523ac8d444c8d",
+      "width": 1536,
+      "height": 1024,
+      "size": 1497694
+    },
+    {
+      "path": "public/media/vehicles/2023-kia-sorento-sxl-awd/02-front-left.png",
+      "sha256": "9b8bd7ebd8839f6931c48dc4d40738a624aa4c291e50ce177f712c80471d7bea",
+      "width": 1536,
+      "height": 1024,
+      "size": 1725724
+    },
+    {
+      "path": "public/media/vehicles/2023-kia-sorento-sxl-awd/03-left.png",
+      "sha256": "70ee74e41110ba7fc73ed9445af7fdf5c8fbf0ec5169298e33bbf941fc591b0b",
+      "width": 1536,
+      "height": 1024,
+      "size": 1451626
+    },
+    {
+      "path": "public/media/vehicles/2023-kia-sorento-sxl-awd/04-rear-left.png",
+      "sha256": "ad6f3c89f0ccdf79be295077b4de9b2c13df55ddc0c9a3f2181a4d973c1008ac",
+      "width": 1536,
+      "height": 1024,
+      "size": 1610707
+    },
+    {
+      "path": "public/media/vehicles/2023-kia-sorento-sxl-awd/05-rear.png",
+      "sha256": "4cb8eb7993431a19f7fa0809a2d57f1da8beda9794a6144d98171b7631b82847",
+      "width": 1536,
+      "height": 1024,
+      "size": 1384002
+    },
+    {
+      "path": "public/media/vehicles/2023-kia-sorento-sxl-awd/06-rear-right.png",
+      "sha256": "db351d8c928bafe4b09d6a2de441d606e16dedebeccf977967be04c24f4021ee",
+      "width": 1536,
+      "height": 1024,
+      "size": 1681200
+    },
+    {
+      "path": "public/media/vehicles/2023-kia-sorento-sxl-awd/07-right.png",
+      "sha256": "86ef604633c40137596f3c436c810e601fd0b5547e4696d3aa58678b7ed0803e",
+      "width": 1536,
+      "height": 1024,
+      "size": 1431048
+    },
+    {
+      "path": "public/media/vehicles/2023-kia-sorento-sxl-awd/08-front-right.png",
+      "sha256": "d490631dffc1cb57fd4a49d1a03c9c4706b1bb7af4def17c4a609d2bb26f2c96",
+      "width": 1536,
+      "height": 1024,
+      "size": 1698427
+    },
+    {
+      "path": "public/media/vehicles/2024-nissan-x-trail-e-power/01-front.png",
+      "sha256": "b43cbf70d665d7c6c533d2cec926f77ff20c0ab0b73a79ae87198ff8e29154ca",
+      "width": 1536,
+      "height": 1024,
+      "size": 1631402
+    },
+    {
+      "path": "public/media/vehicles/2024-nissan-x-trail-e-power/02-front-left.png",
+      "sha256": "3d2379d6566e4cfd25baef22fc6261e6d722e9f0f82cf4e9570b4fda316b23e5",
+      "width": 1536,
+      "height": 1024,
+      "size": 1787653
+    },
+    {
+      "path": "public/media/vehicles/2024-nissan-x-trail-e-power/03-left.png",
+      "sha256": "5b1624bc278dd4db1abad063ad6eaa405da10d6e0727d7f7ba9cee9f2c260f66",
+      "width": 1536,
+      "height": 1024,
+      "size": 1519858
+    },
+    {
+      "path": "public/media/vehicles/2024-nissan-x-trail-e-power/04-rear-left.png",
+      "sha256": "4dbae00ee95d31cb5aa8807b3843eaae9ecd6f58000fe12bc0bb1de3e3597f28",
+      "width": 1536,
+      "height": 1024,
+      "size": 1619528
+    },
+    {
+      "path": "public/media/vehicles/2024-nissan-x-trail-e-power/05-rear.png",
+      "sha256": "7b04e99bc0a83a0816e7038fca29c94d6616b014284dc62a04f2a8bf6a92a646",
+      "width": 1536,
+      "height": 1024,
+      "size": 1396959
+    },
+    {
+      "path": "public/media/vehicles/2024-nissan-x-trail-e-power/06-rear-right.png",
+      "sha256": "498a045e9d6fcecc782a21247bbc1ca1788a644b323e495d64c54e058d0c3ed0",
+      "width": 1536,
+      "height": 1024,
+      "size": 1727269
+    },
+    {
+      "path": "public/media/vehicles/2024-nissan-x-trail-e-power/07-right.png",
+      "sha256": "1e9de31ddd971c848f63fde1c35fd8e02801cd08b0e478a6f8dec0b98ba04c5a",
+      "width": 1536,
+      "height": 1024,
+      "size": 1443169
+    },
+    {
+      "path": "public/media/vehicles/2024-nissan-x-trail-e-power/08-front-right.png",
+      "sha256": "469efa70461d066ac1809b52b0ae8ff8375b8f322c93e926bc42f95633528d86",
+      "width": 1536,
+      "height": 1024,
+      "size": 1737650
+    },
+    {
+      "path": "public/media/vehicles/2023-mazda3-astina/01-front.png",
+      "sha256": "7e60e3c1905344288ebaf27fe46f14df61913f51f6bcdcd19c5af494c601c8de",
+      "width": 1536,
+      "height": 1024,
+      "size": 1288001
+    },
+    {
+      "path": "public/media/vehicles/2023-mazda3-astina/02-front-left.png",
+      "sha256": "74c68b56ced27cede8e1517bd36665bb975aa116da4c5cc2009f283b409326df",
+      "width": 1536,
+      "height": 1024,
+      "size": 1523976
+    },
+    {
+      "path": "public/media/vehicles/2023-mazda3-astina/03-left.png",
+      "sha256": "ed9881540534878ca2a050c2709209cce8f38cd557aa03c68110aa1a312b56bb",
+      "width": 1536,
+      "height": 1024,
+      "size": 1331181
+    },
+    {
+      "path": "public/media/vehicles/2023-mazda3-astina/04-rear-left.png",
+      "sha256": "d336661fa9ef6b7762cda0fb349525ac91c164e782262a9ff60df9304cf18737",
+      "width": 1536,
+      "height": 1024,
+      "size": 1467174
+    },
+    {
+      "path": "public/media/vehicles/2023-mazda3-astina/05-rear.png",
+      "sha256": "db370ae8539e56f8c5e57b2683cb6ddf49fa1d25ff0afcd52ce587d105989038",
+      "width": 1536,
+      "height": 1024,
+      "size": 1273591
+    },
+    {
+      "path": "public/media/vehicles/2023-mazda3-astina/06-rear-right.png",
+      "sha256": "9cf5ac7ffdd7260748d4f5f2db669d089b6314663bd2afb9368f133fc38b8967",
+      "width": 1536,
+      "height": 1024,
+      "size": 1527490
+    },
+    {
+      "path": "public/media/vehicles/2023-mazda3-astina/07-right.png",
+      "sha256": "5512a0a19fd27dd5e5d4ed7b38a7154fc257dcf75a347dec66c44a367635ff94",
+      "width": 1536,
+      "height": 1024,
+      "size": 1320948
+    },
+    {
+      "path": "public/media/vehicles/2023-mazda3-astina/08-front-right.png",
+      "sha256": "a281eef4e2fd38a223193e64d4956c0028b58bedabcf7ecaaf5e47cad3141f54",
+      "width": 1536,
+      "height": 1024,
+      "size": 1411217
+    },
+    {
+      "path": "public/media/vehicles/2024-volvo-xc40-recharge-twin/01-front.png",
+      "sha256": "ac4d9f69c6f90aea73b7bac5a40fd32a0dc056f0660950f2e37f09b765528ac9",
+      "width": 1536,
+      "height": 1024,
+      "size": 1346172
+    },
+    {
+      "path": "public/media/vehicles/2024-volvo-xc40-recharge-twin/02-front-left.png",
+      "sha256": "c7a5573845fbcde213f34d764c17b8fc1122507a62eeb75f89042e688b8e0722",
+      "width": 1536,
+      "height": 1024,
+      "size": 1606828
+    },
+    {
+      "path": "public/media/vehicles/2024-volvo-xc40-recharge-twin/03-left.png",
+      "sha256": "432a9e273187d554a2198f6f163e4611550f4967e47e2419394f8cc411bab5eb",
+      "width": 1536,
+      "height": 1024,
+      "size": 1430462
+    },
+    {
+      "path": "public/media/vehicles/2024-volvo-xc40-recharge-twin/04-rear-left.png",
+      "sha256": "b01848022897924ccb23f0e80b59befbed2fd0856f3d8a06fda3453413f6944c",
+      "width": 1536,
+      "height": 1024,
+      "size": 1578878
+    },
+    {
+      "path": "public/media/vehicles/2024-volvo-xc40-recharge-twin/05-rear.png",
+      "sha256": "831c5a14a71069e62487ef8ab06ec06344d8fc9715be7a541484809d1e1c2bdc",
+      "width": 1536,
+      "height": 1024,
+      "size": 1309507
+    },
+    {
+      "path": "public/media/vehicles/2024-volvo-xc40-recharge-twin/06-rear-right.png",
+      "sha256": "0e4d826f57c78dc6919199e2dccb21747505fcdb2d5c4d6e41164a41ea2b5390",
+      "width": 1536,
+      "height": 1024,
+      "size": 1629178
+    },
+    {
+      "path": "public/media/vehicles/2024-volvo-xc40-recharge-twin/07-right.png",
+      "sha256": "ae8d3a7bfa223ec4b8d8ba6d964dd9208d56172acd7548de7d7c7c4ed5a4ef70",
+      "width": 1536,
+      "height": 1024,
+      "size": 1434124
+    },
+    {
+      "path": "public/media/vehicles/2024-volvo-xc40-recharge-twin/08-front-right.png",
+      "sha256": "ef8b01efbec626166918f1410630bd7320797a595bdfdd1b0dd5a023dfa4869f",
+      "width": 1536,
+      "height": 1024,
+      "size": 1627843
     }
   ]
 }

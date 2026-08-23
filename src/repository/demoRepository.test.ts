@@ -9,16 +9,16 @@ describe("DemoRepository", () => {
 
     const repository = createDemoRepository(storage);
 
-    expect(repository.getState().vehicles).toHaveLength(10);
-    expect(JSON.parse(storage.getItem(STORAGE_KEY) ?? "{}").schemaVersion).toBe(1);
+    expect(repository.getState().vehicles).toHaveLength(30);
+    expect(JSON.parse(storage.getItem(STORAGE_KEY) ?? "{}").schemaVersion).toBe(2);
   });
 
   it("recovers from an incompatible payload and persists the deterministic seed", () => {
     const storage = memoryStorage();
     storage.setItem(STORAGE_KEY, JSON.stringify({ schemaVersion: 2, vehicles: [] }));
 
-    expect(createDemoRepository(storage).getState().activities).toHaveLength(12);
-    expect(JSON.parse(storage.getItem(STORAGE_KEY) ?? "{}").schemaVersion).toBe(1);
+    expect(createDemoRepository(storage).getState().activities).toHaveLength(40);
+    expect(JSON.parse(storage.getItem(STORAGE_KEY) ?? "{}").schemaVersion).toBe(2);
   });
 
   it.each([
@@ -27,7 +27,7 @@ describe("DemoRepository", () => {
     ["dangling activity target", (state: Record<string, any>) => { state.activities[0].targetId = "vehicle-999"; }],
   ])("recovers deterministic seed from %s", (_name, corrupt) => {
     const storage = memoryStorage(); const state = createDemoRepository(storage).getState() as unknown as Record<string, any>; corrupt(state); storage.setItem(STORAGE_KEY, JSON.stringify(state));
-    expect(createDemoRepository(storage).getState().activities).toHaveLength(12);
+    expect(createDemoRepository(storage).getState().activities).toHaveLength(40);
   });
 
   it("recovers from nested corrupt records before repository actions can crash", () => {
@@ -65,7 +65,7 @@ describe("DemoRepository", () => {
 
     const recovered = createDemoRepository(storage).getState();
 
-    expect(recovered).toMatchObject({ schemaVersion: 1 });
+    expect(recovered).toMatchObject({ schemaVersion: 2 });
     expect(recovered.vehicles[0]).toMatchObject({ derivative: "GT3", price: 4_250_000 });
     expect(recovered.financeDrafts[0].aprPercent).toBe(11.5);
     expect(recovered.tasks[0].relatedId).toBe("lead-01");
@@ -94,8 +94,8 @@ describe("DemoRepository", () => {
     const repository = createDemoRepository(memoryStorage());
     const existing = repository.getState().customers[0];
 
-    expect(() => repository.addCustomer({ ...existing, id: "customer-13", email: ` ${existing.email.toUpperCase()} ` })).toThrow("A customer with this email already exists.");
-    expect(repository.getState().customers).toHaveLength(12);
+    expect(() => repository.addCustomer({ ...existing, id: "customer-49", email: ` ${existing.email.toUpperCase()} ` })).toThrow("A customer with this email already exists.");
+    expect(repository.getState().customers).toHaveLength(48);
   });
 
   it("rejects lead and deal references that do not belong to the active directory", () => {
@@ -125,7 +125,7 @@ describe("DemoRepository", () => {
   it("rejects dangling customer vehicle interests on create and update without an audit", () => {
     const repository = createDemoRepository(memoryStorage());
     const before = repository.getState();
-    expect(() => repository.addCustomer({ ...before.customers[0], id: "customer-13", email: "new@example.com", vehicleInterestId: "vehicle-missing" })).toThrow("Vehicle interest not found.");
+    expect(() => repository.addCustomer({ ...before.customers[0], id: "customer-49", email: "new@example.com", vehicleInterestId: "vehicle-missing" })).toThrow("Vehicle interest not found.");
     expect(() => repository.updateCustomer(before.customers[0].id, { vehicleInterestId: "vehicle-missing" })).toThrow("Vehicle interest not found.");
     expect(repository.getState()).toEqual(before);
   });
@@ -139,7 +139,7 @@ describe("DemoRepository", () => {
 
   it("persists successful customer lead and deal mutations with typed audits across reload", () => {
     const storage = memoryStorage(); const repository = createDemoRepository(storage); const state = repository.getState();
-    const customer = { ...state.customers[0], id: "customer-13", email: "reload@example.com" };
+    const customer = { ...state.customers[0], id: "customer-49", email: "reload@example.com" };
     repository.addCustomer(customer); repository.addLead({ ...state.leads[0], id: "lead-99", customerId: customer.id }); repository.addDeal({ ...state.deals[0], id: "deal-99", customerId: customer.id });
     const reloaded = createDemoRepository(storage).getState();
     expect(reloaded.activities.slice(0, 3).map((activity) => activity.targetType)).toEqual(["deal", "lead", "customer"]);
@@ -147,10 +147,10 @@ describe("DemoRepository", () => {
 
   it("persists successful vehicle creation with a typed vehicle audit", () => {
     const storage = memoryStorage(); const repository = createDemoRepository(storage); const vehicle = repository.getState().vehicles[0];
-    repository.addVehicle({ ...vehicle, id: "vehicle-11", vin: "1HGCM82633A004352", stockId: "WEE-2411" });
+    repository.addVehicle({ ...vehicle, id: "vehicle-31", vin: "1HGCM82633A004352", stockId: "WEE-2431" });
     const reloaded = createDemoRepository(storage).getState();
-    expect(reloaded.vehicles.find((item) => item.id === "vehicle-11")?.stockId).toBe("WEE-2411");
-    expect(reloaded.activities[0]).toMatchObject({ action: "Vehicle added", targetType: "vehicle", targetId: "vehicle-11" });
+    expect(reloaded.vehicles.find((item) => item.id === "vehicle-31")?.stockId).toBe("WEE-2431");
+    expect(reloaded.activities[0]).toMatchObject({ action: "Vehicle added", targetType: "vehicle", targetId: "vehicle-31" });
   });
 
   it("persists successful vehicle edit with a typed vehicle audit", () => {
@@ -169,6 +169,37 @@ describe("DemoRepository", () => {
     repository.updateServiceJob(state.serviceJobs[0].id, { note: "Checked" }); expect(repository.getState().activities[0]).toMatchObject({ targetType: "service", targetId: state.serviceJobs[0].id });
   });
 
+  it("persists vehicle-intake drafts independently by account and branch", () => {
+    const repository = createDemoRepository(memoryStorage());
+    const initialActivityCount = repository.getState().activities.length;
+
+    repository.updateVehicleIntakeDraft("owner:Johannesburg North", { step: 2, values: { stockId: "OWNER-DRAFT" } });
+    repository.updateVehicleIntakeDraft("stock:Pretoria", { step: 1, values: { stockId: "STOCK-DRAFT" } });
+
+    expect(repository.getState().drafts.vehicleIntakes["owner:Johannesburg North"]?.values.stockId).toBe("OWNER-DRAFT");
+    expect(repository.getState().drafts.vehicleIntakes["stock:Pretoria"]?.values.stockId).toBe("STOCK-DRAFT");
+    repository.updateVehicleIntakeDraft("stock:Pretoria", null);
+    expect(repository.getState().drafts.vehicleIntakes["stock:Pretoria"]).toBeUndefined();
+    expect(repository.getState().drafts.vehicleIntakes["owner:Johannesburg North"]?.values.stockId).toBe("OWNER-DRAFT");
+    expect(repository.getState().activities).toHaveLength(initialActivityCount);
+  });
+
+  it("reloads an incomplete vehicle-intake draft without resetting persisted CRM state", () => {
+    const storage = memoryStorage();
+    const repository = createDemoRepository(storage);
+    repository.setPreferences({ density: "compact" });
+    repository.updateVehicleIntakeDraft("owner:Johannesburg North", {
+      step: 1,
+      values: { vin: "OWNER", stockId: "", year: 2024, make: "", model: "", engine: "", registration: "Unregistered" },
+    });
+
+    const reloaded = createDemoRepository(storage).getState();
+
+    expect(reloaded.preferences.density).toBe("compact");
+    expect(reloaded.vehicles).toHaveLength(30);
+    expect(reloaded.drafts.vehicleIntakes["owner:Johannesburg North"]?.values.vin).toBe("OWNER");
+  });
+
   it("writes an explicit audit target matrix for every entity mutation", () => {
     const repository = createDemoRepository(memoryStorage()); const state = repository.getState();
     const cases: Array<[string, () => void, string, string, string]> = [
@@ -184,7 +215,7 @@ describe("DemoRepository", () => {
 
   it("keeps preferences, drafts, and notifications intentionally system-scoped", () => {
     const repository = createDemoRepository(memoryStorage()); const state = repository.getState();
-    repository.setPreferences({ branch: "Swakopmund" }); expect(repository.getState().activities[0]).toMatchObject({ targetType: "system", targetId: "system" });
+    repository.setPreferences({ branch: "Sandton" }); expect(repository.getState().activities[0]).toMatchObject({ targetType: "system", targetId: "system" });
     repository.updateDraft("lead", { owner: "Alicia Brown" }); expect(repository.getState().activities[0]).toMatchObject({ targetType: "system", targetId: "system" });
     repository.markNotificationRead(state.notifications[0].id); expect(repository.getState().activities[0]).toMatchObject({ targetType: "system", targetId: "system" });
   });
@@ -241,7 +272,7 @@ describe("DemoRepository", () => {
 
     const reloaded = createDemoRepository(storage).getState();
     expect(reloaded.leads.find((item) => item.id === lead.id)?.stage).toBe("Delivery");
-    expect(reloaded.activities[0]).toMatchObject({ id: "activity-13", action: "Lead moved" });
+    expect(reloaded.activities[0]).toMatchObject({ id: "activity-41", action: "Lead moved" });
     expect(listener).toHaveBeenCalledTimes(1);
   });
 
@@ -319,6 +350,17 @@ describe("DemoRepository", () => {
     expect(repository.getState().activities[0].action).toBe("Demo data reset");
   });
 
+  it("attributes mutations and resets to the active in-memory demo employee", () => {
+    const repository = createDemoRepository(memoryStorage());
+    repository.setAuditActor("Kabelo Molefe · Stock Controller");
+
+    repository.updateVehicle("vehicle-01", { location: "Stock control bay" });
+    expect(repository.getState().activities[0].actor).toBe("Kabelo Molefe · Stock Controller");
+
+    repository.reset();
+    expect(repository.getState().activities[0].actor).toBe("Kabelo Molefe · Stock Controller");
+  });
+
   it("keeps reset audit activity IDs increasing within a repository session", () => {
     const repository = createDemoRepository(memoryStorage());
     repository.reset();
@@ -326,7 +368,7 @@ describe("DemoRepository", () => {
     repository.reset();
 
     expect(repository.getState().activities[0].id).not.toBe(firstId);
-    expect(repository.getState().activities[0].id).toBe("activity-14");
+    expect(repository.getState().activities[0].id).toBe("activity-42");
   });
 
   it("remains usable when browser storage reads and writes fail", () => {

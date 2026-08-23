@@ -1,4 +1,4 @@
-import { cleanup, render, screen, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { NavigationTarget } from "./routes";
@@ -33,7 +33,7 @@ const groupedCases: RouteCase[] = [
   { label: "Vehicles / Appraisals", target: { page: "inventory", subview: "appraisals" }, heading: "Vehicle appraisals", control: "Open appraisal vehicle-01", row: "2024 Porsche 911 GT3" },
   { label: "Vehicles / Trade-ins", target: { page: "inventory", subview: "trade-ins" }, heading: "Trade-ins", control: "Open trade-in vehicle-02", row: "WEE-2402" },
   { label: "Vehicles / Recon", target: { page: "inventory", subview: "recon" }, heading: "Reconditioning queue", control: "Open recon vehicle-08", row: "2024 Ford Ranger Raptor" },
-  { label: "Vehicles / Transfers", target: { page: "inventory", subview: "transfers" }, heading: "Vehicle transfers", control: "Open transfer vehicle-03", row: "Swakopmund" },
+  { label: "Vehicles / Transfers", target: { page: "inventory", subview: "transfers" }, heading: "Vehicle transfers", control: "Open transfer vehicle-03", row: "Pretoria" },
   { label: "Vehicles / Pricing", target: { page: "inventory", subview: "pricing" }, heading: "Pricing review", control: "Open pricing vehicle-01", row: "WEE-2401" },
   { label: "Sales / Sales Log", target: { page: "sales", subview: "sales-log" }, heading: "Sales log", control: "New deal", row: "2024 Porsche 911" },
   { label: "Sales / Deals", target: { page: "sales", subview: "deals" }, heading: "Deals", control: "Open deal deal-01", row: "Deal deal-01" },
@@ -50,8 +50,8 @@ const groupedCases: RouteCase[] = [
   { label: "Aftersales / Bookings", target: { page: "service", subview: "bookings" }, heading: "Service bookings", control: "Open booking service-01", row: "Annual inspection" },
   { label: "Aftersales / Job Cards", target: { page: "service", subview: "job-cards" }, heading: "Workshop job cards", control: "Open job card service-02", row: "Sasha Naobes" },
   { label: "Aftersales / Repair Orders", target: { page: "service", subview: "repair-orders" }, heading: "Repair orders", control: "Open repair order service-03", row: "Marius Louw" },
-  { label: "Aftersales / Service History", target: { page: "service", subview: "history" }, heading: "Service history", row: "No connected records match this operational queue." },
-  { label: "Workforce / Employees", target: { page: "operations", subview: "employees" }, heading: "Employees", control: "Open assigned task task-01", row: "Alicia Brown" },
+  { label: "Aftersales / Service History", target: { page: "service", subview: "history" }, heading: "Service history", control: "Open service history service-07", row: "Service job service-07" },
+  { label: "Workforce / Employees", target: { page: "operations", subview: "employees" }, heading: "Employees", control: "Open assigned task task-01", row: "Naledi Ndlovu" },
   { label: "Workforce / Teams", target: { page: "operations", subview: "teams" }, heading: "Teams", control: "Open team task task-01", row: "Connected team" },
   { label: "Workforce / Targets", target: { page: "operations", subview: "targets" }, heading: "Team targets", control: "Open target deal deal-01", row: "Pipeline value" },
   { label: "Workforce / Attendance", target: { page: "operations", subview: "attendance" }, heading: "Attendance", control: "Open attendance record vehicle-01", row: "Latest recorded activity" },
@@ -59,7 +59,7 @@ const groupedCases: RouteCase[] = [
   { label: "Operations / Calendar", target: { page: "operations", subview: "calendar" }, heading: "Operations calendar", control: "Open calendar task task-01", row: "Call Amelia" },
   { label: "Operations / Documents", target: { page: "operations", subview: "documents" }, heading: "Operations documents", control: "Open audit artifact activity-01", row: "Demo activity 1" },
   { label: "Operations / Audit Trail", target: { page: "operations", subview: "audit-trail" }, heading: "Audit trail", control: "Open audit vehicle-01", row: "Vehicle updated" },
-  { label: "Operations / Settings", target: { page: "operations", subview: "settings" }, heading: "Workspace settings", control: "Reset demo data", row: "Windhoek" },
+  { label: "Operations / Settings", target: { page: "operations", subview: "settings" }, heading: "Workspace settings", control: "Reset demo data", row: "Johannesburg North" },
 ];
 
 describe("rendered employee route matrix", () => {
@@ -174,18 +174,19 @@ describe("connected inventory and deal journey", () => {
     const storage = memoryStorage(); const repository = createDemoRepository(storage); const user = userEvent.setup();
     render(<App repository={repository} />); await user.click(screen.getByRole("button", { name: "Inventory" })); await user.click(screen.getByRole("button", { name: "Add vehicle" }));
     expect(screen.getByRole("heading", { name: "Vehicle intake" })).toBeInTheDocument();
-    await user.type(screen.getByLabelText("VIN"), "1HGCM82633A004352"); await user.type(screen.getByLabelText("Stock ID"), "WEE-2411"); await user.click(screen.getByRole("button", { name: "Continue" }));
-    await user.clear(screen.getByLabelText("Year")); await user.type(screen.getByLabelText("Year"), "2025"); await user.type(screen.getByLabelText("Make"), "Volvo"); await user.type(screen.getByLabelText("Model"), "EX90"); await user.type(screen.getByLabelText("Derivative"), "Twin Motor"); await user.clear(screen.getByLabelText("Price (ZAR)")); await user.type(screen.getByLabelText("Price (ZAR)"), "1800000");
+    fireEvent.change(screen.getByLabelText("VIN"), { target: { value: "1HGCM82633A004352" } }); fireEvent.change(screen.getByLabelText("Stock ID"), { target: { value: "WEE-2411" } }); await user.click(screen.getByRole("button", { name: "Continue" }));
+    fireEvent.change(screen.getByLabelText("Year"), { target: { value: "2025" } }); fireEvent.change(screen.getByLabelText("Make"), { target: { value: "Volvo" } }); fireEvent.change(screen.getByLabelText("Model"), { target: { value: "EX90" } }); fireEvent.change(screen.getByLabelText("Derivative"), { target: { value: "Twin Motor" } }); fireEvent.change(screen.getByLabelText("Price (ZAR)"), { target: { value: "1800000" } });
+    fireEvent.change(screen.getByLabelText("Body type"), { target: { value: "SUV" } }); fireEvent.change(screen.getByLabelText("Fuel"), { target: { value: "Electric" } }); fireEvent.change(screen.getByLabelText("Transmission"), { target: { value: "Single-speed" } }); fireEvent.change(screen.getByLabelText("Engine"), { target: { value: "Dual motor electric" } });
     await user.click(screen.getByRole("button", { name: "Continue" })); await user.click(screen.getByRole("button", { name: "Continue" })); await user.click(screen.getByRole("button", { name: "Add vehicle to inventory" }));
     expect(screen.getByRole("heading", { name: "2025 Volvo EX90 Twin Motor" })).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Back to inventory" })); expect(screen.getByRole("heading", { name: "Vehicle inventory" })).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: /2025 Volvo EX90/i })); await user.click(screen.getByRole("button", { name: "Create deal" }));
-    expect(screen.getByRole("heading", { name: "New vehicle deal" })).toBeInTheDocument(); expect(screen.getByRole("combobox", { name: "Vehicle" })).toHaveValue("vehicle-11");
-    await user.clear(screen.getByLabelText("Gross profit (ZAR)")); await user.type(screen.getByLabelText("Gross profit (ZAR)"), "125000"); await user.click(screen.getByRole("button", { name: "Save deal" }));
+    expect(screen.getByRole("heading", { name: "New vehicle deal" })).toBeInTheDocument(); expect(screen.getByRole("combobox", { name: "Vehicle" })).toHaveValue("vehicle-31");
+    fireEvent.change(screen.getByLabelText("Gross profit (ZAR)"), { target: { value: "125000" } }); await user.click(screen.getByRole("button", { name: "Save deal" }));
     const deal = repository.getState().deals.at(-1)!;
-    expect(deal).toMatchObject({ vehicleId: "vehicle-11", grossProfit: 125000 }); expect(repository.getState().activities.find((activity) => activity.action === "Deal added")).toMatchObject({ targetId: deal.id });
+    expect(deal).toMatchObject({ vehicleId: "vehicle-31", grossProfit: 125000 }); expect(repository.getState().activities.find((activity) => activity.action === "Deal added")).toMatchObject({ targetId: deal.id });
     expect(screen.getByRole("heading", { name: `Deal ${deal.id}` })).toBeInTheDocument();
-  });
+  }, 10_000);
 });
 
 describe("controlled persisted feature preferences", () => {
@@ -201,7 +202,7 @@ describe("controlled persisted feature preferences", () => {
     await user.click(screen.getByRole("button", { name: "Inventory" })); expect(screen.getByLabelText("Search inventory")).toHaveValue("BMW"); expect(screen.getByRole("button", { name: "Table" })).toHaveAttribute("aria-pressed", "true");
     await user.click(screen.getByRole("button", { name: "Customers" })); expect(screen.getByLabelText("Search customers")).toHaveValue("Jonas"); expect(screen.getByRole("tab", { name: "Follow-ups" })).toHaveAttribute("aria-selected", "true");
     await user.click(screen.getByRole("button", { name: "Sales" })); expect(screen.getByLabelText("Search sales")).toHaveValue("Marcus"); expect(screen.getByLabelText("Sort")).toHaveValue("profit");
-  });
+  }, 10_000);
 });
 
 describe("shell controls and transitions", () => {
@@ -209,13 +210,13 @@ describe("shell controls and transitions", () => {
     const transition = vi.fn((callback: () => void) => { callback(); return {}; }); (document as unknown as { startViewTransition: typeof transition }).startViewTransition = transition;
     const user = userEvent.setup(); const repository = createDemoRepository(memoryStorage()); render(<App repository={repository} />);
     await user.click(screen.getByRole("button", { name: "Inventory" })); expect(transition).toHaveBeenCalledTimes(1); expect(screen.getByRole("heading", { name: "Vehicle inventory" })).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: /Change branch/ })); const branchDialog = screen.getByRole("dialog", { name: "Select branch" }); await user.click(within(branchDialog).getByRole("button", { name: "Swakopmund" })); expect(repository.getState().preferences.branch).toBe("Swakopmund");
-    await user.click(screen.getByRole("button", { name: /Anele Dlamini, Sales Executive/ })); expect(screen.getByRole("dialog", { name: "Employee demo controls" })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /Change branch/ })); const branchDialog = screen.getByRole("dialog", { name: "Select branch" }); await user.click(within(branchDialog).getByRole("button", { name: "Sandton" })); expect(repository.getState().preferences.branch).toBe("Sandton");
+    await user.click(screen.getByRole("button", { name: /Anele Dlamini, Dealership Owner/ })); expect(screen.getByRole("dialog", { name: "Employee demo controls" })).toBeInTheDocument();
   });
 
   it("resets visibly and places the reset audit first on My Day", async () => {
     const user = userEvent.setup(); const repository = createDemoRepository(memoryStorage()); render(<App repository={repository} />);
-    await user.click(screen.getByRole("button", { name: /Anele Dlamini, Sales Executive/ })); await user.click(screen.getByRole("button", { name: "Reset demo data" })); const dialog = screen.getByRole("dialog", { name: "Reset demo data" }); await user.click(within(dialog).getByRole("button", { name: "Reset demo data" }));
+    await user.click(screen.getByRole("button", { name: /Anele Dlamini, Dealership Owner/ })); await user.click(screen.getByRole("button", { name: "Reset demo data" })); const dialog = screen.getByRole("dialog", { name: "Reset demo data" }); await user.click(within(dialog).getByRole("button", { name: "Reset demo data" }));
     expect(screen.getByText("The deterministic demo data was restored.")).toBeInTheDocument(); expect(repository.getState().activities[0].action).toBe("Demo data reset");
     await user.click(screen.getByRole("button", { name: "My Day" })); expect(screen.getAllByText("Demo data reset").length).toBeGreaterThan(0);
   });

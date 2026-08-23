@@ -2,7 +2,8 @@ import type { DemoState } from "../domain/models";
 import { migrateDemoState } from "./migrations";
 import { createSeedState } from "./seed";
 
-export const STORAGE_KEY = "weelee-employee-demo-v1";
+export const STORAGE_KEY = "weelee-employee-demo-v2";
+export const LEGACY_STORAGE_KEY = "weelee-employee-demo-v1";
 
 export function saveDemoState(storage: Storage, state: DemoState): void {
   try {
@@ -14,10 +15,12 @@ export function saveDemoState(storage: Storage, state: DemoState): void {
 
 export function loadDemoState(storage: Storage): DemoState {
   try {
-    const raw = storage.getItem(STORAGE_KEY);
-    if (raw) {
-      const migrated = migrateDemoState(JSON.parse(raw));
-      if (migrated) { saveDemoState(storage, migrated); return migrated; }
+    for (const key of [STORAGE_KEY, LEGACY_STORAGE_KEY]) {
+      const raw = storage.getItem(key);
+      if (raw) {
+        const migrated = migrateDemoState(JSON.parse(raw));
+        if (migrated) { saveDemoState(storage, migrated); return migrated; }
+      }
     }
   } catch {
     // Fall through to a deterministic, recoverable seed state.

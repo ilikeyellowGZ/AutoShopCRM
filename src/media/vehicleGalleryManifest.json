@@ -639,6 +639,1286 @@
           "alt": "2024 BMW X5 M Competition: front-right three-quarter"
         }
       ]
+    },
+    {
+      "id": "vehicle-11",
+      "slug": "2023-mercedes-benz-gle-53-coupe",
+      "displayName": "2023 Mercedes-Benz GLE 53 AMG Coupe",
+      "coverImageId": "2023-mercedes-benz-gle-53-coupe-01",
+      "images": [
+        {
+          "id": "2023-mercedes-benz-gle-53-coupe-01",
+          "angle": "front",
+          "label": "Front elevation",
+          "src": "/media/vehicles/2023-mercedes-benz-gle-53-coupe/01-front.png",
+          "alt": "2023 Mercedes-Benz GLE 53 AMG Coupe: front elevation"
+        },
+        {
+          "id": "2023-mercedes-benz-gle-53-coupe-02",
+          "angle": "front-left",
+          "label": "Front-left three-quarter",
+          "src": "/media/vehicles/2023-mercedes-benz-gle-53-coupe/02-front-left.png",
+          "alt": "2023 Mercedes-Benz GLE 53 AMG Coupe: front-left three-quarter"
+        },
+        {
+          "id": "2023-mercedes-benz-gle-53-coupe-03",
+          "angle": "left",
+          "label": "Left profile",
+          "src": "/media/vehicles/2023-mercedes-benz-gle-53-coupe/03-left.png",
+          "alt": "2023 Mercedes-Benz GLE 53 AMG Coupe: left profile"
+        },
+        {
+          "id": "2023-mercedes-benz-gle-53-coupe-04",
+          "angle": "rear-left",
+          "label": "Rear-left three-quarter",
+          "src": "/media/vehicles/2023-mercedes-benz-gle-53-coupe/04-rear-left.png",
+          "alt": "2023 Mercedes-Benz GLE 53 AMG Coupe: rear-left three-quarter"
+        },
+        {
+          "id": "2023-mercedes-benz-gle-53-coupe-05",
+          "angle": "rear",
+          "label": "Rear elevation",
+          "src": "/media/vehicles/2023-mercedes-benz-gle-53-coupe/05-rear.png",
+          "alt": "2023 Mercedes-Benz GLE 53 AMG Coupe: rear elevation"
+        },
+        {
+          "id": "2023-mercedes-benz-gle-53-coupe-06",
+          "angle": "rear-right",
+          "label": "Rear-right three-quarter",
+          "src": "/media/vehicles/2023-mercedes-benz-gle-53-coupe/06-rear-right.png",
+          "alt": "2023 Mercedes-Benz GLE 53 AMG Coupe: rear-right three-quarter"
+        },
+        {
+          "id": "2023-mercedes-benz-gle-53-coupe-07",
+          "angle": "right",
+          "label": "Right profile",
+          "src": "/media/vehicles/2023-mercedes-benz-gle-53-coupe/07-right.png",
+          "alt": "2023 Mercedes-Benz GLE 53 AMG Coupe: right profile"
+        },
+        {
+          "id": "2023-mercedes-benz-gle-53-coupe-08",
+          "angle": "front-right",
+          "label": "Front-right three-quarter",
+          "src": "/media/vehicles/2023-mercedes-benz-gle-53-coupe/08-front-right.png",
+          "alt": "2023 Mercedes-Benz GLE 53 AMG Coupe: front-right three-quarter"
+        }
+      ]
+    },
+    {
+      "id": "vehicle-12",
+      "slug": "2024-toyota-land-cruiser-300-zx",
+      "displayName": "2024 Toyota Land Cruiser 300 ZX",
+      "coverImageId": "2024-toyota-land-cruiser-300-zx-01",
+      "images": [
+        {
+          "id": "2024-toyota-land-cruiser-300-zx-01",
+          "angle": "front",
+          "label": "Front elevation",
+          "src": "/media/vehicles/2024-toyota-land-cruiser-300-zx/01-front.png",
+          "alt": "2024 Toyota Land Cruiser 300 ZX: front elevation"
+        },
+        {
+          "id": "2024-toyota-land-cruiser-300-zx-02",
+          "angle": "front-left",
+          "label": "Front-left three-quarter",
+          "src": "/media/vehicles/2024-toyota-land-cruiser-300-zx/02-front-left.png",
+          "alt": "2024 Toyota Land Cruiser 300 ZX: front-left three-quarter"
+        },
+        {
+          "id": "2024-toyota-land-cruiser-300-zx-03",
+          "angle": "left",
+          "label": "Left profile",
+          "src": "/media/vehicles/2024-toyota-land-cruiser-300-zx/03-left.png",
+          "alt": "2024 Toyota Land Cruiser 300 ZX: left profile"
+        },
+        {
+          "id": "2024-toyota-land-cruiser-300-zx-04",
+          "angle": "rear-left",
+          "label": "Rear-left three-quarter",
+          "src": "/media/vehicles/2024-toyota-land-cruiser-300-zx/04-rear-left.png",
+          "alt": "2024 Toyota Land Cruiser 300 ZX: rear-left three-quarter"
+        },
+        {
+          "id": "2024-toyota-land-cruiser-300-zx-05",
+          "angle": "rear",
+          "label": "Rear elevation",
+          "src": "/media/vehicles/2024-toyota-land-cruiser-300-zx/05-rear.png",
+          "alt": "2024 Toyota Land Cruiser 300 ZX: rear elevation"
+        },
+        {
+          "id": "2024-toyota-land-cruiser-300-zx-06",
+          "angle": "rear-right",
+          "label": "Rear-right three-quarter",
+          "src": "/media/vehicles/2024-toyota-land-cruiser-300-zx/06-rear-right.png",
+          "alt": "2024 Toyota Land Cruiser 300 ZX: rear-right three-quarter"
+        },
+        {
+          "id": "2024-toyota-land-cruiser-300-zx-07",
+          "angle": "right",
+          "label": "Right profile",
+          "src": "/media/vehicles/2024-toyota-land-cruiser-300-zx/07-right.png",
+          "alt": "2024 Toyota Land Cruiser 300 ZX: right profile"
+        },
+        {
+          "id": "2024-toyota-land-cruiser-300-zx-08",
+          "angle": "front-right",
+          "label": "Front-right three-quarter",
+          "src": "/media/vehicles/2024-toyota-land-cruiser-300-zx/08-front-right.png",
+          "alt": "2024 Toyota Land Cruiser 300 ZX: front-right three-quarter"
+        }
+      ]
+    },
+    {
+      "id": "vehicle-13",
+      "slug": "2023-hyundai-tucson-n-line",
+      "displayName": "2023 Hyundai Tucson N Line",
+      "coverImageId": "2023-hyundai-tucson-n-line-01",
+      "images": [
+        {
+          "id": "2023-hyundai-tucson-n-line-01",
+          "angle": "front",
+          "label": "Front elevation",
+          "src": "/media/vehicles/2023-hyundai-tucson-n-line/01-front.png",
+          "alt": "2023 Hyundai Tucson N Line: front elevation"
+        },
+        {
+          "id": "2023-hyundai-tucson-n-line-02",
+          "angle": "front-left",
+          "label": "Front-left three-quarter",
+          "src": "/media/vehicles/2023-hyundai-tucson-n-line/02-front-left.png",
+          "alt": "2023 Hyundai Tucson N Line: front-left three-quarter"
+        },
+        {
+          "id": "2023-hyundai-tucson-n-line-03",
+          "angle": "left",
+          "label": "Left profile",
+          "src": "/media/vehicles/2023-hyundai-tucson-n-line/03-left.png",
+          "alt": "2023 Hyundai Tucson N Line: left profile"
+        },
+        {
+          "id": "2023-hyundai-tucson-n-line-04",
+          "angle": "rear-left",
+          "label": "Rear-left three-quarter",
+          "src": "/media/vehicles/2023-hyundai-tucson-n-line/04-rear-left.png",
+          "alt": "2023 Hyundai Tucson N Line: rear-left three-quarter"
+        },
+        {
+          "id": "2023-hyundai-tucson-n-line-05",
+          "angle": "rear",
+          "label": "Rear elevation",
+          "src": "/media/vehicles/2023-hyundai-tucson-n-line/05-rear.png",
+          "alt": "2023 Hyundai Tucson N Line: rear elevation"
+        },
+        {
+          "id": "2023-hyundai-tucson-n-line-06",
+          "angle": "rear-right",
+          "label": "Rear-right three-quarter",
+          "src": "/media/vehicles/2023-hyundai-tucson-n-line/06-rear-right.png",
+          "alt": "2023 Hyundai Tucson N Line: rear-right three-quarter"
+        },
+        {
+          "id": "2023-hyundai-tucson-n-line-07",
+          "angle": "right",
+          "label": "Right profile",
+          "src": "/media/vehicles/2023-hyundai-tucson-n-line/07-right.png",
+          "alt": "2023 Hyundai Tucson N Line: right profile"
+        },
+        {
+          "id": "2023-hyundai-tucson-n-line-08",
+          "angle": "front-right",
+          "label": "Front-right three-quarter",
+          "src": "/media/vehicles/2023-hyundai-tucson-n-line/08-front-right.png",
+          "alt": "2023 Hyundai Tucson N Line: front-right three-quarter"
+        }
+      ]
+    },
+    {
+      "id": "vehicle-14",
+      "slug": "2024-kia-sportage-gt-line",
+      "displayName": "2024 Kia Sportage GT-Line",
+      "coverImageId": "2024-kia-sportage-gt-line-01",
+      "images": [
+        {
+          "id": "2024-kia-sportage-gt-line-01",
+          "angle": "front",
+          "label": "Front elevation",
+          "src": "/media/vehicles/2024-kia-sportage-gt-line/01-front.png",
+          "alt": "2024 Kia Sportage GT-Line: front elevation"
+        },
+        {
+          "id": "2024-kia-sportage-gt-line-02",
+          "angle": "front-left",
+          "label": "Front-left three-quarter",
+          "src": "/media/vehicles/2024-kia-sportage-gt-line/02-front-left.png",
+          "alt": "2024 Kia Sportage GT-Line: front-left three-quarter"
+        },
+        {
+          "id": "2024-kia-sportage-gt-line-03",
+          "angle": "left",
+          "label": "Left profile",
+          "src": "/media/vehicles/2024-kia-sportage-gt-line/03-left.png",
+          "alt": "2024 Kia Sportage GT-Line: left profile"
+        },
+        {
+          "id": "2024-kia-sportage-gt-line-04",
+          "angle": "rear-left",
+          "label": "Rear-left three-quarter",
+          "src": "/media/vehicles/2024-kia-sportage-gt-line/04-rear-left.png",
+          "alt": "2024 Kia Sportage GT-Line: rear-left three-quarter"
+        },
+        {
+          "id": "2024-kia-sportage-gt-line-05",
+          "angle": "rear",
+          "label": "Rear elevation",
+          "src": "/media/vehicles/2024-kia-sportage-gt-line/05-rear.png",
+          "alt": "2024 Kia Sportage GT-Line: rear elevation"
+        },
+        {
+          "id": "2024-kia-sportage-gt-line-06",
+          "angle": "rear-right",
+          "label": "Rear-right three-quarter",
+          "src": "/media/vehicles/2024-kia-sportage-gt-line/06-rear-right.png",
+          "alt": "2024 Kia Sportage GT-Line: rear-right three-quarter"
+        },
+        {
+          "id": "2024-kia-sportage-gt-line-07",
+          "angle": "right",
+          "label": "Right profile",
+          "src": "/media/vehicles/2024-kia-sportage-gt-line/07-right.png",
+          "alt": "2024 Kia Sportage GT-Line: right profile"
+        },
+        {
+          "id": "2024-kia-sportage-gt-line-08",
+          "angle": "front-right",
+          "label": "Front-right three-quarter",
+          "src": "/media/vehicles/2024-kia-sportage-gt-line/08-front-right.png",
+          "alt": "2024 Kia Sportage GT-Line: front-right three-quarter"
+        }
+      ]
+    },
+    {
+      "id": "vehicle-15",
+      "slug": "2024-suzuki-jimny-5-door-glx",
+      "displayName": "2024 Suzuki Jimny 5-door GLX",
+      "coverImageId": "2024-suzuki-jimny-5-door-glx-01",
+      "images": [
+        {
+          "id": "2024-suzuki-jimny-5-door-glx-01",
+          "angle": "front",
+          "label": "Front elevation",
+          "src": "/media/vehicles/2024-suzuki-jimny-5-door-glx/01-front.png",
+          "alt": "2024 Suzuki Jimny 5-door GLX: front elevation"
+        },
+        {
+          "id": "2024-suzuki-jimny-5-door-glx-02",
+          "angle": "front-left",
+          "label": "Front-left three-quarter",
+          "src": "/media/vehicles/2024-suzuki-jimny-5-door-glx/02-front-left.png",
+          "alt": "2024 Suzuki Jimny 5-door GLX: front-left three-quarter"
+        },
+        {
+          "id": "2024-suzuki-jimny-5-door-glx-03",
+          "angle": "left",
+          "label": "Left profile",
+          "src": "/media/vehicles/2024-suzuki-jimny-5-door-glx/03-left.png",
+          "alt": "2024 Suzuki Jimny 5-door GLX: left profile"
+        },
+        {
+          "id": "2024-suzuki-jimny-5-door-glx-04",
+          "angle": "rear-left",
+          "label": "Rear-left three-quarter",
+          "src": "/media/vehicles/2024-suzuki-jimny-5-door-glx/04-rear-left.png",
+          "alt": "2024 Suzuki Jimny 5-door GLX: rear-left three-quarter"
+        },
+        {
+          "id": "2024-suzuki-jimny-5-door-glx-05",
+          "angle": "rear",
+          "label": "Rear elevation",
+          "src": "/media/vehicles/2024-suzuki-jimny-5-door-glx/05-rear.png",
+          "alt": "2024 Suzuki Jimny 5-door GLX: rear elevation"
+        },
+        {
+          "id": "2024-suzuki-jimny-5-door-glx-06",
+          "angle": "rear-right",
+          "label": "Rear-right three-quarter",
+          "src": "/media/vehicles/2024-suzuki-jimny-5-door-glx/06-rear-right.png",
+          "alt": "2024 Suzuki Jimny 5-door GLX: rear-right three-quarter"
+        },
+        {
+          "id": "2024-suzuki-jimny-5-door-glx-07",
+          "angle": "right",
+          "label": "Right profile",
+          "src": "/media/vehicles/2024-suzuki-jimny-5-door-glx/07-right.png",
+          "alt": "2024 Suzuki Jimny 5-door GLX: right profile"
+        },
+        {
+          "id": "2024-suzuki-jimny-5-door-glx-08",
+          "angle": "front-right",
+          "label": "Front-right three-quarter",
+          "src": "/media/vehicles/2024-suzuki-jimny-5-door-glx/08-front-right.png",
+          "alt": "2024 Suzuki Jimny 5-door GLX: front-right three-quarter"
+        }
+      ]
+    },
+    {
+      "id": "vehicle-16",
+      "slug": "2023-nissan-navara-pro-4x",
+      "displayName": "2023 Nissan Navara Pro-4X",
+      "coverImageId": "2023-nissan-navara-pro-4x-01",
+      "images": [
+        {
+          "id": "2023-nissan-navara-pro-4x-01",
+          "angle": "front",
+          "label": "Front elevation",
+          "src": "/media/vehicles/2023-nissan-navara-pro-4x/01-front.png",
+          "alt": "2023 Nissan Navara Pro-4X: front elevation"
+        },
+        {
+          "id": "2023-nissan-navara-pro-4x-02",
+          "angle": "front-left",
+          "label": "Front-left three-quarter",
+          "src": "/media/vehicles/2023-nissan-navara-pro-4x/02-front-left.png",
+          "alt": "2023 Nissan Navara Pro-4X: front-left three-quarter"
+        },
+        {
+          "id": "2023-nissan-navara-pro-4x-03",
+          "angle": "left",
+          "label": "Left profile",
+          "src": "/media/vehicles/2023-nissan-navara-pro-4x/03-left.png",
+          "alt": "2023 Nissan Navara Pro-4X: left profile"
+        },
+        {
+          "id": "2023-nissan-navara-pro-4x-04",
+          "angle": "rear-left",
+          "label": "Rear-left three-quarter",
+          "src": "/media/vehicles/2023-nissan-navara-pro-4x/04-rear-left.png",
+          "alt": "2023 Nissan Navara Pro-4X: rear-left three-quarter"
+        },
+        {
+          "id": "2023-nissan-navara-pro-4x-05",
+          "angle": "rear",
+          "label": "Rear elevation",
+          "src": "/media/vehicles/2023-nissan-navara-pro-4x/05-rear.png",
+          "alt": "2023 Nissan Navara Pro-4X: rear elevation"
+        },
+        {
+          "id": "2023-nissan-navara-pro-4x-06",
+          "angle": "rear-right",
+          "label": "Rear-right three-quarter",
+          "src": "/media/vehicles/2023-nissan-navara-pro-4x/06-rear-right.png",
+          "alt": "2023 Nissan Navara Pro-4X: rear-right three-quarter"
+        },
+        {
+          "id": "2023-nissan-navara-pro-4x-07",
+          "angle": "right",
+          "label": "Right profile",
+          "src": "/media/vehicles/2023-nissan-navara-pro-4x/07-right.png",
+          "alt": "2023 Nissan Navara Pro-4X: right profile"
+        },
+        {
+          "id": "2023-nissan-navara-pro-4x-08",
+          "angle": "front-right",
+          "label": "Front-right three-quarter",
+          "src": "/media/vehicles/2023-nissan-navara-pro-4x/08-front-right.png",
+          "alt": "2023 Nissan Navara Pro-4X: front-right three-quarter"
+        }
+      ]
+    },
+    {
+      "id": "vehicle-17",
+      "slug": "2024-mazda-cx-60-takumi",
+      "displayName": "2024 Mazda CX-60 Takumi",
+      "coverImageId": "2024-mazda-cx-60-takumi-01",
+      "images": [
+        {
+          "id": "2024-mazda-cx-60-takumi-01",
+          "angle": "front",
+          "label": "Front elevation",
+          "src": "/media/vehicles/2024-mazda-cx-60-takumi/01-front.png",
+          "alt": "2024 Mazda CX-60 Takumi: front elevation"
+        },
+        {
+          "id": "2024-mazda-cx-60-takumi-02",
+          "angle": "front-left",
+          "label": "Front-left three-quarter",
+          "src": "/media/vehicles/2024-mazda-cx-60-takumi/02-front-left.png",
+          "alt": "2024 Mazda CX-60 Takumi: front-left three-quarter"
+        },
+        {
+          "id": "2024-mazda-cx-60-takumi-03",
+          "angle": "left",
+          "label": "Left profile",
+          "src": "/media/vehicles/2024-mazda-cx-60-takumi/03-left.png",
+          "alt": "2024 Mazda CX-60 Takumi: left profile"
+        },
+        {
+          "id": "2024-mazda-cx-60-takumi-04",
+          "angle": "rear-left",
+          "label": "Rear-left three-quarter",
+          "src": "/media/vehicles/2024-mazda-cx-60-takumi/04-rear-left.png",
+          "alt": "2024 Mazda CX-60 Takumi: rear-left three-quarter"
+        },
+        {
+          "id": "2024-mazda-cx-60-takumi-05",
+          "angle": "rear",
+          "label": "Rear elevation",
+          "src": "/media/vehicles/2024-mazda-cx-60-takumi/05-rear.png",
+          "alt": "2024 Mazda CX-60 Takumi: rear elevation"
+        },
+        {
+          "id": "2024-mazda-cx-60-takumi-06",
+          "angle": "rear-right",
+          "label": "Rear-right three-quarter",
+          "src": "/media/vehicles/2024-mazda-cx-60-takumi/06-rear-right.png",
+          "alt": "2024 Mazda CX-60 Takumi: rear-right three-quarter"
+        },
+        {
+          "id": "2024-mazda-cx-60-takumi-07",
+          "angle": "right",
+          "label": "Right profile",
+          "src": "/media/vehicles/2024-mazda-cx-60-takumi/07-right.png",
+          "alt": "2024 Mazda CX-60 Takumi: right profile"
+        },
+        {
+          "id": "2024-mazda-cx-60-takumi-08",
+          "angle": "front-right",
+          "label": "Front-right three-quarter",
+          "src": "/media/vehicles/2024-mazda-cx-60-takumi/08-front-right.png",
+          "alt": "2024 Mazda CX-60 Takumi: front-right three-quarter"
+        }
+      ]
+    },
+    {
+      "id": "vehicle-18",
+      "slug": "2023-volvo-xc60-recharge",
+      "displayName": "2023 Volvo XC60 Recharge Ultimate",
+      "coverImageId": "2023-volvo-xc60-recharge-01",
+      "images": [
+        {
+          "id": "2023-volvo-xc60-recharge-01",
+          "angle": "front",
+          "label": "Front elevation",
+          "src": "/media/vehicles/2023-volvo-xc60-recharge/01-front.png",
+          "alt": "2023 Volvo XC60 Recharge Ultimate: front elevation"
+        },
+        {
+          "id": "2023-volvo-xc60-recharge-02",
+          "angle": "front-left",
+          "label": "Front-left three-quarter",
+          "src": "/media/vehicles/2023-volvo-xc60-recharge/02-front-left.png",
+          "alt": "2023 Volvo XC60 Recharge Ultimate: front-left three-quarter"
+        },
+        {
+          "id": "2023-volvo-xc60-recharge-03",
+          "angle": "left",
+          "label": "Left profile",
+          "src": "/media/vehicles/2023-volvo-xc60-recharge/03-left.png",
+          "alt": "2023 Volvo XC60 Recharge Ultimate: left profile"
+        },
+        {
+          "id": "2023-volvo-xc60-recharge-04",
+          "angle": "rear-left",
+          "label": "Rear-left three-quarter",
+          "src": "/media/vehicles/2023-volvo-xc60-recharge/04-rear-left.png",
+          "alt": "2023 Volvo XC60 Recharge Ultimate: rear-left three-quarter"
+        },
+        {
+          "id": "2023-volvo-xc60-recharge-05",
+          "angle": "rear",
+          "label": "Rear elevation",
+          "src": "/media/vehicles/2023-volvo-xc60-recharge/05-rear.png",
+          "alt": "2023 Volvo XC60 Recharge Ultimate: rear elevation"
+        },
+        {
+          "id": "2023-volvo-xc60-recharge-06",
+          "angle": "rear-right",
+          "label": "Rear-right three-quarter",
+          "src": "/media/vehicles/2023-volvo-xc60-recharge/06-rear-right.png",
+          "alt": "2023 Volvo XC60 Recharge Ultimate: rear-right three-quarter"
+        },
+        {
+          "id": "2023-volvo-xc60-recharge-07",
+          "angle": "right",
+          "label": "Right profile",
+          "src": "/media/vehicles/2023-volvo-xc60-recharge/07-right.png",
+          "alt": "2023 Volvo XC60 Recharge Ultimate: right profile"
+        },
+        {
+          "id": "2023-volvo-xc60-recharge-08",
+          "angle": "front-right",
+          "label": "Front-right three-quarter",
+          "src": "/media/vehicles/2023-volvo-xc60-recharge/08-front-right.png",
+          "alt": "2023 Volvo XC60 Recharge Ultimate: front-right three-quarter"
+        }
+      ]
+    },
+    {
+      "id": "vehicle-19",
+      "slug": "2024-range-rover-sport-d350",
+      "displayName": "2024 Range Rover Sport D350 Dynamic SE",
+      "coverImageId": "2024-range-rover-sport-d350-01",
+      "images": [
+        {
+          "id": "2024-range-rover-sport-d350-01",
+          "angle": "front",
+          "label": "Front elevation",
+          "src": "/media/vehicles/2024-range-rover-sport-d350/01-front.png",
+          "alt": "2024 Range Rover Sport D350 Dynamic SE: front elevation"
+        },
+        {
+          "id": "2024-range-rover-sport-d350-02",
+          "angle": "front-left",
+          "label": "Front-left three-quarter",
+          "src": "/media/vehicles/2024-range-rover-sport-d350/02-front-left.png",
+          "alt": "2024 Range Rover Sport D350 Dynamic SE: front-left three-quarter"
+        },
+        {
+          "id": "2024-range-rover-sport-d350-03",
+          "angle": "left",
+          "label": "Left profile",
+          "src": "/media/vehicles/2024-range-rover-sport-d350/03-left.png",
+          "alt": "2024 Range Rover Sport D350 Dynamic SE: left profile"
+        },
+        {
+          "id": "2024-range-rover-sport-d350-04",
+          "angle": "rear-left",
+          "label": "Rear-left three-quarter",
+          "src": "/media/vehicles/2024-range-rover-sport-d350/04-rear-left.png",
+          "alt": "2024 Range Rover Sport D350 Dynamic SE: rear-left three-quarter"
+        },
+        {
+          "id": "2024-range-rover-sport-d350-05",
+          "angle": "rear",
+          "label": "Rear elevation",
+          "src": "/media/vehicles/2024-range-rover-sport-d350/05-rear.png",
+          "alt": "2024 Range Rover Sport D350 Dynamic SE: rear elevation"
+        },
+        {
+          "id": "2024-range-rover-sport-d350-06",
+          "angle": "rear-right",
+          "label": "Rear-right three-quarter",
+          "src": "/media/vehicles/2024-range-rover-sport-d350/06-rear-right.png",
+          "alt": "2024 Range Rover Sport D350 Dynamic SE: rear-right three-quarter"
+        },
+        {
+          "id": "2024-range-rover-sport-d350-07",
+          "angle": "right",
+          "label": "Right profile",
+          "src": "/media/vehicles/2024-range-rover-sport-d350/07-right.png",
+          "alt": "2024 Range Rover Sport D350 Dynamic SE: right profile"
+        },
+        {
+          "id": "2024-range-rover-sport-d350-08",
+          "angle": "front-right",
+          "label": "Front-right three-quarter",
+          "src": "/media/vehicles/2024-range-rover-sport-d350/08-front-right.png",
+          "alt": "2024 Range Rover Sport D350 Dynamic SE: front-right three-quarter"
+        }
+      ]
+    },
+    {
+      "id": "vehicle-20",
+      "slug": "2024-volkswagen-amarok-aventura",
+      "displayName": "2024 Volkswagen Amarok Aventura",
+      "coverImageId": "2024-volkswagen-amarok-aventura-01",
+      "images": [
+        {
+          "id": "2024-volkswagen-amarok-aventura-01",
+          "angle": "front",
+          "label": "Front elevation",
+          "src": "/media/vehicles/2024-volkswagen-amarok-aventura/01-front.png",
+          "alt": "2024 Volkswagen Amarok Aventura: front elevation"
+        },
+        {
+          "id": "2024-volkswagen-amarok-aventura-02",
+          "angle": "front-left",
+          "label": "Front-left three-quarter",
+          "src": "/media/vehicles/2024-volkswagen-amarok-aventura/02-front-left.png",
+          "alt": "2024 Volkswagen Amarok Aventura: front-left three-quarter"
+        },
+        {
+          "id": "2024-volkswagen-amarok-aventura-03",
+          "angle": "left",
+          "label": "Left profile",
+          "src": "/media/vehicles/2024-volkswagen-amarok-aventura/03-left.png",
+          "alt": "2024 Volkswagen Amarok Aventura: left profile"
+        },
+        {
+          "id": "2024-volkswagen-amarok-aventura-04",
+          "angle": "rear-left",
+          "label": "Rear-left three-quarter",
+          "src": "/media/vehicles/2024-volkswagen-amarok-aventura/04-rear-left.png",
+          "alt": "2024 Volkswagen Amarok Aventura: rear-left three-quarter"
+        },
+        {
+          "id": "2024-volkswagen-amarok-aventura-05",
+          "angle": "rear",
+          "label": "Rear elevation",
+          "src": "/media/vehicles/2024-volkswagen-amarok-aventura/05-rear.png",
+          "alt": "2024 Volkswagen Amarok Aventura: rear elevation"
+        },
+        {
+          "id": "2024-volkswagen-amarok-aventura-06",
+          "angle": "rear-right",
+          "label": "Rear-right three-quarter",
+          "src": "/media/vehicles/2024-volkswagen-amarok-aventura/06-rear-right.png",
+          "alt": "2024 Volkswagen Amarok Aventura: rear-right three-quarter"
+        },
+        {
+          "id": "2024-volkswagen-amarok-aventura-07",
+          "angle": "right",
+          "label": "Right profile",
+          "src": "/media/vehicles/2024-volkswagen-amarok-aventura/07-right.png",
+          "alt": "2024 Volkswagen Amarok Aventura: right profile"
+        },
+        {
+          "id": "2024-volkswagen-amarok-aventura-08",
+          "angle": "front-right",
+          "label": "Front-right three-quarter",
+          "src": "/media/vehicles/2024-volkswagen-amarok-aventura/08-front-right.png",
+          "alt": "2024 Volkswagen Amarok Aventura: front-right three-quarter"
+        }
+      ]
+    },
+    {
+      "id": "vehicle-21",
+      "slug": "2024-ford-everest-platinum",
+      "displayName": "2024 Ford Everest Platinum",
+      "coverImageId": "2024-ford-everest-platinum-01",
+      "images": [
+        {
+          "id": "2024-ford-everest-platinum-01",
+          "angle": "front",
+          "label": "Front elevation",
+          "src": "/media/vehicles/2024-ford-everest-platinum/01-front.png",
+          "alt": "2024 Ford Everest Platinum: front elevation"
+        },
+        {
+          "id": "2024-ford-everest-platinum-02",
+          "angle": "front-left",
+          "label": "Front-left three-quarter",
+          "src": "/media/vehicles/2024-ford-everest-platinum/02-front-left.png",
+          "alt": "2024 Ford Everest Platinum: front-left three-quarter"
+        },
+        {
+          "id": "2024-ford-everest-platinum-03",
+          "angle": "left",
+          "label": "Left profile",
+          "src": "/media/vehicles/2024-ford-everest-platinum/03-left.png",
+          "alt": "2024 Ford Everest Platinum: left profile"
+        },
+        {
+          "id": "2024-ford-everest-platinum-04",
+          "angle": "rear-left",
+          "label": "Rear-left three-quarter",
+          "src": "/media/vehicles/2024-ford-everest-platinum/04-rear-left.png",
+          "alt": "2024 Ford Everest Platinum: rear-left three-quarter"
+        },
+        {
+          "id": "2024-ford-everest-platinum-05",
+          "angle": "rear",
+          "label": "Rear elevation",
+          "src": "/media/vehicles/2024-ford-everest-platinum/05-rear.png",
+          "alt": "2024 Ford Everest Platinum: rear elevation"
+        },
+        {
+          "id": "2024-ford-everest-platinum-06",
+          "angle": "rear-right",
+          "label": "Rear-right three-quarter",
+          "src": "/media/vehicles/2024-ford-everest-platinum/06-rear-right.png",
+          "alt": "2024 Ford Everest Platinum: rear-right three-quarter"
+        },
+        {
+          "id": "2024-ford-everest-platinum-07",
+          "angle": "right",
+          "label": "Right profile",
+          "src": "/media/vehicles/2024-ford-everest-platinum/07-right.png",
+          "alt": "2024 Ford Everest Platinum: right profile"
+        },
+        {
+          "id": "2024-ford-everest-platinum-08",
+          "angle": "front-right",
+          "label": "Front-right three-quarter",
+          "src": "/media/vehicles/2024-ford-everest-platinum/08-front-right.png",
+          "alt": "2024 Ford Everest Platinum: front-right three-quarter"
+        }
+      ]
+    },
+    {
+      "id": "vehicle-22",
+      "slug": "2023-audi-q5-sportback-45-tfsi",
+      "displayName": "2023 Audi Q5 Sportback 45 TFSI",
+      "coverImageId": "2023-audi-q5-sportback-45-tfsi-01",
+      "images": [
+        {
+          "id": "2023-audi-q5-sportback-45-tfsi-01",
+          "angle": "front",
+          "label": "Front elevation",
+          "src": "/media/vehicles/2023-audi-q5-sportback-45-tfsi/01-front.png",
+          "alt": "2023 Audi Q5 Sportback 45 TFSI: front elevation"
+        },
+        {
+          "id": "2023-audi-q5-sportback-45-tfsi-02",
+          "angle": "front-left",
+          "label": "Front-left three-quarter",
+          "src": "/media/vehicles/2023-audi-q5-sportback-45-tfsi/02-front-left.png",
+          "alt": "2023 Audi Q5 Sportback 45 TFSI: front-left three-quarter"
+        },
+        {
+          "id": "2023-audi-q5-sportback-45-tfsi-03",
+          "angle": "left",
+          "label": "Left profile",
+          "src": "/media/vehicles/2023-audi-q5-sportback-45-tfsi/03-left.png",
+          "alt": "2023 Audi Q5 Sportback 45 TFSI: left profile"
+        },
+        {
+          "id": "2023-audi-q5-sportback-45-tfsi-04",
+          "angle": "rear-left",
+          "label": "Rear-left three-quarter",
+          "src": "/media/vehicles/2023-audi-q5-sportback-45-tfsi/04-rear-left.png",
+          "alt": "2023 Audi Q5 Sportback 45 TFSI: rear-left three-quarter"
+        },
+        {
+          "id": "2023-audi-q5-sportback-45-tfsi-05",
+          "angle": "rear",
+          "label": "Rear elevation",
+          "src": "/media/vehicles/2023-audi-q5-sportback-45-tfsi/05-rear.png",
+          "alt": "2023 Audi Q5 Sportback 45 TFSI: rear elevation"
+        },
+        {
+          "id": "2023-audi-q5-sportback-45-tfsi-06",
+          "angle": "rear-right",
+          "label": "Rear-right three-quarter",
+          "src": "/media/vehicles/2023-audi-q5-sportback-45-tfsi/06-rear-right.png",
+          "alt": "2023 Audi Q5 Sportback 45 TFSI: rear-right three-quarter"
+        },
+        {
+          "id": "2023-audi-q5-sportback-45-tfsi-07",
+          "angle": "right",
+          "label": "Right profile",
+          "src": "/media/vehicles/2023-audi-q5-sportback-45-tfsi/07-right.png",
+          "alt": "2023 Audi Q5 Sportback 45 TFSI: right profile"
+        },
+        {
+          "id": "2023-audi-q5-sportback-45-tfsi-08",
+          "angle": "front-right",
+          "label": "Front-right three-quarter",
+          "src": "/media/vehicles/2023-audi-q5-sportback-45-tfsi/08-front-right.png",
+          "alt": "2023 Audi Q5 Sportback 45 TFSI: front-right three-quarter"
+        }
+      ]
+    },
+    {
+      "id": "vehicle-23",
+      "slug": "2022-bmw-320i-m-sport",
+      "displayName": "2022 BMW 320i M Sport",
+      "coverImageId": "2022-bmw-320i-m-sport-01",
+      "images": [
+        {
+          "id": "2022-bmw-320i-m-sport-01",
+          "angle": "front",
+          "label": "Front elevation",
+          "src": "/media/vehicles/2022-bmw-320i-m-sport/01-front.png",
+          "alt": "2022 BMW 320i M Sport: front elevation"
+        },
+        {
+          "id": "2022-bmw-320i-m-sport-02",
+          "angle": "front-left",
+          "label": "Front-left three-quarter",
+          "src": "/media/vehicles/2022-bmw-320i-m-sport/02-front-left.png",
+          "alt": "2022 BMW 320i M Sport: front-left three-quarter"
+        },
+        {
+          "id": "2022-bmw-320i-m-sport-03",
+          "angle": "left",
+          "label": "Left profile",
+          "src": "/media/vehicles/2022-bmw-320i-m-sport/03-left.png",
+          "alt": "2022 BMW 320i M Sport: left profile"
+        },
+        {
+          "id": "2022-bmw-320i-m-sport-04",
+          "angle": "rear-left",
+          "label": "Rear-left three-quarter",
+          "src": "/media/vehicles/2022-bmw-320i-m-sport/04-rear-left.png",
+          "alt": "2022 BMW 320i M Sport: rear-left three-quarter"
+        },
+        {
+          "id": "2022-bmw-320i-m-sport-05",
+          "angle": "rear",
+          "label": "Rear elevation",
+          "src": "/media/vehicles/2022-bmw-320i-m-sport/05-rear.png",
+          "alt": "2022 BMW 320i M Sport: rear elevation"
+        },
+        {
+          "id": "2022-bmw-320i-m-sport-06",
+          "angle": "rear-right",
+          "label": "Rear-right three-quarter",
+          "src": "/media/vehicles/2022-bmw-320i-m-sport/06-rear-right.png",
+          "alt": "2022 BMW 320i M Sport: rear-right three-quarter"
+        },
+        {
+          "id": "2022-bmw-320i-m-sport-07",
+          "angle": "right",
+          "label": "Right profile",
+          "src": "/media/vehicles/2022-bmw-320i-m-sport/07-right.png",
+          "alt": "2022 BMW 320i M Sport: right profile"
+        },
+        {
+          "id": "2022-bmw-320i-m-sport-08",
+          "angle": "front-right",
+          "label": "Front-right three-quarter",
+          "src": "/media/vehicles/2022-bmw-320i-m-sport/08-front-right.png",
+          "alt": "2022 BMW 320i M Sport: front-right three-quarter"
+        }
+      ]
+    },
+    {
+      "id": "vehicle-24",
+      "slug": "2023-mercedes-benz-v-class-v300d",
+      "displayName": "2023 Mercedes-Benz V-Class V300d",
+      "coverImageId": "2023-mercedes-benz-v-class-v300d-01",
+      "images": [
+        {
+          "id": "2023-mercedes-benz-v-class-v300d-01",
+          "angle": "front",
+          "label": "Front elevation",
+          "src": "/media/vehicles/2023-mercedes-benz-v-class-v300d/01-front.png",
+          "alt": "2023 Mercedes-Benz V-Class V300d: front elevation"
+        },
+        {
+          "id": "2023-mercedes-benz-v-class-v300d-02",
+          "angle": "front-left",
+          "label": "Front-left three-quarter",
+          "src": "/media/vehicles/2023-mercedes-benz-v-class-v300d/02-front-left.png",
+          "alt": "2023 Mercedes-Benz V-Class V300d: front-left three-quarter"
+        },
+        {
+          "id": "2023-mercedes-benz-v-class-v300d-03",
+          "angle": "left",
+          "label": "Left profile",
+          "src": "/media/vehicles/2023-mercedes-benz-v-class-v300d/03-left.png",
+          "alt": "2023 Mercedes-Benz V-Class V300d: left profile"
+        },
+        {
+          "id": "2023-mercedes-benz-v-class-v300d-04",
+          "angle": "rear-left",
+          "label": "Rear-left three-quarter",
+          "src": "/media/vehicles/2023-mercedes-benz-v-class-v300d/04-rear-left.png",
+          "alt": "2023 Mercedes-Benz V-Class V300d: rear-left three-quarter"
+        },
+        {
+          "id": "2023-mercedes-benz-v-class-v300d-05",
+          "angle": "rear",
+          "label": "Rear elevation",
+          "src": "/media/vehicles/2023-mercedes-benz-v-class-v300d/05-rear.png",
+          "alt": "2023 Mercedes-Benz V-Class V300d: rear elevation"
+        },
+        {
+          "id": "2023-mercedes-benz-v-class-v300d-06",
+          "angle": "rear-right",
+          "label": "Rear-right three-quarter",
+          "src": "/media/vehicles/2023-mercedes-benz-v-class-v300d/06-rear-right.png",
+          "alt": "2023 Mercedes-Benz V-Class V300d: rear-right three-quarter"
+        },
+        {
+          "id": "2023-mercedes-benz-v-class-v300d-07",
+          "angle": "right",
+          "label": "Right profile",
+          "src": "/media/vehicles/2023-mercedes-benz-v-class-v300d/07-right.png",
+          "alt": "2023 Mercedes-Benz V-Class V300d: right profile"
+        },
+        {
+          "id": "2023-mercedes-benz-v-class-v300d-08",
+          "angle": "front-right",
+          "label": "Front-right three-quarter",
+          "src": "/media/vehicles/2023-mercedes-benz-v-class-v300d/08-front-right.png",
+          "alt": "2023 Mercedes-Benz V-Class V300d: front-right three-quarter"
+        }
+      ]
+    },
+    {
+      "id": "vehicle-25",
+      "slug": "2024-toyota-corolla-cross-gr-s",
+      "displayName": "2024 Toyota Corolla Cross GR-S",
+      "coverImageId": "2024-toyota-corolla-cross-gr-s-01",
+      "images": [
+        {
+          "id": "2024-toyota-corolla-cross-gr-s-01",
+          "angle": "front",
+          "label": "Front elevation",
+          "src": "/media/vehicles/2024-toyota-corolla-cross-gr-s/01-front.png",
+          "alt": "2024 Toyota Corolla Cross GR-S: front elevation"
+        },
+        {
+          "id": "2024-toyota-corolla-cross-gr-s-02",
+          "angle": "front-left",
+          "label": "Front-left three-quarter",
+          "src": "/media/vehicles/2024-toyota-corolla-cross-gr-s/02-front-left.png",
+          "alt": "2024 Toyota Corolla Cross GR-S: front-left three-quarter"
+        },
+        {
+          "id": "2024-toyota-corolla-cross-gr-s-03",
+          "angle": "left",
+          "label": "Left profile",
+          "src": "/media/vehicles/2024-toyota-corolla-cross-gr-s/03-left.png",
+          "alt": "2024 Toyota Corolla Cross GR-S: left profile"
+        },
+        {
+          "id": "2024-toyota-corolla-cross-gr-s-04",
+          "angle": "rear-left",
+          "label": "Rear-left three-quarter",
+          "src": "/media/vehicles/2024-toyota-corolla-cross-gr-s/04-rear-left.png",
+          "alt": "2024 Toyota Corolla Cross GR-S: rear-left three-quarter"
+        },
+        {
+          "id": "2024-toyota-corolla-cross-gr-s-05",
+          "angle": "rear",
+          "label": "Rear elevation",
+          "src": "/media/vehicles/2024-toyota-corolla-cross-gr-s/05-rear.png",
+          "alt": "2024 Toyota Corolla Cross GR-S: rear elevation"
+        },
+        {
+          "id": "2024-toyota-corolla-cross-gr-s-06",
+          "angle": "rear-right",
+          "label": "Rear-right three-quarter",
+          "src": "/media/vehicles/2024-toyota-corolla-cross-gr-s/06-rear-right.png",
+          "alt": "2024 Toyota Corolla Cross GR-S: rear-right three-quarter"
+        },
+        {
+          "id": "2024-toyota-corolla-cross-gr-s-07",
+          "angle": "right",
+          "label": "Right profile",
+          "src": "/media/vehicles/2024-toyota-corolla-cross-gr-s/07-right.png",
+          "alt": "2024 Toyota Corolla Cross GR-S: right profile"
+        },
+        {
+          "id": "2024-toyota-corolla-cross-gr-s-08",
+          "angle": "front-right",
+          "label": "Front-right three-quarter",
+          "src": "/media/vehicles/2024-toyota-corolla-cross-gr-s/08-front-right.png",
+          "alt": "2024 Toyota Corolla Cross GR-S: front-right three-quarter"
+        }
+      ]
+    },
+    {
+      "id": "vehicle-26",
+      "slug": "2022-hyundai-i20-n",
+      "displayName": "2022 Hyundai i20 N",
+      "coverImageId": "2022-hyundai-i20-n-01",
+      "images": [
+        {
+          "id": "2022-hyundai-i20-n-01",
+          "angle": "front",
+          "label": "Front elevation",
+          "src": "/media/vehicles/2022-hyundai-i20-n/01-front.png",
+          "alt": "2022 Hyundai i20 N: front elevation"
+        },
+        {
+          "id": "2022-hyundai-i20-n-02",
+          "angle": "front-left",
+          "label": "Front-left three-quarter",
+          "src": "/media/vehicles/2022-hyundai-i20-n/02-front-left.png",
+          "alt": "2022 Hyundai i20 N: front-left three-quarter"
+        },
+        {
+          "id": "2022-hyundai-i20-n-03",
+          "angle": "left",
+          "label": "Left profile",
+          "src": "/media/vehicles/2022-hyundai-i20-n/03-left.png",
+          "alt": "2022 Hyundai i20 N: left profile"
+        },
+        {
+          "id": "2022-hyundai-i20-n-04",
+          "angle": "rear-left",
+          "label": "Rear-left three-quarter",
+          "src": "/media/vehicles/2022-hyundai-i20-n/04-rear-left.png",
+          "alt": "2022 Hyundai i20 N: rear-left three-quarter"
+        },
+        {
+          "id": "2022-hyundai-i20-n-05",
+          "angle": "rear",
+          "label": "Rear elevation",
+          "src": "/media/vehicles/2022-hyundai-i20-n/05-rear.png",
+          "alt": "2022 Hyundai i20 N: rear elevation"
+        },
+        {
+          "id": "2022-hyundai-i20-n-06",
+          "angle": "rear-right",
+          "label": "Rear-right three-quarter",
+          "src": "/media/vehicles/2022-hyundai-i20-n/06-rear-right.png",
+          "alt": "2022 Hyundai i20 N: rear-right three-quarter"
+        },
+        {
+          "id": "2022-hyundai-i20-n-07",
+          "angle": "right",
+          "label": "Right profile",
+          "src": "/media/vehicles/2022-hyundai-i20-n/07-right.png",
+          "alt": "2022 Hyundai i20 N: right profile"
+        },
+        {
+          "id": "2022-hyundai-i20-n-08",
+          "angle": "front-right",
+          "label": "Front-right three-quarter",
+          "src": "/media/vehicles/2022-hyundai-i20-n/08-front-right.png",
+          "alt": "2022 Hyundai i20 N: front-right three-quarter"
+        }
+      ]
+    },
+    {
+      "id": "vehicle-27",
+      "slug": "2023-kia-sorento-sxl-awd",
+      "displayName": "2023 Kia Sorento SXL AWD",
+      "coverImageId": "2023-kia-sorento-sxl-awd-01",
+      "images": [
+        {
+          "id": "2023-kia-sorento-sxl-awd-01",
+          "angle": "front",
+          "label": "Front elevation",
+          "src": "/media/vehicles/2023-kia-sorento-sxl-awd/01-front.png",
+          "alt": "2023 Kia Sorento SXL AWD: front elevation"
+        },
+        {
+          "id": "2023-kia-sorento-sxl-awd-02",
+          "angle": "front-left",
+          "label": "Front-left three-quarter",
+          "src": "/media/vehicles/2023-kia-sorento-sxl-awd/02-front-left.png",
+          "alt": "2023 Kia Sorento SXL AWD: front-left three-quarter"
+        },
+        {
+          "id": "2023-kia-sorento-sxl-awd-03",
+          "angle": "left",
+          "label": "Left profile",
+          "src": "/media/vehicles/2023-kia-sorento-sxl-awd/03-left.png",
+          "alt": "2023 Kia Sorento SXL AWD: left profile"
+        },
+        {
+          "id": "2023-kia-sorento-sxl-awd-04",
+          "angle": "rear-left",
+          "label": "Rear-left three-quarter",
+          "src": "/media/vehicles/2023-kia-sorento-sxl-awd/04-rear-left.png",
+          "alt": "2023 Kia Sorento SXL AWD: rear-left three-quarter"
+        },
+        {
+          "id": "2023-kia-sorento-sxl-awd-05",
+          "angle": "rear",
+          "label": "Rear elevation",
+          "src": "/media/vehicles/2023-kia-sorento-sxl-awd/05-rear.png",
+          "alt": "2023 Kia Sorento SXL AWD: rear elevation"
+        },
+        {
+          "id": "2023-kia-sorento-sxl-awd-06",
+          "angle": "rear-right",
+          "label": "Rear-right three-quarter",
+          "src": "/media/vehicles/2023-kia-sorento-sxl-awd/06-rear-right.png",
+          "alt": "2023 Kia Sorento SXL AWD: rear-right three-quarter"
+        },
+        {
+          "id": "2023-kia-sorento-sxl-awd-07",
+          "angle": "right",
+          "label": "Right profile",
+          "src": "/media/vehicles/2023-kia-sorento-sxl-awd/07-right.png",
+          "alt": "2023 Kia Sorento SXL AWD: right profile"
+        },
+        {
+          "id": "2023-kia-sorento-sxl-awd-08",
+          "angle": "front-right",
+          "label": "Front-right three-quarter",
+          "src": "/media/vehicles/2023-kia-sorento-sxl-awd/08-front-right.png",
+          "alt": "2023 Kia Sorento SXL AWD: front-right three-quarter"
+        }
+      ]
+    },
+    {
+      "id": "vehicle-28",
+      "slug": "2024-nissan-x-trail-e-power",
+      "displayName": "2024 Nissan X-Trail e-Power Tekna",
+      "coverImageId": "2024-nissan-x-trail-e-power-01",
+      "images": [
+        {
+          "id": "2024-nissan-x-trail-e-power-01",
+          "angle": "front",
+          "label": "Front elevation",
+          "src": "/media/vehicles/2024-nissan-x-trail-e-power/01-front.png",
+          "alt": "2024 Nissan X-Trail e-Power Tekna: front elevation"
+        },
+        {
+          "id": "2024-nissan-x-trail-e-power-02",
+          "angle": "front-left",
+          "label": "Front-left three-quarter",
+          "src": "/media/vehicles/2024-nissan-x-trail-e-power/02-front-left.png",
+          "alt": "2024 Nissan X-Trail e-Power Tekna: front-left three-quarter"
+        },
+        {
+          "id": "2024-nissan-x-trail-e-power-03",
+          "angle": "left",
+          "label": "Left profile",
+          "src": "/media/vehicles/2024-nissan-x-trail-e-power/03-left.png",
+          "alt": "2024 Nissan X-Trail e-Power Tekna: left profile"
+        },
+        {
+          "id": "2024-nissan-x-trail-e-power-04",
+          "angle": "rear-left",
+          "label": "Rear-left three-quarter",
+          "src": "/media/vehicles/2024-nissan-x-trail-e-power/04-rear-left.png",
+          "alt": "2024 Nissan X-Trail e-Power Tekna: rear-left three-quarter"
+        },
+        {
+          "id": "2024-nissan-x-trail-e-power-05",
+          "angle": "rear",
+          "label": "Rear elevation",
+          "src": "/media/vehicles/2024-nissan-x-trail-e-power/05-rear.png",
+          "alt": "2024 Nissan X-Trail e-Power Tekna: rear elevation"
+        },
+        {
+          "id": "2024-nissan-x-trail-e-power-06",
+          "angle": "rear-right",
+          "label": "Rear-right three-quarter",
+          "src": "/media/vehicles/2024-nissan-x-trail-e-power/06-rear-right.png",
+          "alt": "2024 Nissan X-Trail e-Power Tekna: rear-right three-quarter"
+        },
+        {
+          "id": "2024-nissan-x-trail-e-power-07",
+          "angle": "right",
+          "label": "Right profile",
+          "src": "/media/vehicles/2024-nissan-x-trail-e-power/07-right.png",
+          "alt": "2024 Nissan X-Trail e-Power Tekna: right profile"
+        },
+        {
+          "id": "2024-nissan-x-trail-e-power-08",
+          "angle": "front-right",
+          "label": "Front-right three-quarter",
+          "src": "/media/vehicles/2024-nissan-x-trail-e-power/08-front-right.png",
+          "alt": "2024 Nissan X-Trail e-Power Tekna: front-right three-quarter"
+        }
+      ]
+    },
+    {
+      "id": "vehicle-29",
+      "slug": "2023-mazda3-astina",
+      "displayName": "2023 Mazda3 Astina",
+      "coverImageId": "2023-mazda3-astina-01",
+      "images": [
+        {
+          "id": "2023-mazda3-astina-01",
+          "angle": "front",
+          "label": "Front elevation",
+          "src": "/media/vehicles/2023-mazda3-astina/01-front.png",
+          "alt": "2023 Mazda3 Astina: front elevation"
+        },
+        {
+          "id": "2023-mazda3-astina-02",
+          "angle": "front-left",
+          "label": "Front-left three-quarter",
+          "src": "/media/vehicles/2023-mazda3-astina/02-front-left.png",
+          "alt": "2023 Mazda3 Astina: front-left three-quarter"
+        },
+        {
+          "id": "2023-mazda3-astina-03",
+          "angle": "left",
+          "label": "Left profile",
+          "src": "/media/vehicles/2023-mazda3-astina/03-left.png",
+          "alt": "2023 Mazda3 Astina: left profile"
+        },
+        {
+          "id": "2023-mazda3-astina-04",
+          "angle": "rear-left",
+          "label": "Rear-left three-quarter",
+          "src": "/media/vehicles/2023-mazda3-astina/04-rear-left.png",
+          "alt": "2023 Mazda3 Astina: rear-left three-quarter"
+        },
+        {
+          "id": "2023-mazda3-astina-05",
+          "angle": "rear",
+          "label": "Rear elevation",
+          "src": "/media/vehicles/2023-mazda3-astina/05-rear.png",
+          "alt": "2023 Mazda3 Astina: rear elevation"
+        },
+        {
+          "id": "2023-mazda3-astina-06",
+          "angle": "rear-right",
+          "label": "Rear-right three-quarter",
+          "src": "/media/vehicles/2023-mazda3-astina/06-rear-right.png",
+          "alt": "2023 Mazda3 Astina: rear-right three-quarter"
+        },
+        {
+          "id": "2023-mazda3-astina-07",
+          "angle": "right",
+          "label": "Right profile",
+          "src": "/media/vehicles/2023-mazda3-astina/07-right.png",
+          "alt": "2023 Mazda3 Astina: right profile"
+        },
+        {
+          "id": "2023-mazda3-astina-08",
+          "angle": "front-right",
+          "label": "Front-right three-quarter",
+          "src": "/media/vehicles/2023-mazda3-astina/08-front-right.png",
+          "alt": "2023 Mazda3 Astina: front-right three-quarter"
+        }
+      ]
+    },
+    {
+      "id": "vehicle-30",
+      "slug": "2024-volvo-xc40-recharge-twin",
+      "displayName": "2024 Volvo XC40 Recharge Twin",
+      "coverImageId": "2024-volvo-xc40-recharge-twin-01",
+      "images": [
+        {
+          "id": "2024-volvo-xc40-recharge-twin-01",
+          "angle": "front",
+          "label": "Front elevation",
+          "src": "/media/vehicles/2024-volvo-xc40-recharge-twin/01-front.png",
+          "alt": "2024 Volvo XC40 Recharge Twin: front elevation"
+        },
+        {
+          "id": "2024-volvo-xc40-recharge-twin-02",
+          "angle": "front-left",
+          "label": "Front-left three-quarter",
+          "src": "/media/vehicles/2024-volvo-xc40-recharge-twin/02-front-left.png",
+          "alt": "2024 Volvo XC40 Recharge Twin: front-left three-quarter"
+        },
+        {
+          "id": "2024-volvo-xc40-recharge-twin-03",
+          "angle": "left",
+          "label": "Left profile",
+          "src": "/media/vehicles/2024-volvo-xc40-recharge-twin/03-left.png",
+          "alt": "2024 Volvo XC40 Recharge Twin: left profile"
+        },
+        {
+          "id": "2024-volvo-xc40-recharge-twin-04",
+          "angle": "rear-left",
+          "label": "Rear-left three-quarter",
+          "src": "/media/vehicles/2024-volvo-xc40-recharge-twin/04-rear-left.png",
+          "alt": "2024 Volvo XC40 Recharge Twin: rear-left three-quarter"
+        },
+        {
+          "id": "2024-volvo-xc40-recharge-twin-05",
+          "angle": "rear",
+          "label": "Rear elevation",
+          "src": "/media/vehicles/2024-volvo-xc40-recharge-twin/05-rear.png",
+          "alt": "2024 Volvo XC40 Recharge Twin: rear elevation"
+        },
+        {
+          "id": "2024-volvo-xc40-recharge-twin-06",
+          "angle": "rear-right",
+          "label": "Rear-right three-quarter",
+          "src": "/media/vehicles/2024-volvo-xc40-recharge-twin/06-rear-right.png",
+          "alt": "2024 Volvo XC40 Recharge Twin: rear-right three-quarter"
+        },
+        {
+          "id": "2024-volvo-xc40-recharge-twin-07",
+          "angle": "right",
+          "label": "Right profile",
+          "src": "/media/vehicles/2024-volvo-xc40-recharge-twin/07-right.png",
+          "alt": "2024 Volvo XC40 Recharge Twin: right profile"
+        },
+        {
+          "id": "2024-volvo-xc40-recharge-twin-08",
+          "angle": "front-right",
+          "label": "Front-right three-quarter",
+          "src": "/media/vehicles/2024-volvo-xc40-recharge-twin/08-front-right.png",
+          "alt": "2024 Volvo XC40 Recharge Twin: front-right three-quarter"
+        }
+      ]
     }
   ]
 }

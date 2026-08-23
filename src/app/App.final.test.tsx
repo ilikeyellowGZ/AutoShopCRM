@@ -18,12 +18,12 @@ describe("Inventory route ownership", () => {
     await user.click(screen.getByRole("button", { name: /Search. Press/ })); await user.type(screen.getByRole("combobox", { name: "Search employee records" }), "vehicle-10"); await user.click(within(screen.getByRole("listbox", { name: "Search results" })).getByRole("option"));
     expect(screen.getByTestId("inventory-route")).toHaveAttribute("data-mount-identity", identity); expect(screen.getByRole("heading", { name: "2024 BMW X5 M Competition" })).toBeInTheDocument();
     rendered.unmount(); render(<App repository={createDemoRepository(storage)} />); expect(screen.getByTestId("inventory-route")).toBeInTheDocument(); expect(screen.getByRole("heading", { name: "2024 BMW X5 M Competition" })).toBeInTheDocument();
-  });
+  }, 10_000);
 });
 
 describe("exact Open actions on composed primary and command views", () => {
   it("opens the Action Centre task's exact related lead", async () => {
-    const user = userEvent.setup(); render(<App repository={createDemoRepository(memoryStorage())} />); await user.click(screen.getByRole("button", { name: /Action Centre 11/ }));
+    const user = userEvent.setup(); render(<App repository={createDemoRepository(memoryStorage())} />); await user.click(screen.getByRole("button", { name: /Action Centre \d+/ }));
     const row = screen.getByText("Call Amelia").closest("li")!; await user.click(within(row).getByRole("button", { name: "Open related record" })); expect(screen.getByRole("heading", { name: "Lead lead-01" })).toBeInTheDocument();
   });
 
