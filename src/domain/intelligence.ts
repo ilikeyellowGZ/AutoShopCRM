@@ -19,7 +19,7 @@ export function insightsForCustomer(state: DemoState, customerId: string, now = 
   for (const lead of context.leads) {
     if (lead.stage !== "Delivery" && isBefore(lead.dueAt, now)) insights.push({
       id: `stale-lead-${lead.id}`,
-      severity: lead.status === "Overdue" ? "critical" : "warning",
+      severity: "warning",
       title: "Follow-up is overdue",
       summary: `${lead.nextAction} is overdue for ${context.customer.name}.`,
       recommendation: "Create or complete the next customer follow-up.",
