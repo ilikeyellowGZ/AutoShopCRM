@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { CURRENT_SCHEMA_VERSION } from "../domain/models";
 import { createSeedState } from "./seed";
 import { migrateDemoState } from "./migrations";
 import { LEGACY_STORAGE_KEY, loadDemoState, STORAGE_KEY } from "./storage";
@@ -33,7 +34,7 @@ describe("preference migrations", () => {
 
     const migrated = migrateDemoState(state)!;
 
-    expect(migrated.schemaVersion).toBe(4);
+    expect(migrated.schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
     expect(migrated.vehicles).toHaveLength(30);
     expect(migrated.vehicles[0]).toMatchObject({ price: 4_300_000, bodyType: "Coupe", branch: "Johannesburg North" });
     expect(migrated.vehicles.every((vehicle) => vehicle.engine && vehicle.registration)).toBe(true);
@@ -45,8 +46,8 @@ describe("preference migrations", () => {
     state.schemaVersion = 1;
     storage.setItem(LEGACY_STORAGE_KEY, JSON.stringify(state));
 
-    expect(loadDemoState(storage).schemaVersion).toBe(4);
-    expect(JSON.parse(storage.getItem(STORAGE_KEY)!).schemaVersion).toBe(4);
+    expect(loadDemoState(storage).schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
+    expect(JSON.parse(storage.getItem(STORAGE_KEY)!).schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
   });
 
   it("does not assign seeded specifications to a legacy user vehicle with a colliding ID", () => {

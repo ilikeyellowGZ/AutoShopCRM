@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { CURRENT_SCHEMA_VERSION } from "../domain/models";
 import type { TaskItem } from "../domain/models";
 import { createSeedState } from "./seed";
 
@@ -9,7 +10,7 @@ describe("createSeedState", () => {
   it("creates the complete connected demo roster with stable vehicle IDs", () => {
     const state = createSeedState();
 
-    expect(state.schemaVersion).toBe(4);
+    expect(state.schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
     expect(state.vehicles.map((vehicle) => vehicle.id)).toEqual(Array.from({ length: 30 }, (_, index) => `vehicle-${String(index + 1).padStart(2, "0")}`));
     expect(state.customers).toHaveLength(48);
     expect(state.leads).toHaveLength(64);

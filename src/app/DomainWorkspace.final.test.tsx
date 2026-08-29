@@ -115,7 +115,7 @@ describe("workspace links are real and optional", () => {
 
   it("does not offer an Open action for an untyped system notification", () => {
     const repository = createDemoRepository(memoryStorage()); const state = repository.getState();
-    state.notifications = [{ id: "notification-system", title: "Local maintenance", detail: "No connected entity.", read: false, tone: "neutral", relatedId: "system" }];
+    state.notifications = [{ id: "notification-system", organizationId: "org-motorgroup-sa", category: "system" as const, priority: "normal" as const, createdAt: "2026-08-16T08:00:00+02:00", title: "Local maintenance", detail: "No connected entity.", read: false, tone: "neutral", relatedId: "system" }];
     render(<ActionCentreView view="notifications" state={state} repository={repository} onNavigate={vi.fn()} />);
     expect(screen.getByText("Local maintenance")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Open related record" })).not.toBeInTheDocument();

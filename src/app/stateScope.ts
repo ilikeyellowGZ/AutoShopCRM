@@ -61,7 +61,7 @@ export function scopeStateForAccount(state: DemoState, account: DemoAccount): De
   };
   const tasks = state.tasks.filter(visibleTask);
   const relatedIds = new Set([...vehicleIds, ...leadIds, ...dealIds, ...serviceIds, ...customerIds, ...tasks.map((task) => task.id)]);
-  const notifications = state.notifications.filter((notification) => relatedIds.has(notification.relatedId));
+  const notifications = state.notifications.filter((notification) => notification.organizationId === account.organizationId && relatedIds.has(notification.relatedId));
   const activities = hasPermission(account, "audit.read") ? state.activities.filter((activity) => activity.organizationId === account.organizationId && (activity.targetType === "system" || relatedIds.has(activity.targetId))) : [];
   const sessions = state.sessions.filter((session) => session.organizationId === account.organizationId && (session.accountId === account.id || (hasPermission(account, "staff.read") && visibleBranchIds.has(session.branchId))));
   const draftScope = `${account.id}:${selectedBranch}`;

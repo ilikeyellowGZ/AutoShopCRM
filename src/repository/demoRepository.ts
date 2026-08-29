@@ -50,6 +50,7 @@ export type DemoRepository = {
   addServiceJob(job: ServiceJob): void;
   updateServiceState(jobId: string, status: ServiceJob["status"]): void;
   markNotificationRead(notificationId: string): void;
+  markAllNotificationsRead(notificationIds: readonly string[]): void;
 };
 
 const clone = <T,>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
@@ -203,9 +204,11 @@ export function createDemoRepository(storage: Storage, now: () => string = () =>
     updateVehicle: (vehicleId, patch) => {
       const current = state.vehicles[findIndex(state.vehicles, vehicleId, "Vehicle")];
       const identifiers = validateVehicleIdentifiers({ ...current, ...patch }, state.vehicles, vehicleId);
+      const movedBranch = patch.branch !== undefined && patch.branch !== current.branch ? state.branches.find((branch) => branch.name === patch.branch) : undefined;
+      if (patch.branch !== undefined && patch.branch !== current.branch && !movedBranch) throw new Error("Vehicle branch not found.");
       commit("Vehicle updated", "Vehicle record was updated.", (draft) => {
         const index = findIndex(draft.vehicles, vehicleId, "Vehicle");
-        draft.vehicles[index] = { ...draft.vehicles[index], ...clone(patch), ...identifiers };
+        draft.vehicles[index] = { ...draft.vehicles[index], ...clone(patch), ...identifiers, ...(movedBranch ? { branchId: movedBranch.id } : {}) };
       }, "info", "vehicle", vehicleId);
     },
     addCustomer: (customer) => {
@@ -292,5 +295,12 @@ export function createDemoRepository(storage: Storage, now: () => string = () =>
       const index = findIndex(draft.notifications, notificationId, "Notification");
       draft.notifications[index] = { ...draft.notifications[index], read: true };
     }, "neutral"),
+    markAllNotificationsRead: (notificationIds) => {
+      const visible = new Set(notificationIds);
+      if (!state.notifications.some((notification) => visible.has(notification.id) && !notification.read)) return;
+      commit("Notifications read", "Visible notifications were marked as read.", (draft) => {
+        draft.notifications = draft.notifications.map((notification) => visible.has(notification.id) ? { ...notification, read: true } : notification);
+      }, "neutral");
+    },
   };
 }

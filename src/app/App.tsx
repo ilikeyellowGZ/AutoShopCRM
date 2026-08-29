@@ -86,8 +86,8 @@ export function App({ repository: providedRepository, initialAccountId }: AppPro
   const updateView = <K extends keyof ViewPreferences>(key: K, patch: Partial<ViewPreferences[K]>) => repository.setPreferences({ viewPreferences: { ...app.state.preferences.viewPreferences, [key]: { ...app.state.preferences.viewPreferences[key], ...patch } } });
   const signIn = (nextAccount: DemoAccount) => {
     repository.setAuditActor(`${nextAccount.name} · ${nextAccount.title}`);
-    sessionId.current = repository.startSession(nextAccount, typeof navigator === "undefined" ? "unknown" : navigator.userAgent);
     repository.setPreferences({ branch: nextAccount.homeBranch, activePage: nextAccount.initialTarget.page, activeSubview: nextAccount.initialTarget.subview, activeRecordType: undefined, activeRecordId: undefined, activeContextId: undefined });
+    sessionId.current = repository.startSession(nextAccount, typeof navigator === "undefined" ? "unknown" : navigator.userAgent);
     setUsesPersistedTarget(true);
     setAccountId(nextAccount.id);
   };

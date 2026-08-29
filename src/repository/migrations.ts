@@ -1,6 +1,8 @@
 import {
   branchIdForName,
+  CURRENT_SCHEMA_VERSION,
   demoBranches,
+  notificationCategories,
   demoOrganizationId,
   vehicleBodyTypes,
   vehicleFuels,
@@ -11,6 +13,7 @@ import {
   type ViewPreferences,
 } from "../domain/models";
 import { navigationGroups, primaryNavigation } from "../app/routes";
+import { DEMO_NOW } from "../domain/demoClock";
 import { createSeedState } from "./seed";
 
 type RecordValue = Record<string, unknown>;
@@ -97,7 +100,7 @@ const isTask = (value: unknown) => hasShape(value, {
   id: nonEmptyString, title: nonEmptyString, detail: nonEmptyString, relatedType: oneOf(relatedTypes), relatedId: nonEmptyString, dueAt: nonEmptyString, status: oneOf(taskStatuses), tone: oneOf(tones),
 });
 const isNotification = (value: unknown) => hasShape(value, {
-  id: nonEmptyString, title: nonEmptyString, detail: nonEmptyString, read: boolean, tone: oneOf(tones), relatedId: nonEmptyString,
+  id: nonEmptyString, organizationId: nonEmptyString, category: oneOf(notificationCategories), priority: oneOf(["normal", "high"]), createdAt: nonEmptyString, title: nonEmptyString, detail: nonEmptyString, read: boolean, tone: oneOf(tones), relatedId: nonEmptyString,
 });
 const isSession = (value: unknown) => hasShape(value, { id: nonEmptyString, organizationId: nonEmptyString, branchId: nonEmptyString, accountId: nonEmptyString, actor: nonEmptyString, startedAt: nonEmptyString, lastActivityAt: nonEmptyString, endedAt: optional(nonEmptyString), status: oneOf(["active", "ended"]), userAgent: string, endReason: optional(oneOf(["signed-out", "replaced"])) });
 const isActivity = (value: unknown) => hasShape(value, {
@@ -185,7 +188,7 @@ const isDrafts = (value: unknown) => isRecord(value)
   && isRecord(value.serviceNotes) && Object.values(value.serviceNotes).every(string);
 
 export function isCompatibleDemoState(value: unknown): value is DemoState {
-  if (!isRecord(value) || value.schemaVersion !== 4 || !hasShape(value.preferences, { branch: nonEmptyString, density: oneOf(["comfortable", "compact"]), activePage: nonEmptyString, activeSubview: nonEmptyString, viewPreferences: (item) => JSON.stringify(normalizeViewPreferences(item)) === JSON.stringify(item) }) || !isDrafts(value.drafts)) return false;
+  if (!isRecord(value) || value.schemaVersion !== CURRENT_SCHEMA_VERSION || !hasShape(value.preferences, { branch: nonEmptyString, density: oneOf(["comfortable", "compact"]), activePage: nonEmptyString, activeSubview: nonEmptyString, viewPreferences: (item) => JSON.stringify(normalizeViewPreferences(item)) === JSON.stringify(item) }) || !isDrafts(value.drafts)) return false;
   const collections = ["organizations", "branches", "sessions", "vehicles", "customers", "leads", "deals", "financeDrafts", "financeApplications", "serviceJobs", "employees", "appointments", "testDrives", "quotes", "payments", "documents", "tasks", "notifications", "activities"] as const;
   if (!collections.every((key) => Array.isArray(value[key]))) return false;
 
@@ -230,7 +233,8 @@ export function isCompatibleDemoState(value: unknown): value is DemoState {
     return idsByType[task.relatedType as keyof typeof idsByType].has(task.relatedId as string);
   };
   const relatedIds = new Set([...vehicleIds, ...leadIds, ...dealIds, ...serviceIds]);
-  return sessions.every((session) => organizationIds.has((session as RecordValue).organizationId as string) && branchIds.has((session as RecordValue).branchId as string))
+  return notifications.every((notification) => organizationIds.has((notification as RecordValue).organizationId as string))
+    && sessions.every((session) => organizationIds.has((session as RecordValue).organizationId as string) && branchIds.has((session as RecordValue).branchId as string))
     && activities.every((activity) => organizationIds.has((activity as RecordValue).organizationId as string))
     && vehicles.every((vehicle) => branchIds.has((vehicle as RecordValue).branchId as string))
     && employees.every((employee) => branchIds.has((employee as RecordValue).branchId as string))
@@ -371,11 +375,29 @@ function addSessionsAndAuditTenancy(value: RecordValue): RecordValue {
   return { ...value, schemaVersion: 4, activities, sessions: Array.isArray(value.sessions) ? value.sessions : [] };
 }
 
+const notificationCategoryFor = (relatedId: unknown): string => {
+  const prefix = typeof relatedId === "string" ? relatedId.split("-")[0] : "";
+  const known: Record<string, string> = { deal: "deal", lead: "lead", customer: "customer", vehicle: "inventory", service: "service", task: "task" };
+  return known[prefix] ?? "system";
+};
+
+function addNotificationCentre(value: RecordValue): RecordValue {
+  const notifications = (Array.isArray(value.notifications) ? value.notifications as unknown[] : []).map((notification) => {
+    if (!isRecord(notification)) return notification;
+    const category = oneOf(notificationCategories)(notification.category) ? notification.category : notificationCategoryFor(notification.relatedId);
+    const priority = notification.priority === "high" || notification.tone === "critical" ? "high" : "normal";
+    const createdAt = typeof notification.createdAt === "string" && notification.createdAt.length > 0 ? notification.createdAt : DEMO_NOW;
+    return { ...notification, organizationId: typeof notification.organizationId === "string" && notification.organizationId.length > 0 ? notification.organizationId : demoOrganizationId, category, priority, createdAt };
+  });
+  return { ...value, schemaVersion: CURRENT_SCHEMA_VERSION, notifications };
+}
+
 export function migrateDemoState(value: unknown): DemoState | null {
   if (isRecord(value) && value.schemaVersion === 1) value = migrateVehicleRoster(value);
   if (isRecord(value) && value.schemaVersion === 2) value = addOrganizationTenancy(value);
   if (isRecord(value) && value.schemaVersion === 3) value = addSessionsAndAuditTenancy(value);
-  if (isRecord(value) && value.schemaVersion === 4 && isRecord(value.preferences)) {
+  if (isRecord(value) && value.schemaVersion === 4) value = addNotificationCentre(value);
+  if (isRecord(value) && value.schemaVersion === CURRENT_SCHEMA_VERSION && isRecord(value.preferences)) {
     const normalized = normalizeConnectedDataset(normalizeDemoAssignees(value));
     const preferences = isRecord(normalized.preferences) ? normalized.preferences : value.preferences;
     const { activePage: _page, activeSubview: _subview, activeRecordType: _type, activeRecordId: _id, activeContextId: _context, ...stablePreferences } = preferences;

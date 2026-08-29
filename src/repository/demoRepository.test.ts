@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import { CURRENT_SCHEMA_VERSION } from "../domain/models";
 import { memoryStorage } from "../test/memoryStorage";
 import { createDemoRepository, STORAGE_KEY } from "./demoRepository";
 
@@ -10,7 +11,7 @@ describe("DemoRepository", () => {
     const repository = createDemoRepository(storage);
 
     expect(repository.getState().vehicles).toHaveLength(30);
-    expect(JSON.parse(storage.getItem(STORAGE_KEY) ?? "{}").schemaVersion).toBe(4);
+    expect(JSON.parse(storage.getItem(STORAGE_KEY) ?? "{}").schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
   });
 
   it("recovers from an incompatible payload and persists the deterministic seed", () => {
@@ -18,7 +19,7 @@ describe("DemoRepository", () => {
     storage.setItem(STORAGE_KEY, JSON.stringify({ schemaVersion: 2, vehicles: [] }));
 
     expect(createDemoRepository(storage).getState().activities).toHaveLength(40);
-    expect(JSON.parse(storage.getItem(STORAGE_KEY) ?? "{}").schemaVersion).toBe(4);
+    expect(JSON.parse(storage.getItem(STORAGE_KEY) ?? "{}").schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
   });
 
   it.each([
@@ -65,7 +66,7 @@ describe("DemoRepository", () => {
 
     const recovered = createDemoRepository(storage).getState();
 
-    expect(recovered).toMatchObject({ schemaVersion: 4 });
+    expect(recovered).toMatchObject({ schemaVersion: CURRENT_SCHEMA_VERSION });
     expect(recovered.vehicles[0]).toMatchObject({ derivative: "GT3", price: 4_250_000 });
     expect(recovered.financeDrafts[0].aprPercent).toBe(11.5);
     expect(recovered.tasks[0].relatedId).toBe("lead-01");
