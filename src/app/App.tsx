@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { Button } from "../components/controls/Button";
 import { ToastRegion } from "../components/feedback/ToastRegion";
 import { EmployeeShell } from "../components/navigation/EmployeeShell";
@@ -22,7 +22,7 @@ import { DomainWorkspace, ExactRecordView } from "./DomainWorkspace";
 import { LoginPage } from "./LoginPage";
 import { pageKeys, type NavigationTarget, type PageKey } from "./routes";
 import { scopeStateForAccount } from "./stateScope";
-import { useDemoApp } from "./useDemoApp";
+import { targetFromPreferences, useDemoApp } from "./useDemoApp";
 
 type ViewTransitionDocument = Document & { startViewTransition?: (callback: () => void) => unknown };
 type AppProps = { repository?: DemoRepository; initialAccountId?: DemoRole | null };
@@ -41,10 +41,13 @@ export function App({ repository: providedRepository, initialAccountId }: AppPro
   const repository = useMemo(() => providedRepository ?? browserRepository(), [providedRepository]);
   const defaultAccountId = initialAccountId === undefined ? (providedRepository ? "owner" : null) : initialAccountId;
   const [accountId, setAccountId] = useState<DemoRole | null>(defaultAccountId);
+  const sessionId = useRef<string | null>(null);
   const [usesPersistedTarget, setUsesPersistedTarget] = useState(initialAccountId === undefined);
   const account = accountId ? getDemoAccount(accountId) : null;
   const app = useDemoApp(repository);
-  const persistedTarget = isPageKey(app.target.page) ? app.target : { page: "my-day" as const, subview: "overview" };
+  const scopedState = account ? scopeStateForAccount(app.state, account) : app.state;
+  const scopedTarget = targetFromPreferences(scopedState.preferences);
+  const persistedTarget = isPageKey(scopedTarget.page) ? scopedTarget : { page: "my-day" as const, subview: "overview" };
   const target = account && usesPersistedTarget && canAccessTarget(account, persistedTarget) ? persistedTarget : account ? initialTargetForAccount(account) : persistedTarget;
 
   useEffect(() => {
@@ -74,6 +77,7 @@ export function App({ repository: providedRepository, initialAccountId }: AppPro
       app.pushToast({ title: "Access limited for this demo role", detail: "Choose an available destination or sign in with another account.", tone: "warning" });
       return;
     }
+    if (sessionId.current) repository.touchSession(sessionId.current);
     const change = () => app.navigate(next);
     const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
     const transitionDocument = document as ViewTransitionDocument;
@@ -82,15 +86,22 @@ export function App({ repository: providedRepository, initialAccountId }: AppPro
   const updateView = <K extends keyof ViewPreferences>(key: K, patch: Partial<ViewPreferences[K]>) => repository.setPreferences({ viewPreferences: { ...app.state.preferences.viewPreferences, [key]: { ...app.state.preferences.viewPreferences[key], ...patch } } });
   const signIn = (nextAccount: DemoAccount) => {
     repository.setAuditActor(`${nextAccount.name} · ${nextAccount.title}`);
+    sessionId.current = repository.startSession(nextAccount, typeof navigator === "undefined" ? "unknown" : navigator.userAgent);
     repository.setPreferences({ branch: nextAccount.homeBranch, activePage: nextAccount.initialTarget.page, activeSubview: nextAccount.initialTarget.subview, activeRecordType: undefined, activeRecordId: undefined, activeContextId: undefined });
     setUsesPersistedTarget(true);
     setAccountId(nextAccount.id);
   };
-  const signOut = () => { app.closeOverlay(); app.setSearchOpen(false); repository.setAuditActor("Weelee Employee"); setAccountId(null); };
+  const signOut = () => {
+    if (sessionId.current) repository.endSession(sessionId.current);
+    sessionId.current = null;
+    app.closeOverlay();
+    app.setSearchOpen(false);
+    repository.setAuditActor("Weelee Employee");
+    setAccountId(null);
+  };
 
   if (!account) return <LoginPage onSignIn={signIn} />;
 
-  const scopedState = scopeStateForAccount(app.state, account);
   const canWriteInventory = hasPermission(account, "inventory.write");
   const canCreateDeal = hasPermission(account, "sales.write");
   const canWriteCustomers = hasPermission(account, "customers.write");
@@ -142,7 +153,7 @@ export function App({ repository: providedRepository, initialAccountId }: AppPro
     {account.role === "auditor" ? <p className="access-context" role="status">Read-only demo view</p> : null}
     {content}
     <CommandPalette open={app.searchOpen} state={scopedState} onClose={() => app.setSearchOpen(false)} filterResult={(result) => canAccessTarget(account, result.target)} onSelect={(result) => { navigate(result.target); notify("Opened connected record", result.title); }} />
-    {hasPermission(account, "demo.reset") ? <Dialog open={app.activeOverlay?.id === "reset"} title="Reset demo data" onClose={app.closeOverlay}><p>This restores the deterministic Weelee demonstration data in this browser. This cannot be undone.</p><div className="modal-footer"><Button variant="secondary" onClick={app.closeOverlay}>Cancel</Button><Button onClick={() => { repository.reset(); app.closeOverlay(); notify("Demo data reset", "The deterministic demo data was restored."); }}>Reset demo data</Button></div></Dialog> : null}
+    {hasPermission(account, "demo.reset") ? <Dialog open={app.activeOverlay?.id === "reset"} title="Reset demo data" onClose={app.closeOverlay}><p>This restores the deterministic Weelee demonstration data in this browser. This cannot be undone.</p><div className="modal-footer"><Button variant="secondary" onClick={app.closeOverlay}>Cancel</Button><Button onClick={() => { repository.reset(); sessionId.current = repository.startSession(account, typeof navigator === "undefined" ? "unknown" : navigator.userAgent); app.closeOverlay(); notify("Demo data reset", "The deterministic demo data was restored."); }}>Reset demo data</Button></div></Dialog> : null}
     <Dialog open={app.activeOverlay?.id === "branch"} title="Select branch" onClose={app.closeOverlay}><p>Choose the current employee branch for this local demo.</p>{account.allowedBranches.map((branch) => <Button key={branch} variant="secondary" onClick={() => { repository.setPreferences({ branch }); app.closeOverlay(); }}>{branch}</Button>)}</Dialog>
     <Dialog open={app.activeOverlay?.id === "employee"} title="Employee demo controls" onClose={app.closeOverlay}><p>{account.name} · {account.title} · {account.email}</p>{hasPermission(account, "settings.manage") ? <Button variant="secondary" onClick={() => { app.closeOverlay(); navigate({ page: "operations", subview: "settings" }); }}>Open workspace settings</Button> : null}{hasPermission(account, "demo.reset") ? <Button variant="secondary" onClick={() => { app.closeOverlay(); app.setActiveOverlay({ kind: "dialog", id: "reset" }); }}>Reset demo data</Button> : null}<Button variant="secondary" onClick={signOut}>Sign out</Button></Dialog>
     <ToastRegion toasts={app.toasts} onDismiss={app.dismissToast} />

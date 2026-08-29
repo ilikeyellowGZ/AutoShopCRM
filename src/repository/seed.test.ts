@@ -9,7 +9,7 @@ describe("createSeedState", () => {
   it("creates the complete connected demo roster with stable vehicle IDs", () => {
     const state = createSeedState();
 
-    expect(state.schemaVersion).toBe(2);
+    expect(state.schemaVersion).toBe(4);
     expect(state.vehicles.map((vehicle) => vehicle.id)).toEqual(Array.from({ length: 30 }, (_, index) => `vehicle-${String(index + 1).padStart(2, "0")}`));
     expect(state.customers).toHaveLength(48);
     expect(state.leads).toHaveLength(64);

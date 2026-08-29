@@ -1,11 +1,28 @@
-import type { DemoState, TaskItem } from "../domain/models";
+import type { CrmDocument, DemoState, TaskItem } from "../domain/models";
 import { hasPermission, type DemoAccount, type DemoBranch } from "./access";
 
+const emptyScope = (state: DemoState, branch: string): DemoState => ({
+  ...state,
+  organizations: [], branches: [], sessions: [], vehicles: [], customers: [], leads: [], deals: [], financeDrafts: [],
+  financeApplications: [], serviceJobs: [], employees: [], appointments: [], testDrives: [], quotes: [],
+  payments: [], documents: [], tasks: [], notifications: [], activities: [],
+  preferences: { ...state.preferences, branch, activePage: "my-day", activeSubview: "overview", activeRecordType: undefined, activeRecordId: undefined, activeContextId: undefined },
+  drafts: { vehicleIntake: null, vehicleIntakes: {}, lead: null, deal: null, serviceNotes: {} },
+});
+
 export function scopeStateForAccount(state: DemoState, account: DemoAccount): DemoState {
-  const selectedBranch = account.allowedBranches.includes(state.preferences.branch as DemoBranch) ? state.preferences.branch as DemoBranch : account.homeBranch;
-  const visibleBranches = account.dataScope === "organization" ? account.allowedBranches : [selectedBranch];
+  const organizations = state.organizations.filter((organization) => organization.id === account.organizationId);
+  const branches = state.branches.filter((branch) => branch.organizationId === account.organizationId);
+  const permittedBranches = branches.filter((branch) => account.allowedBranches.includes(branch.name as DemoBranch));
+  if (organizations.length === 0 || permittedBranches.length === 0) return emptyScope(state, account.homeBranch);
+  const selected = permittedBranches.find((branch) => branch.name === state.preferences.branch)
+    ?? permittedBranches.find((branch) => branch.name === account.homeBranch)
+    ?? permittedBranches[0];
+  const selectedBranch = selected.name;
+  const visibleBranchIds = new Set((account.dataScope === "organization" ? permittedBranches : [selected]).map((branch) => branch.id));
+  const tenantBranchIds = new Set(branches.map((branch) => branch.id));
   const individuallyScoped = account.dataScope === "own";
-  const vehicles = state.vehicles.filter((vehicle) => visibleBranches.includes(vehicle.branch as DemoBranch));
+  const vehicles = state.vehicles.filter((vehicle) => visibleBranchIds.has(vehicle.branchId));
   const vehicleIds = new Set(vehicles.map((vehicle) => vehicle.id));
   const leads = state.leads.filter((lead) => vehicleIds.has(lead.vehicleId) && (!individuallyScoped || lead.owner === account.recordAssignee));
   const leadIds = new Set(leads.map((lead) => lead.id));
@@ -23,13 +40,19 @@ export function scopeStateForAccount(state: DemoState, account: DemoAccount): De
   const customers = state.customers.filter((customer) => customerIds.has(customer.id) || (!individuallyScoped && vehicleIds.has(customer.vehicleInterestId)));
   const visibleCustomerIds = new Set(customers.map((customer) => customer.id));
   const financeApplications = canViewFinance ? state.financeApplications.filter((application) => vehicleIds.has(application.vehicleId) && dealIds.has(application.dealId) && visibleCustomerIds.has(application.customerId)) : [];
-  const appointments = state.appointments.filter((appointment) => vehicleIds.has(appointment.vehicleId) && leadIds.has(appointment.leadId) && visibleCustomerIds.has(appointment.customerId) && (!individuallyScoped || appointment.assignedTo === account.recordAssignee));
+  const appointments = state.appointments.filter((appointment) => visibleBranchIds.has(appointment.branchId) && vehicleIds.has(appointment.vehicleId) && leadIds.has(appointment.leadId) && visibleCustomerIds.has(appointment.customerId) && (!individuallyScoped || appointment.assignedTo === account.recordAssignee));
   const appointmentIds = new Set(appointments.map((appointment) => appointment.id));
   const testDrives = state.testDrives.filter((drive) => appointmentIds.has(drive.appointmentId) && vehicleIds.has(drive.vehicleId) && leadIds.has(drive.leadId) && visibleCustomerIds.has(drive.customerId));
   const quotes = state.quotes.filter((quote) => vehicleIds.has(quote.vehicleId) && leadIds.has(quote.leadId) && visibleCustomerIds.has(quote.customerId) && (!individuallyScoped || quote.createdBy === account.recordAssignee));
   const payments = canViewFinance ? state.payments.filter((payment) => dealIds.has(payment.dealId) && visibleCustomerIds.has(payment.customerId)) : [];
-  const documents = state.documents.filter((document) => (!document.vehicleId || vehicleIds.has(document.vehicleId)) && (!document.customerId || visibleCustomerIds.has(document.customerId)) && (!document.leadId || leadIds.has(document.leadId)) && (!document.dealId || dealIds.has(document.dealId)));
-  const employees = hasPermission(account, "staff.read") ? state.employees.filter((employee) => visibleBranches.includes(employee.branch as DemoBranch)) : state.employees.filter((employee) => employee.name === account.name);
+  const documentLinks = (document: CrmDocument) => [
+    document.vehicleId === undefined ? null : vehicleIds.has(document.vehicleId),
+    document.customerId === undefined ? null : visibleCustomerIds.has(document.customerId),
+    document.leadId === undefined ? null : leadIds.has(document.leadId),
+    document.dealId === undefined ? null : dealIds.has(document.dealId),
+  ].filter((link): link is boolean => link !== null);
+  const documents = state.documents.filter((document) => { const links = documentLinks(document); return links.length > 0 && links.every(Boolean); });
+  const employees = hasPermission(account, "staff.read") ? state.employees.filter((employee) => visibleBranchIds.has(employee.branchId)) : state.employees.filter((employee) => tenantBranchIds.has(employee.branchId) && employee.name === account.name);
   const visibleTask = (task: TaskItem) => {
     if (task.relatedType === "vehicle") return !individuallyScoped && account.pages.includes("inventory") && vehicleIds.has(task.relatedId);
     if (task.relatedType === "lead") return (account.pages.includes("customers") || account.pages.includes("pipeline")) && leadIds.has(task.relatedId);
@@ -39,9 +62,10 @@ export function scopeStateForAccount(state: DemoState, account: DemoAccount): De
   const tasks = state.tasks.filter(visibleTask);
   const relatedIds = new Set([...vehicleIds, ...leadIds, ...dealIds, ...serviceIds, ...customerIds, ...tasks.map((task) => task.id)]);
   const notifications = state.notifications.filter((notification) => relatedIds.has(notification.relatedId));
-  const activities = hasPermission(account, "audit.read") ? state.activities.filter((activity) => activity.targetType === "system" || relatedIds.has(activity.targetId)) : [];
+  const activities = hasPermission(account, "audit.read") ? state.activities.filter((activity) => activity.organizationId === account.organizationId && (activity.targetType === "system" || relatedIds.has(activity.targetId))) : [];
+  const sessions = state.sessions.filter((session) => session.organizationId === account.organizationId && (session.accountId === account.id || (hasPermission(account, "staff.read") && visibleBranchIds.has(session.branchId))));
   const draftScope = `${account.id}:${selectedBranch}`;
   const vehicleIntake = state.drafts.vehicleIntakes[draftScope] ?? null;
 
-  return { ...state, vehicles, customers, leads, deals, financeDrafts, financeApplications, serviceJobs, employees, appointments, testDrives, quotes, payments, documents, tasks, notifications, activities, preferences: { ...state.preferences, branch: selectedBranch }, drafts: { ...state.drafts, vehicleIntake, vehicleIntakes: vehicleIntake ? { [draftScope]: vehicleIntake } : {} } };
+  return { ...state, organizations, branches, sessions, vehicles, customers, leads, deals, financeDrafts, financeApplications, serviceJobs, employees, appointments, testDrives, quotes, payments, documents, tasks, notifications, activities, preferences: { ...state.preferences, branch: selectedBranch }, drafts: { ...state.drafts, vehicleIntake, vehicleIntakes: vehicleIntake ? { [draftScope]: vehicleIntake } : {} } };
 }

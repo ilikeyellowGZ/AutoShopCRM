@@ -33,20 +33,20 @@ describe("preference migrations", () => {
 
     const migrated = migrateDemoState(state)!;
 
-    expect(migrated.schemaVersion).toBe(2);
+    expect(migrated.schemaVersion).toBe(4);
     expect(migrated.vehicles).toHaveLength(30);
     expect(migrated.vehicles[0]).toMatchObject({ price: 4_300_000, bodyType: "Coupe", branch: "Johannesburg North" });
     expect(migrated.vehicles.every((vehicle) => vehicle.engine && vehicle.registration)).toBe(true);
   });
 
-  it("discovers the legacy storage key and persists its migration under v2", () => {
+  it("discovers the legacy storage key and persists its migration under the current schema", () => {
     const storage = memoryStorage();
     const state = stateRecord();
     state.schemaVersion = 1;
     storage.setItem(LEGACY_STORAGE_KEY, JSON.stringify(state));
 
-    expect(loadDemoState(storage).schemaVersion).toBe(2);
-    expect(JSON.parse(storage.getItem(STORAGE_KEY)!).schemaVersion).toBe(2);
+    expect(loadDemoState(storage).schemaVersion).toBe(4);
+    expect(JSON.parse(storage.getItem(STORAGE_KEY)!).schemaVersion).toBe(4);
   });
 
   it("does not assign seeded specifications to a legacy user vehicle with a colliding ID", () => {
@@ -196,5 +196,28 @@ describe("preference migrations", () => {
     expect(migrated.appointments).toHaveLength(24);
     expect(migrated.documents).toHaveLength(30);
     expect(migrated.activities).toHaveLength(40);
+  });
+it("rejects a persisted state whose records point at a missing branch", () => {
+    const state = createSeedState();
+    const broken = { ...state, vehicles: state.vehicles.map((vehicle) => ({ ...vehicle, branchId: "branch-does-not-exist" })) };
+
+    expect(migrateDemoState(broken)).toBeNull();
+  });
+
+  it("gives every migrated legacy record a branch that resolves inside the organization", () => {
+    const state = createSeedState() as unknown as UnknownRecord;
+    state.schemaVersion = 2;
+    for (const key of ["vehicles", "employees", "appointments"] as const) {
+      state[key] = (state[key] as UnknownRecord[]).map(({ branchId: _branchId, ...rest }) => rest);
+    }
+
+    const migrated = migrateDemoState(state);
+
+    expect(migrated).not.toBeNull();
+    const branchIds = new Set(migrated!.branches.map((branch) => branch.id));
+    expect(migrated!.branches.every((branch) => branch.organizationId === migrated!.organizations[0].id)).toBe(true);
+    expect(migrated!.vehicles.every((vehicle) => branchIds.has(vehicle.branchId))).toBe(true);
+    expect(migrated!.employees.every((employee) => branchIds.has(employee.branchId))).toBe(true);
+    expect(migrated!.appointments.every((appointment) => branchIds.has(appointment.branchId))).toBe(true);
   });
 });

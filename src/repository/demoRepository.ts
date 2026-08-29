@@ -8,10 +8,12 @@ import type {
   Lead,
   LeadStage,
   ServiceJob,
+  SessionEndReason,
   UserPreferences,
   Vehicle,
   VehicleIntakeDraft,
 } from "../domain/models";
+import { demoOrganizationId } from "../domain/models";
 import { createSeedState, NOW } from "./seed";
 import { loadDemoState, saveDemoState, STORAGE_KEY } from "./storage";
 import { isLeadStage } from "../domain/leadStages";
@@ -23,6 +25,9 @@ export type DemoRepository = {
   getState(): DemoState;
   subscribe(listener: (state: DemoState) => void): () => void;
   setAuditActor(actor: string): void;
+  startSession(account: { id: string; name: string; title: string; organizationId: string }, userAgent: string): string;
+  touchSession(sessionId: string): void;
+  endSession(sessionId: string, reason?: SessionEndReason): void;
   reset(): void;
   setPreferences(patch: Partial<UserPreferences>): void;
   updateDraft<K extends keyof FormDrafts>(key: K, draft: FormDrafts[K]): void;
@@ -48,6 +53,7 @@ export type DemoRepository = {
 };
 
 const clone = <T,>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
+const maximumSuffix = (ids: string[]) => ids.reduce((largest, id) => Math.max(largest, Number(id.match(/(\d+)$/)?.[1]) || 0), 0);
 const maximumActivityNumber = (activities: AuditActivity[]) => activities.reduce((largest, activity) => Math.max(largest, Number(activity.id.match(/(\d+)$/)?.[1]) || 0), 0);
 const activityId = (number: number) => `activity-${String(number).padStart(2, "0")}`;
 export const normalizeVehicleIdentifier = (value: string) => value.trim().toUpperCase();
@@ -81,16 +87,18 @@ function validateCustomerAndVehicle(customerId: string, vehicleId: string, state
   if (!state.vehicles.some((vehicle) => vehicle.id === vehicleId)) throw new Error("Vehicle not found.");
 }
 
-export function createDemoRepository(storage: Storage): DemoRepository {
+export function createDemoRepository(storage: Storage, now: () => string = () => new Date().toISOString()): DemoRepository {
   let state = clone(loadDemoState(storage));
   let activityNumber = maximumActivityNumber(state.activities);
   let auditActor = "Weelee Employee";
+  let sessionNumber = maximumSuffix(state.sessions.map((session) => session.id));
   const listeners = new Set<(state: DemoState) => void>();
 
   const commit = (action: string, detail: string, mutate: (draft: DemoState) => void, tone: AuditActivity["tone"] = "info", targetType: AuditActivity["targetType"] = "system", targetId = "system") => {
     const draft = clone(state);
     mutate(draft);
-    draft.activities.unshift({ id: activityId(++activityNumber), action, detail, actor: auditActor, occurredAt: NOW, tone, targetType, targetId });
+    const tenant = draft.branches.find((branch) => branch.name === draft.preferences.branch);
+    draft.activities.unshift({ id: activityId(++activityNumber), organizationId: tenant?.organizationId ?? demoOrganizationId, branchId: tenant?.id, action, detail, actor: auditActor, occurredAt: NOW, tone, targetType, targetId });
     state = draft;
     saveDemoState(storage, state);
     listeners.forEach((listener) => listener(clone(state)));
@@ -117,10 +125,40 @@ export function createDemoRepository(storage: Storage): DemoRepository {
       return () => listeners.delete(listener);
     },
     setAuditActor: (actor) => { auditActor = actor.trim() || "Weelee Employee"; },
+    startSession: (account, userAgent) => {
+      const startedAt = now();
+      const id = `session-${String(++sessionNumber).padStart(4, "0")}`;
+      const homeBranch = state.branches.find((branch) => branch.name === state.preferences.branch && branch.organizationId === account.organizationId) ?? state.branches.find((branch) => branch.organizationId === account.organizationId);
+      persist((draft) => {
+        for (const session of draft.sessions) {
+          if (session.accountId === account.id && session.status === "active") {
+            session.status = "ended";
+            session.endedAt = startedAt;
+            session.endReason = "replaced";
+          }
+        }
+        draft.sessions.unshift({ id, organizationId: account.organizationId, branchId: homeBranch?.id ?? "", accountId: account.id, actor: `${account.name} · ${account.title}`, startedAt, lastActivityAt: startedAt, status: "active", userAgent });
+      });
+      return id;
+    },
+    touchSession: (sessionId) => persist((draft) => {
+      const session = draft.sessions.find((item) => item.id === sessionId);
+      if (session && session.status === "active") session.lastActivityAt = now();
+    }),
+    endSession: (sessionId, reason = "signed-out") => persist((draft) => {
+      const session = draft.sessions.find((item) => item.id === sessionId);
+      if (!session || session.status === "ended") return;
+      const endedAt = now();
+      session.status = "ended";
+      session.endedAt = endedAt;
+      session.lastActivityAt = endedAt;
+      session.endReason = reason;
+    }),
     reset: () => {
       const resetState = createSeedState();
       resetState.activities.unshift({
         id: activityId(++activityNumber),
+        organizationId: demoOrganizationId,
         action: "Demo data reset",
         detail: "The employee demo was restored to its deterministic seed data.",
         actor: auditActor,
@@ -159,6 +197,7 @@ export function createDemoRepository(storage: Storage): DemoRepository {
     }, "info", "task", taskId),
     addVehicle: (vehicle) => {
       const identifiers = validateVehicleIdentifiers(vehicle, state.vehicles);
+      if (!state.branches.some((branch) => branch.id === vehicle.branchId)) throw new Error("Vehicle branch not found.");
       commit("Vehicle added", `${vehicle.year} ${vehicle.make} ${vehicle.model} was added to inventory.`, (draft) => { draft.vehicles.push({ ...clone(vehicle), ...identifiers }); }, "positive", "vehicle", vehicle.id);
     },
     updateVehicle: (vehicleId, patch) => {

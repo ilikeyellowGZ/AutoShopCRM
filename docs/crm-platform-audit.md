@@ -155,3 +155,43 @@ The app can deploy as a static website through the existing Netlify configuratio
 ## Review Notes
 
 The user requested CodeRabbit review through a skill. No CodeRabbit-specific local skill or executable is available in this workspace. Use the available `gsd-code-review` skill as the local review fallback, and do not claim CodeRabbit has run.
+
+## Phase 1 Progress — Platform Foundation
+
+Date: 2026-08-29. Schema version: 4.
+
+### Tenancy
+
+- Organization and Branch are records. `DemoState` holds `organizations` and `branches`.
+- Vehicles, employees, appointments and sessions hold `branchId`. Branch identity decides visibility. Branch name does not.
+- Branch identifiers include the organization. `branchIdForName(organizationId, name)` in `src/domain/models.ts` is the only definition. Two organizations can both own a branch called Sandton.
+- Every account holds `organizationId` and a declared `dataScope` of `organization`, `branch` or `own`. Role names no longer drive visibility.
+- `scopeStateForAccount` returns an empty workspace when the account organization owns no branch.
+- Application routing reads the scoped state. A denied account cannot follow a persisted deep link.
+
+### Sessions
+
+- `startSession`, `touchSession` and `endSession` record real wall-clock times. The repository takes a clock, so tests control it.
+- The demo seed contains no sessions. Session history accumulates from real sign-ins only.
+- `sessionPresence` and `sessionDurationMs` in `src/domain/sessions.ts` derive online, idle, away and offline from real timestamps. No presence value is stored.
+- Signing in again on one account ends the previous session with reason `replaced`.
+- A user sees their own sessions. A holder of `staff.read` also sees sessions in visible branches of their own organization.
+
+### Audit
+
+- Every committed audit event carries `organizationId` and the `branchId` it happened in, derived from state at commit time.
+- Audit reads are filtered by organization, so one dealer group cannot read another group's trail.
+
+### Validation
+
+- `isCompatibleDemoState` rejects duplicate branch identifiers, unresolvable `branchId` references on vehicles, employees, appointments and sessions, and audit events without an organization.
+- `validateDemoState` checks organizations, branches, sessions and every branch link.
+- `addVehicle` refuses a vehicle whose branch does not exist.
+
+### Not Delivered
+
+The notification centre is unbuilt. Notifications remain a flat list without categories, timestamps or deep links.
+
+### Security Boundary Unchanged
+
+This is browser-side scoping. It is not a network boundary. The production requirements in the Security Boundary section above still apply in full.

@@ -6,7 +6,7 @@ import { useDemoApp } from "./useDemoApp";
 
 function repository(activePage: string): DemoRepository {
   const state = { preferences: { activePage, activeSubview: "overview" } } as DemoState;
-  return { getState: () => state, subscribe: vi.fn(() => () => {}), setAuditActor: vi.fn(), reset: vi.fn(), setPreferences: vi.fn(), updateDraft: vi.fn(), updateVehicleIntakeDraft: vi.fn(), completeTask: vi.fn(), rescheduleTask: vi.fn(), addVehicle: vi.fn(), updateVehicle: vi.fn(), addCustomer: vi.fn(), updateCustomer: vi.fn(), addCustomerNote: vi.fn(), addLead: vi.fn(), updateLeadStage: vi.fn(), moveLead: vi.fn(), addDeal: vi.fn(), updateDealStatus: vi.fn(), updateFinanceDraft: vi.fn(), submitFinanceApplication: vi.fn(), updateServiceJob: vi.fn(), addServiceJob: vi.fn(), updateServiceState: vi.fn(), markNotificationRead: vi.fn() };
+  return { getState: () => state, subscribe: vi.fn(() => () => {}), setAuditActor: vi.fn(), startSession: vi.fn(() => "session-0001"), touchSession: vi.fn(), endSession: vi.fn(), reset: vi.fn(), setPreferences: vi.fn(), updateDraft: vi.fn(), updateVehicleIntakeDraft: vi.fn(), completeTask: vi.fn(), rescheduleTask: vi.fn(), addVehicle: vi.fn(), updateVehicle: vi.fn(), addCustomer: vi.fn(), updateCustomer: vi.fn(), addCustomerNote: vi.fn(), addLead: vi.fn(), updateLeadStage: vi.fn(), moveLead: vi.fn(), addDeal: vi.fn(), updateDealStatus: vi.fn(), updateFinanceDraft: vi.fn(), submitFinanceApplication: vi.fn(), updateServiceJob: vi.fn(), addServiceJob: vi.fn(), updateServiceState: vi.fn(), markNotificationRead: vi.fn() };
 }
 
 describe("useDemoApp", () => {

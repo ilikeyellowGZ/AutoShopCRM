@@ -14,7 +14,7 @@ type Identified = { id: string };
 export function validateDemoState(state: DemoState): SeedIntegrityIssue[] {
   const issues: SeedIntegrityIssue[] = [];
   const collections: Record<string, readonly Identified[]> = {
-    vehicles: state.vehicles, customers: state.customers, leads: state.leads, deals: state.deals,
+    organizations: state.organizations, branches: state.branches, sessions: state.sessions, vehicles: state.vehicles, customers: state.customers, leads: state.leads, deals: state.deals,
     financeApplications: state.financeApplications, serviceJobs: state.serviceJobs, employees: state.employees,
     appointments: state.appointments, testDrives: state.testDrives, quotes: state.quotes, payments: state.payments,
     documents: state.documents, tasks: state.tasks, notifications: state.notifications, activities: state.activities,
@@ -51,6 +51,11 @@ export function validateDemoState(state: DemoState): SeedIntegrityIssue[] {
   const reference = (collection: string, recordId: string, field: string, targetId: string | undefined, targetCollection: keyof typeof ids) => {
     if (targetId && !ids[targetCollection].has(targetId)) issues.push({ code: "dangling-reference", collection, recordId, field, targetId, message: `${collection}.${recordId}.${field} points to missing ${targetCollection}.${targetId}.` });
   };
+  for (const branch of state.branches) reference("branches", branch.id, "organizationId", branch.organizationId, "organizations");
+  for (const session of state.sessions) { reference("sessions", session.id, "organizationId", session.organizationId, "organizations"); reference("sessions", session.id, "branchId", session.branchId, "branches"); }
+  for (const vehicle of state.vehicles) reference("vehicles", vehicle.id, "branchId", vehicle.branchId, "branches");
+  for (const employee of state.employees) reference("employees", employee.id, "branchId", employee.branchId, "branches");
+  for (const appointment of state.appointments) reference("appointments", appointment.id, "branchId", appointment.branchId, "branches");
   for (const customer of state.customers) reference("customers", customer.id, "vehicleInterestId", customer.vehicleInterestId, "vehicles");
   for (const lead of state.leads) { reference("leads", lead.id, "customerId", lead.customerId, "customers"); reference("leads", lead.id, "vehicleId", lead.vehicleId, "vehicles"); }
   for (const deal of state.deals) { reference("deals", deal.id, "customerId", deal.customerId, "customers"); reference("deals", deal.id, "vehicleId", deal.vehicleId, "vehicles"); }
@@ -67,7 +72,7 @@ export function validateDemoState(state: DemoState): SeedIntegrityIssue[] {
   for (const task of state.tasks) reference("tasks", task.id, "relatedId", task.relatedId, taskTargets[task.relatedType]);
   const activityTargets = { vehicle: "vehicles", customer: "customers", lead: "leads", deal: "deals", service: "serviceJobs", task: "tasks" } as const;
   for (const activity of state.activities) if (activity.targetType !== "system") reference("activities", activity.id, "targetId", activity.targetId, activityTargets[activity.targetType]);
-  const allRecordIds = new Set(Object.values(ids).flatMap((set) => [...set]));
+  const allRecordIds = new Set(Object.entries(ids).filter(([collection]) => collection !== "branches" && collection !== "organizations" && collection !== "sessions").flatMap(([, set]) => [...set]));
   for (const notification of state.notifications) if (!allRecordIds.has(notification.relatedId)) issues.push({ code: "dangling-reference", collection: "notifications", recordId: notification.id, field: "relatedId", targetId: notification.relatedId, message: `notifications.${notification.id}.relatedId points to a missing record.` });
 
   return issues;
