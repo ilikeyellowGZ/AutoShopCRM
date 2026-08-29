@@ -16,7 +16,8 @@ export function insightsForCustomer(state: DemoState, customerId: string, now = 
   const context = customerContext(state, customerId);
   if (!context) return [];
   const insights: AgentInsight[] = [];
-  for (const lead of context.leads) {
+  const customerLeads = context.leads.filter((lead) => lead.customerId === customerId);
+  for (const lead of customerLeads) {
     if (lead.stage !== "Delivery" && isBefore(lead.dueAt, now)) insights.push({
       id: `stale-lead-${lead.id}`,
       severity: "warning",
@@ -26,7 +27,7 @@ export function insightsForCustomer(state: DemoState, customerId: string, now = 
       evidence: [lead.id],
     });
   }
-  const pendingApplications = context.financeApplications.filter((application) => application.status === "Submitted" || application.status === "Draft");
+  const pendingApplications = context.financeApplications.filter((application) => application.customerId === customerId && (application.status === "Submitted" || application.status === "Draft"));
   if (pendingApplications.length) insights.push({
     id: `finance-pending-${customerId}`,
     severity: "info",
@@ -50,15 +51,17 @@ export function insightsForVehicle(state: DemoState, vehicleId: string): AgentIn
     recommendation: "Review pricing, photography, and assigned follow-ups.",
     evidence: [vehicleId],
   });
-  if (context.deals.length && context.documents.length === 0) insights.push({
+  const vehicleDeals = context.deals.filter((deal) => deal.vehicleId === vehicleId);
+  const vehicleDocuments = context.documents.filter((document) => document.vehicleId === vehicleId);
+  if (vehicleDeals.length && vehicleDocuments.length === 0) insights.push({
     id: `missing-documents-${vehicleId}`,
     severity: "critical",
     title: "Deal documents are missing",
     summary: "A linked deal exists, but no CRM documents are attached to this vehicle.",
     recommendation: "Request identity, finance, and contract documents before delivery.",
-    evidence: context.deals.map((deal) => deal.id),
+    evidence: vehicleDeals.map((deal) => deal.id),
   });
-  const openPrepTasks = context.tasks.filter((task) => task.status !== "Completed");
+  const openPrepTasks = context.tasks.filter((task) => task.relatedType === "vehicle" && task.relatedId === vehicleId && task.status !== "Completed");
   if (openPrepTasks.length) insights.push({
     id: `open-tasks-${vehicleId}`,
     severity: "info",

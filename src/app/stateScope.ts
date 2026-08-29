@@ -1,13 +1,10 @@
 import type { DemoState, TaskItem } from "../domain/models";
 import { hasPermission, type DemoAccount, type DemoBranch } from "./access";
 
-const groupWideRoles = new Set(["owner", "ceo", "auditor"]);
-const individuallyScopedRoles = new Set(["sales", "employee"]);
-
 export function scopeStateForAccount(state: DemoState, account: DemoAccount): DemoState {
   const selectedBranch = account.allowedBranches.includes(state.preferences.branch as DemoBranch) ? state.preferences.branch as DemoBranch : account.homeBranch;
-  const visibleBranches = groupWideRoles.has(account.role) ? account.allowedBranches : [selectedBranch];
-  const individuallyScoped = individuallyScopedRoles.has(account.role);
+  const visibleBranches = account.dataScope === "organization" ? account.allowedBranches : [selectedBranch];
+  const individuallyScoped = account.dataScope === "own";
   const vehicles = state.vehicles.filter((vehicle) => visibleBranches.includes(vehicle.branch as DemoBranch));
   const vehicleIds = new Set(vehicles.map((vehicle) => vehicle.id));
   const leads = state.leads.filter((lead) => vehicleIds.has(lead.vehicleId) && (!individuallyScoped || lead.owner === account.recordAssignee));

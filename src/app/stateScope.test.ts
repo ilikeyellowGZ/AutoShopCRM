@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createSeedState } from "../repository/seed";
-import { getDemoAccount } from "./access";
+import { demoAccounts, getDemoAccount } from "./access";
 import { scopeStateForAccount } from "./stateScope";
 
 describe("role and branch record scope", () => {
@@ -89,6 +89,28 @@ describe("role and branch record scope", () => {
     expect(scopeStateForAccount(state, getDemoAccount("stock")).drafts.vehicleIntake?.values.stockId).toBe("STOCK-DRAFT");
     state.preferences.branch = "Midrand";
     expect(scopeStateForAccount(state, getDemoAccount("stock")).drafts.vehicleIntake).toBeNull();
+  });
+
+  it("derives record visibility from the declared data scope, not the role name", () => {
+    const state = createSeedState();
+    const manager = getDemoAccount("manager");
+    state.preferences.branch = "Midrand";
+
+    const branchScoped = scopeStateForAccount(state, manager);
+    const promoted = scopeStateForAccount(state, { ...manager, dataScope: "organization" });
+    const demoted = scopeStateForAccount(state, { ...manager, dataScope: "own" });
+
+    expect(branchScoped.vehicles.every((vehicle) => vehicle.branch === "Midrand")).toBe(true);
+    expect(new Set(promoted.vehicles.map((vehicle) => vehicle.branch)).size).toBeGreaterThan(1);
+    expect(promoted.vehicles.length).toBeGreaterThan(branchScoped.vehicles.length);
+    expect(demoted.leads.every((lead) => lead.owner === manager.recordAssignee)).toBe(true);
+    expect(demoted.leads.length).toBeLessThan(branchScoped.leads.length);
+  });
+
+  it("keeps every demo account on a declared data scope", () => {
+    for (const account of demoAccounts) {
+      expect(["organization", "branch", "own"]).toContain(account.dataScope);
+    }
   });
 
   it("limits a general employee to personally assigned service work", () => {
