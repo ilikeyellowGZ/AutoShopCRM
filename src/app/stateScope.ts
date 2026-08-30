@@ -3,7 +3,7 @@ import { hasPermission, type DemoAccount, type DemoBranch } from "./access";
 
 const emptyScope = (state: DemoState, branch: string): DemoState => ({
   ...state,
-  organizations: [], branches: [], sessions: [], vehicles: [], customers: [], leads: [], deals: [], financeDrafts: [],
+  organizations: [], branches: [], sessions: [], workspaces: [], boards: [], boardGroups: [], boardColumns: [], boardItems: [], boardViews: [], vehicles: [], customers: [], leads: [], deals: [], financeDrafts: [],
   financeApplications: [], serviceJobs: [], employees: [], appointments: [], testDrives: [], quotes: [],
   payments: [], documents: [], tasks: [], notifications: [], activities: [],
   preferences: { ...state.preferences, branch, activePage: "my-day", activeSubview: "overview", activeRecordType: undefined, activeRecordId: undefined, activeContextId: undefined },
@@ -64,8 +64,16 @@ export function scopeStateForAccount(state: DemoState, account: DemoAccount): De
   const notifications = state.notifications.filter((notification) => notification.organizationId === account.organizationId && relatedIds.has(notification.relatedId));
   const activities = hasPermission(account, "audit.read") ? state.activities.filter((activity) => activity.organizationId === account.organizationId && (activity.targetType === "system" || relatedIds.has(activity.targetId))) : [];
   const sessions = state.sessions.filter((session) => session.organizationId === account.organizationId && (session.accountId === account.id || (hasPermission(account, "staff.read") && visibleBranchIds.has(session.branchId))));
+  const workspaces = state.workspaces.filter((workspace) => workspace.organizationId === account.organizationId && (!workspace.branchId || visibleBranchIds.has(workspace.branchId)));
+  const workspaceIds = new Set(workspaces.map((workspace) => workspace.id));
+  const boards = state.boards.filter((board) => workspaceIds.has(board.workspaceId));
+  const boardIds = new Set(boards.map((board) => board.id));
+  const boardGroups = state.boardGroups.filter((group) => boardIds.has(group.boardId));
+  const boardColumns = state.boardColumns.filter((column) => boardIds.has(column.boardId));
+  const boardItems = state.boardItems.filter((item) => boardIds.has(item.boardId));
+  const boardViews = state.boardViews.filter((view) => boardIds.has(view.boardId));
   const draftScope = `${account.id}:${selectedBranch}`;
   const vehicleIntake = state.drafts.vehicleIntakes[draftScope] ?? null;
 
-  return { ...state, organizations, branches, sessions, vehicles, customers, leads, deals, financeDrafts, financeApplications, serviceJobs, employees, appointments, testDrives, quotes, payments, documents, tasks, notifications, activities, preferences: { ...state.preferences, branch: selectedBranch }, drafts: { ...state.drafts, vehicleIntake, vehicleIntakes: vehicleIntake ? { [draftScope]: vehicleIntake } : {} } };
+  return { ...state, organizations, branches, sessions, workspaces, boards, boardGroups, boardColumns, boardItems, boardViews, vehicles, customers, leads, deals, financeDrafts, financeApplications, serviceJobs, employees, appointments, testDrives, quotes, payments, documents, tasks, notifications, activities, preferences: { ...state.preferences, branch: selectedBranch }, drafts: { ...state.drafts, vehicleIntake, vehicleIntakes: vehicleIntake ? { [draftScope]: vehicleIntake } : {} } };
 }

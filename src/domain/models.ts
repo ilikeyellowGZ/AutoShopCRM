@@ -63,5 +63,33 @@ export type PersistedRecordType = "vehicle" | "customer" | "lead" | "deal" | "se
 export type UserPreferences = { branch: string; density: "comfortable" | "compact"; activePage: string; activeSubview: string; activeRecordType?: PersistedRecordType; activeRecordId?: string; activeContextId?: string; viewPreferences: ViewPreferences };
 export type VehicleIntakeDraft = { step: 1 | 2 | 3 | 4; values: Partial<Vehicle> };
 export type FormDrafts = { vehicleIntake: VehicleIntakeDraft | null; vehicleIntakes: Record<string, VehicleIntakeDraft>; lead: Partial<Lead> | null; deal: Partial<Deal> | null; serviceNotes: Record<string, string> };
-export const CURRENT_SCHEMA_VERSION = 5;
-export type DemoState = { schemaVersion: typeof CURRENT_SCHEMA_VERSION; organizations: Organization[]; branches: Branch[]; sessions: SessionRecord[]; vehicles: Vehicle[]; customers: Customer[]; leads: Lead[]; deals: Deal[]; financeDrafts: FinanceDraft[]; financeApplications: FinanceApplication[]; serviceJobs: ServiceJob[]; employees: Employee[]; appointments: Appointment[]; testDrives: TestDrive[]; quotes: Quote[]; payments: Payment[]; documents: CrmDocument[]; tasks: TaskItem[]; notifications: Notification[]; activities: AuditActivity[]; preferences: UserPreferences; drafts: FormDrafts };
+export const boardColumnKinds = ["text", "number", "money", "status", "priority", "person", "date", "checkbox", "tags", "progress", "relation"] as const;
+export type BoardColumnKind = (typeof boardColumnKinds)[number];
+export type BoardColumnOption = { id: string; label: string; tone: Tone };
+export type BoardColumn = { id: string; boardId: string; kind: BoardColumnKind; title: string; position: number; options: BoardColumnOption[]; relationTarget?: PersistedRecordType };
+
+export type BoardCellValue =
+  | { kind: "text"; text: string }
+  | { kind: "number"; number: number }
+  | { kind: "option"; optionId: string }
+  | { kind: "options"; optionIds: string[] }
+  | { kind: "date"; date: string }
+  | { kind: "checkbox"; checked: boolean }
+  | { kind: "person"; employeeId: string }
+  | { kind: "relation"; recordType: PersistedRecordType; recordId: string };
+
+export type BoardGroup = { id: string; boardId: string; title: string; tone: Tone; position: number };
+export type BoardItem = { id: string; boardId: string; groupId: string; parentItemId?: string; title: string; position: number; values: Record<string, BoardCellValue>; createdAt: string; createdBy: string; updatedAt: string; updatedBy: string };
+
+export const boardViewKinds = ["table", "kanban", "calendar", "timeline", "workload"] as const;
+export type BoardViewKind = (typeof boardViewKinds)[number];
+export const boardFilterOperators = ["is", "isNot", "contains", "before", "after"] as const;
+export type BoardFilterOperator = (typeof boardFilterOperators)[number];
+export type BoardFilter = { columnId: string; operator: BoardFilterOperator; value: string };
+export type BoardView = { id: string; boardId: string; kind: BoardViewKind; title: string; position: number; groupByColumnId?: string; filters: BoardFilter[] };
+
+export type Board = { id: string; workspaceId: string; title: string; description: string; position: number };
+export type Workspace = { id: string; organizationId: string; branchId?: string; name: string; description: string; position: number };
+
+export const CURRENT_SCHEMA_VERSION = 6;
+export type DemoState = { schemaVersion: typeof CURRENT_SCHEMA_VERSION; organizations: Organization[]; branches: Branch[]; sessions: SessionRecord[]; workspaces: Workspace[]; boards: Board[]; boardGroups: BoardGroup[]; boardColumns: BoardColumn[]; boardItems: BoardItem[]; boardViews: BoardView[]; vehicles: Vehicle[]; customers: Customer[]; leads: Lead[]; deals: Deal[]; financeDrafts: FinanceDraft[]; financeApplications: FinanceApplication[]; serviceJobs: ServiceJob[]; employees: Employee[]; appointments: Appointment[]; testDrives: TestDrive[]; quotes: Quote[]; payments: Payment[]; documents: CrmDocument[]; tasks: TaskItem[]; notifications: Notification[]; activities: AuditActivity[]; preferences: UserPreferences; drafts: FormDrafts };

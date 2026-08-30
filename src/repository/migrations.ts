@@ -1,4 +1,7 @@
 import {
+  boardColumnKinds,
+  boardFilterOperators,
+  boardViewKinds,
   branchIdForName,
   CURRENT_SCHEMA_VERSION,
   demoBranches,
@@ -117,6 +120,30 @@ const isDocument = (value: unknown) => hasShape(value, { id: nonEmptyString, cus
 const isOrganization = (value: unknown) => hasShape(value, { id: nonEmptyString, name: nonEmptyString, tradingName: nonEmptyString });
 const isBranch = (value: unknown) => hasShape(value, { id: nonEmptyString, organizationId: nonEmptyString, name: nonEmptyString });
 
+const recordTypes = ["vehicle", "customer", "lead", "deal", "service", "task"] as const;
+const isBoardOption = (value: unknown) => hasShape(value, { id: nonEmptyString, label: nonEmptyString, tone: oneOf(tones) });
+const isCellValue = (value: unknown): boolean => {
+  if (!isRecord(value)) return false;
+  switch (value.kind) {
+    case "text": return string(value.text);
+    case "number": return number(value.number);
+    case "option": return nonEmptyString(value.optionId);
+    case "options": return Array.isArray(value.optionIds) && value.optionIds.every(nonEmptyString);
+    case "date": return nonEmptyString(value.date);
+    case "checkbox": return boolean(value.checked);
+    case "person": return nonEmptyString(value.employeeId);
+    case "relation": return oneOf(recordTypes)(value.recordType) && nonEmptyString(value.recordId);
+    default: return false;
+  }
+};
+const isWorkspace = (value: unknown) => hasShape(value, { id: nonEmptyString, organizationId: nonEmptyString, branchId: optional(nonEmptyString), name: nonEmptyString, description: string, position: number });
+const isBoard = (value: unknown) => hasShape(value, { id: nonEmptyString, workspaceId: nonEmptyString, title: nonEmptyString, description: string, position: number });
+const isBoardGroup = (value: unknown) => hasShape(value, { id: nonEmptyString, boardId: nonEmptyString, title: nonEmptyString, tone: oneOf(tones), position: number });
+const isBoardColumn = (value: unknown) => hasShape(value, { id: nonEmptyString, boardId: nonEmptyString, kind: oneOf(boardColumnKinds), title: nonEmptyString, position: number, options: (options) => Array.isArray(options) && options.every(isBoardOption), relationTarget: optional(oneOf(recordTypes)) });
+const isBoardItem = (value: unknown) => hasShape(value, { id: nonEmptyString, boardId: nonEmptyString, groupId: nonEmptyString, parentItemId: optional(nonEmptyString), title: nonEmptyString, position: number, values: (values) => isRecord(values) && Object.values(values).every(isCellValue), createdAt: nonEmptyString, createdBy: nonEmptyString, updatedAt: nonEmptyString, updatedBy: nonEmptyString });
+const isBoardFilter = (value: unknown) => hasShape(value, { columnId: nonEmptyString, operator: oneOf(boardFilterOperators), value: string });
+const isBoardView = (value: unknown) => hasShape(value, { id: nonEmptyString, boardId: nonEmptyString, kind: oneOf(boardViewKinds), title: nonEmptyString, position: number, groupByColumnId: optional(nonEmptyString), filters: (filters) => Array.isArray(filters) && filters.every(isBoardFilter) });
+
 const validString = (value: unknown, fallback: string) => typeof value === "string" ? value : fallback;
 const validChoice = <T extends string>(value: unknown, choices: readonly T[], fallback: T): T => choices.includes(value as T) ? value as T : fallback;
 function normalizeViewPreferences(value: unknown): ViewPreferences {
@@ -189,9 +216,16 @@ const isDrafts = (value: unknown) => isRecord(value)
 
 export function isCompatibleDemoState(value: unknown): value is DemoState {
   if (!isRecord(value) || value.schemaVersion !== CURRENT_SCHEMA_VERSION || !hasShape(value.preferences, { branch: nonEmptyString, density: oneOf(["comfortable", "compact"]), activePage: nonEmptyString, activeSubview: nonEmptyString, viewPreferences: (item) => JSON.stringify(normalizeViewPreferences(item)) === JSON.stringify(item) }) || !isDrafts(value.drafts)) return false;
-  const collections = ["organizations", "branches", "sessions", "vehicles", "customers", "leads", "deals", "financeDrafts", "financeApplications", "serviceJobs", "employees", "appointments", "testDrives", "quotes", "payments", "documents", "tasks", "notifications", "activities"] as const;
+  const collections = ["organizations", "branches", "sessions", "workspaces", "boards", "boardGroups", "boardColumns", "boardItems", "boardViews", "vehicles", "customers", "leads", "deals", "financeDrafts", "financeApplications", "serviceJobs", "employees", "appointments", "testDrives", "quotes", "payments", "documents", "tasks", "notifications", "activities"] as const;
   if (!collections.every((key) => Array.isArray(value[key]))) return false;
 
+  const workspaces = value.workspaces as unknown[];
+  const boards = value.boards as unknown[];
+  const boardGroups = value.boardGroups as unknown[];
+  const boardColumns = value.boardColumns as unknown[];
+  const boardItems = value.boardItems as unknown[];
+  const boardViews = value.boardViews as unknown[];
+  if (!workspaces.every(isWorkspace) || !boards.every(isBoard) || !boardGroups.every(isBoardGroup) || !boardColumns.every(isBoardColumn) || !boardItems.every(isBoardItem) || !boardViews.every(isBoardView)) return false;
   const sessions = value.sessions as unknown[];
   if (!sessions.every(isSession)) return false;
   const organizations = value.organizations as unknown[];
@@ -233,6 +267,17 @@ export function isCompatibleDemoState(value: unknown): value is DemoState {
     return idsByType[task.relatedType as keyof typeof idsByType].has(task.relatedId as string);
   };
   const relatedIds = new Set([...vehicleIds, ...leadIds, ...dealIds, ...serviceIds]);
+  const workspaceIds = new Set(workspaces.map((workspace) => (workspace as RecordValue).id as string));
+  const boardIds = new Set(boards.map((board) => (board as RecordValue).id as string));
+  const boardGroupIds = new Set(boardGroups.map((group) => (group as RecordValue).id as string));
+  const boardItemIds = new Set(boardItems.map((item) => (item as RecordValue).id as string));
+  const boardTenancyHolds = workspaces.every((workspace) => organizationIds.has((workspace as RecordValue).organizationId as string))
+    && boards.every((board) => workspaceIds.has((board as RecordValue).workspaceId as string))
+    && boardGroups.every((group) => boardIds.has((group as RecordValue).boardId as string))
+    && boardColumns.every((column) => boardIds.has((column as RecordValue).boardId as string))
+    && boardViews.every((view) => boardIds.has((view as RecordValue).boardId as string))
+    && boardItems.every((item) => { const record = item as RecordValue; return boardIds.has(record.boardId as string) && boardGroupIds.has(record.groupId as string) && (record.parentItemId === undefined || boardItemIds.has(record.parentItemId as string)); });
+  if (!boardTenancyHolds) return false;
   return notifications.every((notification) => organizationIds.has((notification as RecordValue).organizationId as string))
     && sessions.every((session) => organizationIds.has((session as RecordValue).organizationId as string) && branchIds.has((session as RecordValue).branchId as string))
     && activities.every((activity) => organizationIds.has((activity as RecordValue).organizationId as string))
@@ -392,11 +437,20 @@ function addNotificationCentre(value: RecordValue): RecordValue {
   return { ...value, schemaVersion: CURRENT_SCHEMA_VERSION, notifications };
 }
 
+function addWorkOs(value: RecordValue): RecordValue {
+  const seed = createSeedState() as unknown as RecordValue;
+  const keys = ["workspaces", "boards", "boardGroups", "boardColumns", "boardItems", "boardViews"] as const;
+  const restored: RecordValue = {};
+  for (const key of keys) restored[key] = Array.isArray(value[key]) && (value[key] as unknown[]).length > 0 ? value[key] : seed[key];
+  return { ...value, ...restored, schemaVersion: CURRENT_SCHEMA_VERSION };
+}
+
 export function migrateDemoState(value: unknown): DemoState | null {
   if (isRecord(value) && value.schemaVersion === 1) value = migrateVehicleRoster(value);
   if (isRecord(value) && value.schemaVersion === 2) value = addOrganizationTenancy(value);
   if (isRecord(value) && value.schemaVersion === 3) value = addSessionsAndAuditTenancy(value);
   if (isRecord(value) && value.schemaVersion === 4) value = addNotificationCentre(value);
+  if (isRecord(value) && value.schemaVersion === 5) value = addWorkOs(value);
   if (isRecord(value) && value.schemaVersion === CURRENT_SCHEMA_VERSION && isRecord(value.preferences)) {
     const normalized = normalizeConnectedDataset(normalizeDemoAssignees(value));
     const preferences = isRecord(normalized.preferences) ? normalized.preferences : value.preferences;

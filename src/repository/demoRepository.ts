@@ -7,6 +7,8 @@ import type {
   FormDrafts,
   Lead,
   LeadStage,
+  BoardCellValue,
+  BoardFilter,
   ServiceJob,
   SessionEndReason,
   UserPreferences,
@@ -14,6 +16,7 @@ import type {
   VehicleIntakeDraft,
 } from "../domain/models";
 import { demoOrganizationId } from "../domain/models";
+import { validateCellValue } from "../domain/boards";
 import { createSeedState, NOW } from "./seed";
 import { loadDemoState, saveDemoState, STORAGE_KEY } from "./storage";
 import { isLeadStage } from "../domain/leadStages";
@@ -51,6 +54,10 @@ export type DemoRepository = {
   updateServiceState(jobId: string, status: ServiceJob["status"]): void;
   markNotificationRead(notificationId: string): void;
   markAllNotificationsRead(notificationIds: readonly string[]): void;
+  addBoardItem(boardId: string, groupId: string, title: string): string;
+  setBoardCellValue(itemId: string, columnId: string, value: BoardCellValue): void;
+  moveBoardItem(itemId: string, groupId: string): void;
+  saveBoardView(viewId: string, patch: { title?: string; filters?: BoardFilter[]; groupByColumnId?: string }): void;
 };
 
 const clone = <T,>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
@@ -93,6 +100,7 @@ export function createDemoRepository(storage: Storage, now: () => string = () =>
   let activityNumber = maximumActivityNumber(state.activities);
   let auditActor = "Weelee Employee";
   let sessionNumber = maximumSuffix(state.sessions.map((session) => session.id));
+  let boardItemNumber = maximumSuffix(state.boardItems.map((item) => item.id));
   const listeners = new Set<(state: DemoState) => void>();
 
   const commit = (action: string, detail: string, mutate: (draft: DemoState) => void, tone: AuditActivity["tone"] = "info", targetType: AuditActivity["targetType"] = "system", targetId = "system") => {
@@ -295,6 +303,52 @@ export function createDemoRepository(storage: Storage, now: () => string = () =>
       const index = findIndex(draft.notifications, notificationId, "Notification");
       draft.notifications[index] = { ...draft.notifications[index], read: true };
     }, "neutral"),
+    addBoardItem: (boardId, groupId, title) => {
+      const trimmed = title.trim();
+      if (!trimmed) throw new Error("Board item needs a title.");
+      const group = state.boardGroups.find((candidate) => candidate.id === groupId);
+      if (!group || group.boardId !== boardId) throw new Error("Board group not found.");
+      const id = `board-item-${String(++boardItemNumber).padStart(3, "0")}`;
+      const position = state.boardItems.filter((item) => item.boardId === boardId).length + 1;
+      commit("Board item added", `${trimmed} was added to the board.`, (draft) => {
+        draft.boardItems.push({ id, boardId, groupId, title: trimmed, position, values: {}, createdAt: NOW, createdBy: auditActor, updatedAt: NOW, updatedBy: auditActor });
+      }, "positive");
+      return id;
+    },
+    setBoardCellValue: (itemId, columnId, value) => {
+      const item = state.boardItems.find((candidate) => candidate.id === itemId);
+      if (!item) throw new Error("Board item not found.");
+      const column = state.boardColumns.find((candidate) => candidate.id === columnId);
+      if (!column || column.boardId !== item.boardId) throw new Error("Board column not found.");
+      const issue = validateCellValue(state, column, value);
+      if (issue) throw new Error(issue.message);
+      commit("Board item updated", `${column.title} was updated on ${item.title}.`, (draft) => {
+        const index = findIndex(draft.boardItems, itemId, "Board item");
+        draft.boardItems[index] = { ...draft.boardItems[index], values: { ...draft.boardItems[index].values, [columnId]: clone(value) }, updatedAt: NOW, updatedBy: auditActor };
+      });
+    },
+    moveBoardItem: (itemId, groupId) => {
+      const item = state.boardItems.find((candidate) => candidate.id === itemId);
+      if (!item) throw new Error("Board item not found.");
+      const group = state.boardGroups.find((candidate) => candidate.id === groupId);
+      if (!group || group.boardId !== item.boardId) throw new Error("Board group not found.");
+      if (item.groupId === groupId) return;
+      commit("Board item moved", `${item.title} moved to ${group.title}.`, (draft) => {
+        const index = findIndex(draft.boardItems, itemId, "Board item");
+        draft.boardItems[index] = { ...draft.boardItems[index], groupId, updatedAt: NOW, updatedBy: auditActor };
+      });
+    },
+    saveBoardView: (viewId, patch) => {
+      const view = state.boardViews.find((candidate) => candidate.id === viewId);
+      if (!view) throw new Error("Board view not found.");
+      const columnIds = new Set(state.boardColumns.filter((column) => column.boardId === view.boardId).map((column) => column.id));
+      for (const filter of patch.filters ?? []) if (!columnIds.has(filter.columnId)) throw new Error("Board column not found.");
+      if (patch.groupByColumnId !== undefined && !columnIds.has(patch.groupByColumnId)) throw new Error("Board column not found.");
+      commit("Board view saved", `${patch.title ?? view.title} was saved.`, (draft) => {
+        const index = findIndex(draft.boardViews, viewId, "Board view");
+        draft.boardViews[index] = { ...draft.boardViews[index], ...clone(patch) };
+      }, "neutral");
+    },
     markAllNotificationsRead: (notificationIds) => {
       const visible = new Set(notificationIds);
       if (!state.notifications.some((notification) => visible.has(notification.id) && !notification.read)) return;

@@ -1,4 +1,5 @@
 import type { DemoState } from "../domain/models";
+import { validateCellValue } from "../domain/boards";
 
 export type SeedIntegrityIssue = {
   code: "duplicate-id" | "duplicate-value" | "dangling-reference";
@@ -14,7 +15,8 @@ type Identified = { id: string };
 export function validateDemoState(state: DemoState): SeedIntegrityIssue[] {
   const issues: SeedIntegrityIssue[] = [];
   const collections: Record<string, readonly Identified[]> = {
-    organizations: state.organizations, branches: state.branches, sessions: state.sessions, vehicles: state.vehicles, customers: state.customers, leads: state.leads, deals: state.deals,
+    organizations: state.organizations, branches: state.branches, sessions: state.sessions,
+    workspaces: state.workspaces, boards: state.boards, boardGroups: state.boardGroups, boardColumns: state.boardColumns, boardItems: state.boardItems, boardViews: state.boardViews, vehicles: state.vehicles, customers: state.customers, leads: state.leads, deals: state.deals,
     financeApplications: state.financeApplications, serviceJobs: state.serviceJobs, employees: state.employees,
     appointments: state.appointments, testDrives: state.testDrives, quotes: state.quotes, payments: state.payments,
     documents: state.documents, tasks: state.tasks, notifications: state.notifications, activities: state.activities,
@@ -72,7 +74,31 @@ export function validateDemoState(state: DemoState): SeedIntegrityIssue[] {
   for (const task of state.tasks) reference("tasks", task.id, "relatedId", task.relatedId, taskTargets[task.relatedType]);
   const activityTargets = { vehicle: "vehicles", customer: "customers", lead: "leads", deal: "deals", service: "serviceJobs", task: "tasks" } as const;
   for (const activity of state.activities) if (activity.targetType !== "system") reference("activities", activity.id, "targetId", activity.targetId, activityTargets[activity.targetType]);
-  const allRecordIds = new Set(Object.entries(ids).filter(([collection]) => collection !== "branches" && collection !== "organizations" && collection !== "sessions").flatMap(([, set]) => [...set]));
+  for (const workspace of state.workspaces) reference("workspaces", workspace.id, "organizationId", workspace.organizationId, "organizations");
+  for (const board of state.boards) reference("boards", board.id, "workspaceId", board.workspaceId, "workspaces");
+  for (const group of state.boardGroups) reference("boardGroups", group.id, "boardId", group.boardId, "boards");
+  for (const column of state.boardColumns) reference("boardColumns", column.id, "boardId", column.boardId, "boards");
+  for (const view of state.boardViews) {
+    reference("boardViews", view.id, "boardId", view.boardId, "boards");
+    if (view.groupByColumnId) reference("boardViews", view.id, "groupByColumnId", view.groupByColumnId, "boardColumns");
+    for (const filter of view.filters) reference("boardViews", view.id, "filters.columnId", filter.columnId, "boardColumns");
+  }
+  const columnsById = new Map(state.boardColumns.map((column) => [column.id, column]));
+  for (const item of state.boardItems) {
+    reference("boardItems", item.id, "boardId", item.boardId, "boards");
+    reference("boardItems", item.id, "groupId", item.groupId, "boardGroups");
+    reference("boardItems", item.id, "parentItemId", item.parentItemId, "boardItems");
+    const group = state.boardGroups.find((candidate) => candidate.id === item.groupId);
+    if (group && group.boardId !== item.boardId) issues.push({ code: "dangling-reference", collection: "boardItems", recordId: item.id, field: "groupId", targetId: item.groupId, message: `boardItems.${item.id}.groupId belongs to a different board.` });
+    for (const [columnId, value] of Object.entries(item.values)) {
+      const column = columnsById.get(columnId);
+      if (!column) { issues.push({ code: "dangling-reference", collection: "boardItems", recordId: item.id, field: "values", targetId: columnId, message: `boardItems.${item.id}.values points to missing boardColumns.${columnId}.` }); continue; }
+      if (column.boardId !== item.boardId) { issues.push({ code: "dangling-reference", collection: "boardItems", recordId: item.id, field: "values", targetId: columnId, message: `boardItems.${item.id}.values uses a column from another board.` }); continue; }
+      const issue = validateCellValue(state, column, value);
+      if (issue) issues.push({ code: "dangling-reference", collection: "boardItems", recordId: item.id, field: "values", targetId: columnId, message: issue.message });
+    }
+  }
+  const allRecordIds = new Set(Object.entries(ids).filter(([collection]) => collection !== "branches" && collection !== "organizations" && collection !== "sessions" && !collection.startsWith("board") && collection !== "workspaces").flatMap(([, set]) => [...set]));
   for (const notification of state.notifications) if (!allRecordIds.has(notification.relatedId)) issues.push({ code: "dangling-reference", collection: "notifications", recordId: notification.id, field: "relatedId", targetId: notification.relatedId, message: `notifications.${notification.id}.relatedId points to a missing record.` });
 
   return issues;

@@ -1,5 +1,5 @@
 import { branchIdForName, CURRENT_SCHEMA_VERSION, demoBranches, demoOrganizationId } from "../domain/models";
-import type { Branch, Organization, Appointment, AuditActivity, CrmDocument, Customer, Deal, DemoState, Employee, FinanceApplication, Lead, Payment, Quote, ServiceJob, TaskItem, TestDrive, Vehicle } from "../domain/models";
+import type { Board, BoardColumn, BoardGroup, BoardItem, BoardView, Workspace, Branch, Organization, Appointment, AuditActivity, CrmDocument, Customer, Deal, DemoState, Employee, FinanceApplication, Lead, Payment, Quote, ServiceJob, TaskItem, TestDrive, Vehicle } from "../domain/models";
 import { vehicleGalleries } from "../media/vehicleGalleries";
 
 const NOW = "2026-08-16T08:00:00+02:00";
@@ -111,11 +111,122 @@ const copyGallery = (vehicleId: string) => {
 const organizations: Organization[] = [{ id: demoOrganizationId, name: "MotorGroup South Africa", tradingName: "MotorCRM Demo Group" }];
 const branches: Branch[] = demoBranches.map((name) => ({ id: branchIdForName(demoOrganizationId, name), organizationId: demoOrganizationId, name }));
 
+const prepSteps = ["Mechanical inspection", "Roadworthy", "Detailing", "Photography", "Pricing", "Listing", "Sales approval"] as const;
+const prepVehicleIds = ["vehicle-01", "vehicle-02", "vehicle-03"] as const;
+
+const workspaces: Workspace[] = [
+  { id: "workspace-01", organizationId: demoOrganizationId, name: "Dealership Operations", description: "Cross-branch preparation and readiness work.", position: 1 },
+  { id: "workspace-02", organizationId: demoOrganizationId, name: "Sales Floor", description: "Pipeline follow-up and campaign work for the sales team.", position: 2 },
+];
+
+const boards: Board[] = [
+  { id: "board-01", workspaceId: "workspace-01", title: "Vehicle Preparation", description: "Every step a vehicle clears before it is listed.", position: 1 },
+  { id: "board-02", workspaceId: "workspace-02", title: "Lead Follow-up", description: "Outstanding customer follow-up owned by the sales floor.", position: 1 },
+];
+
+const boardGroups: BoardGroup[] = [
+  { id: "group-01", boardId: "board-01", title: "In progress", tone: "info", position: 1 },
+  { id: "group-02", boardId: "board-01", title: "Blocked", tone: "warning", position: 2 },
+  { id: "group-03", boardId: "board-01", title: "Ready to list", tone: "positive", position: 3 },
+  { id: "group-04", boardId: "board-02", title: "This week", tone: "info", position: 1 },
+  { id: "group-05", boardId: "board-02", title: "Later", tone: "neutral", position: 2 },
+];
+
+const statusOptions = [
+  { id: "status-not-started", label: "Not started", tone: "neutral" as const },
+  { id: "status-in-progress", label: "In progress", tone: "info" as const },
+  { id: "status-blocked", label: "Blocked", tone: "warning" as const },
+  { id: "status-done", label: "Done", tone: "positive" as const },
+];
+const priorityOptions = [
+  { id: "priority-low", label: "Low", tone: "neutral" as const },
+  { id: "priority-medium", label: "Medium", tone: "info" as const },
+  { id: "priority-high", label: "High", tone: "critical" as const },
+];
+
+const boardColumns: BoardColumn[] = [
+  { id: "column-01", boardId: "board-01", kind: "status", title: "Status", position: 1, options: statusOptions },
+  { id: "column-02", boardId: "board-01", kind: "person", title: "Owner", position: 2, options: [] },
+  { id: "column-03", boardId: "board-01", kind: "date", title: "Due", position: 3, options: [] },
+  { id: "column-04", boardId: "board-01", kind: "priority", title: "Priority", position: 4, options: priorityOptions },
+  { id: "column-05", boardId: "board-01", kind: "progress", title: "Progress", position: 5, options: [] },
+  { id: "column-06", boardId: "board-01", kind: "relation", title: "Vehicle", position: 6, options: [], relationTarget: "vehicle" },
+  { id: "column-07", boardId: "board-02", kind: "status", title: "Status", position: 1, options: statusOptions },
+  { id: "column-08", boardId: "board-02", kind: "person", title: "Owner", position: 2, options: [] },
+  { id: "column-09", boardId: "board-02", kind: "date", title: "Next contact", position: 3, options: [] },
+  { id: "column-10", boardId: "board-02", kind: "relation", title: "Lead", position: 4, options: [], relationTarget: "lead" },
+];
+
+const prepOwners = ["employee-08", "employee-09", "employee-10", "employee-11"];
+const boardItems: BoardItem[] = prepVehicleIds.flatMap((vehicleId, vehicleIndex) => prepSteps.map((step, stepIndex) => {
+  const index = vehicleIndex * prepSteps.length + stepIndex;
+  const status = statusOptions[index % 4];
+  const groupId = status.id === "status-blocked" ? "group-02" : status.id === "status-done" ? "group-03" : "group-01";
+  return {
+    id: `board-item-${String(index + 1).padStart(3, "0")}`,
+    boardId: "board-01",
+    groupId,
+    title: `${step} · ${vehicleId.replace("vehicle-", "Stock ")}`,
+    position: index + 1,
+    values: {
+      "column-01": { kind: "option" as const, optionId: status.id },
+      "column-02": { kind: "person" as const, employeeId: prepOwners[index % prepOwners.length] },
+      "column-03": { kind: "date" as const, date: at(17 + (index % 8), 9) },
+      "column-04": { kind: "option" as const, optionId: priorityOptions[index % 3].id },
+      "column-05": { kind: "number" as const, number: (index % 5) * 25 },
+      "column-06": { kind: "relation" as const, recordType: "vehicle" as const, recordId: vehicleId },
+    },
+    createdAt: at(14, 8),
+    createdBy: "Kabelo Molefe",
+    updatedAt: at(16, 8),
+    updatedBy: "Kabelo Molefe",
+  };
+}));
+
+const followUpItems: BoardItem[] = Array.from({ length: 6 }, (_, index) => ({
+  id: `board-item-1${String(index + 1).padStart(2, "0")}`,
+  boardId: "board-02",
+  groupId: index < 4 ? "group-04" : "group-05",
+  title: `Follow up lead-${String(index + 1).padStart(2, "0")}`,
+  position: index + 1,
+  values: {
+    "column-07": { kind: "option" as const, optionId: statusOptions[index % 4].id },
+    "column-08": { kind: "person" as const, employeeId: ["employee-04", "employee-05", "employee-06"][index % 3] },
+    "column-09": { kind: "date" as const, date: at(17 + (index % 5), 10) },
+    "column-10": { kind: "relation" as const, recordType: "lead" as const, recordId: `lead-${String(index + 1).padStart(2, "0")}` },
+  },
+  createdAt: at(14, 8),
+  createdBy: "Lindiwe Khumalo",
+  updatedAt: at(16, 8),
+  updatedBy: "Lindiwe Khumalo",
+}));
+
+const prepSubitems: BoardItem[] = [
+  { id: "board-item-201", boardId: "board-01", groupId: "group-01", parentItemId: "board-item-001", title: "Book workshop bay", position: 1, values: { "column-01": { kind: "option", optionId: "status-done" }, "column-02": { kind: "person", employeeId: "employee-08" } }, createdAt: at(14, 9), createdBy: "Kabelo Molefe", updatedAt: at(15, 9), updatedBy: "Kabelo Molefe" },
+  { id: "board-item-202", boardId: "board-01", groupId: "group-01", parentItemId: "board-item-001", title: "Order brake pads", position: 2, values: { "column-01": { kind: "option", optionId: "status-in-progress" }, "column-02": { kind: "person", employeeId: "employee-09" } }, createdAt: at(14, 9), createdBy: "Kabelo Molefe", updatedAt: at(15, 9), updatedBy: "Kabelo Molefe" },
+];
+
+const boardViews: BoardView[] = [
+  { id: "view-01", boardId: "board-01", kind: "table", title: "Main table", position: 1, filters: [] },
+  { id: "view-02", boardId: "board-01", kind: "kanban", title: "By status", position: 2, groupByColumnId: "column-01", filters: [] },
+  { id: "view-03", boardId: "board-01", kind: "calendar", title: "Due dates", position: 3, filters: [] },
+  { id: "view-04", boardId: "board-01", kind: "workload", title: "Team workload", position: 4, filters: [] },
+  { id: "view-05", boardId: "board-01", kind: "table", title: "Blocked only", position: 5, filters: [{ columnId: "column-01", operator: "is", value: "Blocked" }] },
+  { id: "view-06", boardId: "board-02", kind: "table", title: "Main table", position: 1, filters: [] },
+  { id: "view-07", boardId: "board-02", kind: "kanban", title: "By status", position: 2, groupByColumnId: "column-07", filters: [] },
+];
+
 export function createSeedState(): DemoState {
   const vehicles = vehicleRows.map((vehicle) => ({ ...vehicle, branchId: branchIdForName(demoOrganizationId, vehicle.branch), gallery: copyGallery(vehicle.id) }));
   const financedVehicleIndexes = [1, 0, ...Array.from({ length: 18 }, (_, index) => index + 2)];
   const financeDrafts = financedVehicleIndexes.map((vehicleIndex, index) => ({ vehicleId: `vehicle-${String(vehicleIndex + 1).padStart(2, "0")}`, vehiclePrice: vehicleRows[vehicleIndex].price, downPayment: index === 0 ? 350_000 : 150_000 + index * 10_000, termMonths: ([60, 48, 60, 72] as const)[index % 4], aprPercent: index === 0 ? 11.5 : 9.5 + (index % 6) * .75, tradeAllowance: index === 0 ? 280_000 : index % 3 ? 0 : 220_000, lienPayoff: index === 0 ? 90_000 : 0, serviceContract: index === 0 ? 32_000 : 18_000 + index * 500, gapInsurance: index === 0 ? 14_500 : 9_500 }));
-  return { schemaVersion: CURRENT_SCHEMA_VERSION, sessions: [], organizations: organizations.map((organization) => ({ ...organization })), branches: branches.map((branch) => ({ ...branch })), vehicles, customers: customers.map((customer) => ({ ...customer })), leads: leads.map((lead) => ({ ...lead })), deals: deals.map((deal) => ({ ...deal })), financeDrafts, financeApplications: financeApplications.map((application) => ({ ...application })), serviceJobs: serviceJobs.map((job) => ({ ...job })), employees: employees.map((employee) => ({ ...employee })), appointments: appointments.map((appointment) => ({ ...appointment })), testDrives: testDrives.map((testDrive) => ({ ...testDrive })), quotes: quotes.map((quote) => ({ ...quote })), payments: payments.map((payment) => ({ ...payment })), documents: documents.map((document) => ({ ...document })), tasks: tasks.map((task) => ({ ...task })), notifications: [
+  return { schemaVersion: CURRENT_SCHEMA_VERSION, sessions: [],
+    workspaces: workspaces.map((workspace) => ({ ...workspace })),
+    boards: boards.map((board) => ({ ...board })),
+    boardGroups: boardGroups.map((group) => ({ ...group })),
+    boardColumns: boardColumns.map((column) => ({ ...column, options: column.options.map((option) => ({ ...option })) })),
+    boardItems: [...boardItems, ...followUpItems, ...prepSubitems].map((item) => ({ ...item, values: { ...item.values } })),
+    boardViews: boardViews.map((view) => ({ ...view, filters: view.filters.map((filter) => ({ ...filter })) })), organizations: organizations.map((organization) => ({ ...organization })), branches: branches.map((branch) => ({ ...branch })), vehicles, customers: customers.map((customer) => ({ ...customer })), leads: leads.map((lead) => ({ ...lead })), deals: deals.map((deal) => ({ ...deal })), financeDrafts, financeApplications: financeApplications.map((application) => ({ ...application })), serviceJobs: serviceJobs.map((job) => ({ ...job })), employees: employees.map((employee) => ({ ...employee })), appointments: appointments.map((appointment) => ({ ...appointment })), testDrives: testDrives.map((testDrive) => ({ ...testDrive })), quotes: quotes.map((quote) => ({ ...quote })), payments: payments.map((payment) => ({ ...payment })), documents: documents.map((document) => ({ ...document })), tasks: tasks.map((task) => ({ ...task })), notifications: [
     { id: "notification-01", organizationId: demoOrganizationId, category: "deal", priority: "normal", title: "M4 CSL reserved", detail: "Deposit received from Jonas Kisting.", read: false, tone: "positive", createdAt: at(16, 8), relatedId: "deal-02" },
     { id: "notification-02", organizationId: demoOrganizationId, category: "service", priority: "normal", title: "Taycan parts delayed", detail: "Rear sensor delivery moved to Tuesday.", read: false, tone: "warning", createdAt: at(15, 14), relatedId: "service-02" },
     { id: "notification-03", organizationId: demoOrganizationId, category: "inventory", priority: "normal", title: "RS6 inbound", detail: "Carrier has checked in at the branch.", read: true, tone: "info", createdAt: at(15, 11), relatedId: "vehicle-03" },
