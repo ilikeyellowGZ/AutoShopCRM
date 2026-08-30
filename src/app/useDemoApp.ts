@@ -3,6 +3,8 @@ import type { DemoState, Tone } from "../domain/models";
 import type { DemoRepository } from "../repository/demoRepository";
 import type { NavigationTarget } from "./routes";
 
+export const targetFromPreferences = (preferences: DemoState["preferences"]): NavigationTarget => ({ page: preferences.activePage as NavigationTarget["page"], subview: preferences.activeSubview, recordType: preferences.activeRecordType, recordId: preferences.activeRecordId, contextId: preferences.activeContextId });
+
 export type OverlayTarget = { kind: "dialog" | "drawer" | "media"; id?: string } | null;
 export type AppToast = { id: string; title: string; detail?: string; tone?: Tone };
 
@@ -13,7 +15,7 @@ export function useDemoApp(repository: DemoRepository) {
   const subscribe = useCallback((notify: () => void) => repository.subscribe((next) => { snapshot.current = next; notify(); }), [repository]);
   const getSnapshot = useCallback(() => snapshot.current, []);
   const state = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
-  const target: NavigationTarget = { page: state.preferences.activePage as NavigationTarget["page"], subview: state.preferences.activeSubview, recordType: state.preferences.activeRecordType, recordId: state.preferences.activeRecordId, contextId: state.preferences.activeContextId };
+  const target: NavigationTarget = targetFromPreferences(state.preferences);
   const [activeOverlay, setActiveOverlay] = useState<OverlayTarget>(null);
   const [toasts, setToasts] = useState<AppToast[]>([]);
   const [searchOpen, setSearchOpen] = useState(false);

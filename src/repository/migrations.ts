@@ -1,4 +1,14 @@
 import {
+  boardColumnKinds,
+  chatChannelKinds,
+  commentEntityTypes,
+  boardFilterOperators,
+  boardViewKinds,
+  branchIdForName,
+  CURRENT_SCHEMA_VERSION,
+  demoBranches,
+  notificationCategories,
+  demoOrganizationId,
   vehicleBodyTypes,
   vehicleFuels,
   vehicleTransmissions,
@@ -8,6 +18,7 @@ import {
   type ViewPreferences,
 } from "../domain/models";
 import { navigationGroups, primaryNavigation } from "../app/routes";
+import { DEMO_NOW } from "../domain/demoClock";
 import { createSeedState } from "./seed";
 
 type RecordValue = Record<string, unknown>;
@@ -70,7 +81,7 @@ const isGallery = (value: unknown) => {
 
 const vehicleShape = {
   id: nonEmptyString, stockId: nonEmptyString, vin: isVin, year: number, make: nonEmptyString, model: nonEmptyString, derivative: nonEmptyString,
-  price: number, purchasePrice: number, mileageKm: number, exterior: nonEmptyString, branch: nonEmptyString, location: nonEmptyString,
+  price: number, purchasePrice: number, mileageKm: number, exterior: nonEmptyString, branch: nonEmptyString, branchId: nonEmptyString, location: nonEmptyString,
   status: oneOf(vehicleStatuses), daysInStock: number, bodyType: oneOf(vehicleBodyTypes), fuel: oneOf(vehicleFuels),
   transmission: oneOf(vehicleTransmissions), engine: nonEmptyString, registration: nonEmptyString, gallery: isGallery,
 };
@@ -94,18 +105,51 @@ const isTask = (value: unknown) => hasShape(value, {
   id: nonEmptyString, title: nonEmptyString, detail: nonEmptyString, relatedType: oneOf(relatedTypes), relatedId: nonEmptyString, dueAt: nonEmptyString, status: oneOf(taskStatuses), tone: oneOf(tones),
 });
 const isNotification = (value: unknown) => hasShape(value, {
-  id: nonEmptyString, title: nonEmptyString, detail: nonEmptyString, read: boolean, tone: oneOf(tones), relatedId: nonEmptyString,
+  id: nonEmptyString, organizationId: nonEmptyString, category: oneOf(notificationCategories), priority: oneOf(["normal", "high"]), createdAt: nonEmptyString, commentId: optional(nonEmptyString), recipientEmployeeId: optional(nonEmptyString), title: nonEmptyString, detail: nonEmptyString, read: boolean, tone: oneOf(tones), relatedId: nonEmptyString,
 });
+const isSession = (value: unknown) => hasShape(value, { id: nonEmptyString, organizationId: nonEmptyString, branchId: nonEmptyString, accountId: nonEmptyString, actor: nonEmptyString, startedAt: nonEmptyString, lastActivityAt: nonEmptyString, endedAt: optional(nonEmptyString), status: oneOf(["active", "ended"]), userAgent: string, endReason: optional(oneOf(["signed-out", "replaced"])) });
 const isActivity = (value: unknown) => hasShape(value, {
-  id: nonEmptyString, action: nonEmptyString, detail: nonEmptyString, actor: nonEmptyString, occurredAt: nonEmptyString, tone: oneOf(tones), targetType: oneOf(["vehicle", "customer", "lead", "deal", "service", "task", "system"]), targetId: nonEmptyString,
+  id: nonEmptyString, organizationId: nonEmptyString, branchId: optional(nonEmptyString), action: nonEmptyString, detail: nonEmptyString, actor: nonEmptyString, occurredAt: nonEmptyString, tone: oneOf(tones), targetType: oneOf(["vehicle", "customer", "lead", "deal", "service", "task", "system"]), targetId: nonEmptyString,
 });
-const isEmployee = (value: unknown) => hasShape(value, { id: nonEmptyString, accountId: optional(nonEmptyString), name: nonEmptyString, email: nonEmptyString, title: nonEmptyString, department: oneOf(employeeDepartments), branch: nonEmptyString, managerId: optional(nonEmptyString), status: oneOf(["Active", "Leave"]) });
-const isAppointment = (value: unknown) => hasShape(value, { id: nonEmptyString, customerId: nonEmptyString, leadId: nonEmptyString, vehicleId: nonEmptyString, assignedTo: nonEmptyString, branch: nonEmptyString, scheduledAt: nonEmptyString, purpose: oneOf(appointmentPurposes), status: oneOf(appointmentStatuses) });
+const isEmployee = (value: unknown) => hasShape(value, { id: nonEmptyString, accountId: optional(nonEmptyString), name: nonEmptyString, email: nonEmptyString, title: nonEmptyString, department: oneOf(employeeDepartments), branch: nonEmptyString, branchId: nonEmptyString, managerId: optional(nonEmptyString), status: oneOf(["Active", "Leave"]) });
+const isAppointment = (value: unknown) => hasShape(value, { id: nonEmptyString, customerId: nonEmptyString, leadId: nonEmptyString, vehicleId: nonEmptyString, assignedTo: nonEmptyString, branch: nonEmptyString, branchId: nonEmptyString, scheduledAt: nonEmptyString, purpose: oneOf(appointmentPurposes), status: oneOf(appointmentStatuses) });
 const isTestDrive = (value: unknown) => hasShape(value, { id: nonEmptyString, appointmentId: nonEmptyString, customerId: nonEmptyString, leadId: nonEmptyString, vehicleId: nonEmptyString, host: nonEmptyString, scheduledAt: nonEmptyString, status: oneOf(testDriveStatuses), outcome: string });
 const isQuote = (value: unknown) => hasShape(value, { id: nonEmptyString, customerId: nonEmptyString, leadId: nonEmptyString, vehicleId: nonEmptyString, createdBy: nonEmptyString, amount: number, status: oneOf(quoteStatuses), createdAt: nonEmptyString, expiresAt: nonEmptyString });
 const isPayment = (value: unknown) => hasShape(value, { id: nonEmptyString, dealId: nonEmptyString, customerId: nonEmptyString, amount: number, kind: oneOf(paymentKinds), status: oneOf(paymentStatuses), paidAt: nonEmptyString });
 const isFinanceApplication = (value: unknown) => hasShape(value, { id: nonEmptyString, dealId: nonEmptyString, customerId: nonEmptyString, vehicleId: nonEmptyString, owner: nonEmptyString, requestedAmount: number, status: oneOf(applicationStatuses), updatedAt: nonEmptyString });
 const isDocument = (value: unknown) => hasShape(value, { id: nonEmptyString, customerId: optional(nonEmptyString), leadId: optional(nonEmptyString), dealId: optional(nonEmptyString), vehicleId: optional(nonEmptyString), name: nonEmptyString, category: oneOf(documentCategories), status: oneOf(documentStatuses), updatedAt: nonEmptyString });
+
+const isOrganization = (value: unknown) => hasShape(value, { id: nonEmptyString, name: nonEmptyString, tradingName: nonEmptyString });
+const isBranch = (value: unknown) => hasShape(value, { id: nonEmptyString, organizationId: nonEmptyString, name: nonEmptyString });
+
+const recordTypes = ["vehicle", "customer", "lead", "deal", "service", "task"] as const;
+const isBoardOption = (value: unknown) => hasShape(value, { id: nonEmptyString, label: nonEmptyString, tone: oneOf(tones) });
+const isCellValue = (value: unknown): boolean => {
+  if (!isRecord(value)) return false;
+  switch (value.kind) {
+    case "text": return string(value.text);
+    case "number": return number(value.number);
+    case "option": return nonEmptyString(value.optionId);
+    case "options": return Array.isArray(value.optionIds) && value.optionIds.every(nonEmptyString);
+    case "date": return nonEmptyString(value.date);
+    case "checkbox": return boolean(value.checked);
+    case "person": return nonEmptyString(value.employeeId);
+    case "relation": return oneOf(recordTypes)(value.recordType) && nonEmptyString(value.recordId);
+    default: return false;
+  }
+};
+const isReaction = (value: unknown) => hasShape(value, { emoji: nonEmptyString, employeeIds: (ids) => Array.isArray(ids) && ids.every(nonEmptyString) });
+const isComment = (value: unknown) => hasShape(value, { id: nonEmptyString, organizationId: nonEmptyString, entityType: oneOf(commentEntityTypes), entityId: nonEmptyString, columnId: optional(nonEmptyString), parentCommentId: optional(nonEmptyString), authorEmployeeId: nonEmptyString, body: nonEmptyString, mentions: (ids) => Array.isArray(ids) && ids.every(nonEmptyString), createdAt: nonEmptyString, editedAt: optional(nonEmptyString), resolvedAt: optional(nonEmptyString), resolvedByEmployeeId: optional(nonEmptyString), pinned: boolean, reactions: (items) => Array.isArray(items) && items.every(isReaction) });
+const isChatChannel = (value: unknown) => hasShape(value, { id: nonEmptyString, organizationId: nonEmptyString, kind: oneOf(chatChannelKinds), name: nonEmptyString, topic: string, memberEmployeeIds: (ids) => Array.isArray(ids) && ids.every(nonEmptyString), createdAt: nonEmptyString });
+const isChatMessage = (value: unknown) => hasShape(value, { id: nonEmptyString, channelId: nonEmptyString, authorEmployeeId: nonEmptyString, body: nonEmptyString, mentions: (ids) => Array.isArray(ids) && ids.every(nonEmptyString), createdAt: nonEmptyString, editedAt: optional(nonEmptyString) });
+const isChatRead = (value: unknown) => hasShape(value, { channelId: nonEmptyString, employeeId: nonEmptyString, lastReadMessageId: nonEmptyString, readAt: nonEmptyString });
+const isWorkspace = (value: unknown) => hasShape(value, { id: nonEmptyString, organizationId: nonEmptyString, branchId: optional(nonEmptyString), name: nonEmptyString, description: string, position: number });
+const isBoard = (value: unknown) => hasShape(value, { id: nonEmptyString, workspaceId: nonEmptyString, title: nonEmptyString, description: string, position: number });
+const isBoardGroup = (value: unknown) => hasShape(value, { id: nonEmptyString, boardId: nonEmptyString, title: nonEmptyString, tone: oneOf(tones), position: number });
+const isBoardColumn = (value: unknown) => hasShape(value, { id: nonEmptyString, boardId: nonEmptyString, kind: oneOf(boardColumnKinds), title: nonEmptyString, position: number, options: (options) => Array.isArray(options) && options.every(isBoardOption), relationTarget: optional(oneOf(recordTypes)) });
+const isBoardItem = (value: unknown) => hasShape(value, { id: nonEmptyString, boardId: nonEmptyString, groupId: nonEmptyString, parentItemId: optional(nonEmptyString), title: nonEmptyString, position: number, values: (values) => isRecord(values) && Object.values(values).every(isCellValue), createdAt: nonEmptyString, createdBy: nonEmptyString, updatedAt: nonEmptyString, updatedBy: nonEmptyString });
+const isBoardFilter = (value: unknown) => hasShape(value, { columnId: nonEmptyString, operator: oneOf(boardFilterOperators), value: string });
+const isBoardView = (value: unknown) => hasShape(value, { id: nonEmptyString, boardId: nonEmptyString, kind: oneOf(boardViewKinds), title: nonEmptyString, position: number, groupByColumnId: optional(nonEmptyString), filters: (filters) => Array.isArray(filters) && filters.every(isBoardFilter) });
 
 const validString = (value: unknown, fallback: string) => typeof value === "string" ? value : fallback;
 const validChoice = <T extends string>(value: unknown, choices: readonly T[], fallback: T): T => choices.includes(value as T) ? value as T : fallback;
@@ -157,6 +201,8 @@ function normalizeRoute(state: RecordValue, preferences: RecordValue): RecordVal
     if (page === "finance" && subview === "deal-finance" && typeof contextId === "string" && recordExists(state, "vehicle", contextId)) return { activePage: page, activeSubview: subview, activeContextId: contextId };
     return fallback;
   }
+  if (page === "work" && Array.isArray(state.boards) && (state.boards as unknown[]).some((board) => isRecord(board) && board.id === subview)) return { activePage: page, activeSubview: subview };
+  if (page === "chat" && Array.isArray(state.chatChannels) && (state.chatChannels as unknown[]).some((channel) => isRecord(channel) && channel.id === subview)) return { activePage: page, activeSubview: subview };
   if (page === "inventory" && recordExists(state, "vehicle", subview)) return { activePage: page, activeSubview: subview, activeRecordType: "vehicle", activeRecordId: subview };
   if (page === "customers" && recordExists(state, "customer", subview)) return { activePage: page, activeSubview: subview, activeRecordType: "customer", activeRecordId: subview };
   return staticRoutes.has(`${page}:${subview}`) ? { activePage: page, activeSubview: subview } : fallback;
@@ -165,7 +211,7 @@ function normalizeRoute(state: RecordValue, preferences: RecordValue): RecordVal
 const partial = (shape: Record<string, Validator>): Validator => (value) => isRecord(value) && Object.entries(value).every(([key, field]) => Boolean(shape[key]) && shape[key](field));
 const vehicleIntakeDraftShape = {
   id: string, stockId: string, vin: string, year: number, make: string, model: string, derivative: string,
-  price: number, purchasePrice: number, mileageKm: number, exterior: string, branch: string, location: string,
+  price: number, purchasePrice: number, mileageKm: number, exterior: string, branch: string, branchId: string, location: string,
   status: oneOf(vehicleStatuses), daysInStock: number, bodyType: oneOf(vehicleBodyTypes), fuel: oneOf(vehicleFuels),
   transmission: oneOf(vehicleTransmissions), engine: string, registration: string, gallery: isGallery,
 };
@@ -178,10 +224,38 @@ const isDrafts = (value: unknown) => isRecord(value)
   && isRecord(value.serviceNotes) && Object.values(value.serviceNotes).every(string);
 
 export function isCompatibleDemoState(value: unknown): value is DemoState {
-  if (!isRecord(value) || value.schemaVersion !== 2 || !hasShape(value.preferences, { branch: nonEmptyString, density: oneOf(["comfortable", "compact"]), activePage: nonEmptyString, activeSubview: nonEmptyString, viewPreferences: (item) => JSON.stringify(normalizeViewPreferences(item)) === JSON.stringify(item) }) || !isDrafts(value.drafts)) return false;
-  const collections = ["vehicles", "customers", "leads", "deals", "financeDrafts", "financeApplications", "serviceJobs", "employees", "appointments", "testDrives", "quotes", "payments", "documents", "tasks", "notifications", "activities"] as const;
+  if (!isRecord(value) || value.schemaVersion !== CURRENT_SCHEMA_VERSION || !hasShape(value.preferences, { branch: nonEmptyString, density: oneOf(["comfortable", "compact"]), activePage: nonEmptyString, activeSubview: nonEmptyString, viewPreferences: (item) => JSON.stringify(normalizeViewPreferences(item)) === JSON.stringify(item) }) || !isDrafts(value.drafts)) return false;
+  const collections = ["organizations", "branches", "sessions", "comments", "chatChannels", "chatMessages", "chatReads", "workspaces", "boards", "boardGroups", "boardColumns", "boardItems", "boardViews", "vehicles", "customers", "leads", "deals", "financeDrafts", "financeApplications", "serviceJobs", "employees", "appointments", "testDrives", "quotes", "payments", "documents", "tasks", "notifications", "activities"] as const;
   if (!collections.every((key) => Array.isArray(value[key]))) return false;
 
+  const chatChannels = value.chatChannels as unknown[];
+  const chatMessages = value.chatMessages as unknown[];
+  const chatReads = value.chatReads as unknown[];
+  if (!chatChannels.every(isChatChannel) || !chatMessages.every(isChatMessage) || !chatReads.every(isChatRead)) return false;
+  const chatChannelIds = new Set(chatChannels.map((channel) => (channel as RecordValue).id as string));
+  const chatMessageIds = new Set(chatMessages.map((message) => (message as RecordValue).id as string));
+  if (!chatMessages.every((message) => chatChannelIds.has((message as RecordValue).channelId as string))) return false;
+  if (!chatReads.every((read) => chatChannelIds.has((read as RecordValue).channelId as string) && chatMessageIds.has((read as RecordValue).lastReadMessageId as string))) return false;
+  const comments = value.comments as unknown[];
+  if (!comments.every(isComment)) return false;
+  const commentIds = new Set(comments.map((comment) => (comment as RecordValue).id as string));
+  if (!comments.every((comment) => { const record = comment as RecordValue; return record.parentCommentId === undefined || commentIds.has(record.parentCommentId as string); })) return false;
+  const workspaces = value.workspaces as unknown[];
+  const boards = value.boards as unknown[];
+  const boardGroups = value.boardGroups as unknown[];
+  const boardColumns = value.boardColumns as unknown[];
+  const boardItems = value.boardItems as unknown[];
+  const boardViews = value.boardViews as unknown[];
+  if (!workspaces.every(isWorkspace) || !boards.every(isBoard) || !boardGroups.every(isBoardGroup) || !boardColumns.every(isBoardColumn) || !boardItems.every(isBoardItem) || !boardViews.every(isBoardView)) return false;
+  const sessions = value.sessions as unknown[];
+  if (!sessions.every(isSession)) return false;
+  const organizations = value.organizations as unknown[];
+  const branches = value.branches as unknown[];
+  if (organizations.length === 0 || branches.length === 0 || !organizations.every(isOrganization) || !branches.every(isBranch)) return false;
+  const organizationIds = new Set(organizations.map((organization) => (organization as RecordValue).id as string));
+  if (!branches.every((branch) => organizationIds.has((branch as RecordValue).organizationId as string))) return false;
+  const branchIds = new Set(branches.map((branch) => (branch as RecordValue).id as string));
+  if (branchIds.size !== branches.length) return false;
   const vehicles = value.vehicles as unknown[];
   const customers = value.customers as unknown[];
   const leads = value.leads as unknown[];
@@ -214,7 +288,38 @@ export function isCompatibleDemoState(value: unknown): value is DemoState {
     return idsByType[task.relatedType as keyof typeof idsByType].has(task.relatedId as string);
   };
   const relatedIds = new Set([...vehicleIds, ...leadIds, ...dealIds, ...serviceIds]);
-  return customers.every((customer) => vehicleIds.has((customer as RecordValue).vehicleInterestId as string))
+  const workspaceIds = new Set(workspaces.map((workspace) => (workspace as RecordValue).id as string));
+  const boardIds = new Set(boards.map((board) => (board as RecordValue).id as string));
+  const boardGroupIds = new Set(boardGroups.map((group) => (group as RecordValue).id as string));
+  const boardItemIds = new Set(boardItems.map((item) => (item as RecordValue).id as string));
+  const columnBoard = new Map(boardColumns.map((column) => [(column as RecordValue).id as string, (column as RecordValue).boardId as string]));
+  const boardTenancyHolds = workspaces.every((workspace) => organizationIds.has((workspace as RecordValue).organizationId as string))
+    && boards.every((board) => workspaceIds.has((board as RecordValue).workspaceId as string))
+    && boardGroups.every((group) => boardIds.has((group as RecordValue).boardId as string))
+    && boardColumns.every((column) => boardIds.has((column as RecordValue).boardId as string))
+    && boardViews.every((view) => boardIds.has((view as RecordValue).boardId as string))
+    && boardItems.every((item) => {
+      const record = item as RecordValue;
+      if (!boardIds.has(record.boardId as string) || !boardGroupIds.has(record.groupId as string)) return false;
+      if (record.parentItemId !== undefined && !boardItemIds.has(record.parentItemId as string)) return false;
+      const group = boardGroups.find((candidate) => (candidate as RecordValue).id === record.groupId);
+      if (!group || (group as RecordValue).boardId !== record.boardId) return false;
+      return Object.keys(record.values as RecordValue).every((columnId) => columnBoard.get(columnId) === record.boardId);
+    })
+    && boardViews.every((view) => {
+      const record = view as RecordValue;
+      if (record.groupByColumnId !== undefined && columnBoard.get(record.groupByColumnId as string) !== record.boardId) return false;
+      return (record.filters as RecordValue[]).every((filter) => columnBoard.get(filter.columnId as string) === record.boardId);
+    });
+  if (!boardTenancyHolds) return false;
+  if (!comments.every((comment) => organizationIds.has((comment as RecordValue).organizationId as string))) return false;
+  return notifications.every((notification) => organizationIds.has((notification as RecordValue).organizationId as string) && ((notification as RecordValue).commentId === undefined || commentIds.has((notification as RecordValue).commentId as string)))
+    && sessions.every((session) => organizationIds.has((session as RecordValue).organizationId as string) && branchIds.has((session as RecordValue).branchId as string))
+    && activities.every((activity) => organizationIds.has((activity as RecordValue).organizationId as string))
+    && vehicles.every((vehicle) => branchIds.has((vehicle as RecordValue).branchId as string))
+    && employees.every((employee) => branchIds.has((employee as RecordValue).branchId as string))
+    && appointments.every((appointment) => branchIds.has((appointment as RecordValue).branchId as string))
+    && customers.every((customer) => vehicleIds.has((customer as RecordValue).vehicleInterestId as string))
     && leads.every((lead) => linked(lead as RecordValue))
     && deals.every((deal) => linked(deal as RecordValue))
     && financeDrafts.every((draft) => vehicleIds.has((draft as RecordValue).vehicleId as string))
@@ -310,9 +415,102 @@ function normalizeConnectedDataset(value: RecordValue): RecordValue {
   return normalized;
 }
 
+function addOrganizationTenancy(value: RecordValue): RecordValue {
+  const fallbackBranch = "Johannesburg North";
+  const branchName = (name: unknown) => legacyBranch(name, fallbackBranch);
+  const rowsOf = (key: string) => Array.isArray(value[key]) ? value[key] as unknown[] : [];
+  const tenantKeys = ["vehicles", "employees", "appointments"] as const;
+
+  const names = new Set<string>(demoBranches);
+  for (const key of tenantKeys) for (const row of rowsOf(key)) if (isRecord(row)) names.add(branchName(row.branch));
+  const preferences = isRecord(value.preferences) ? value.preferences : {};
+  const preferredBranch = branchName(preferences.branch);
+  names.add(preferredBranch);
+
+  const organizations = [{ id: demoOrganizationId, name: "MotorGroup South Africa", tradingName: "MotorCRM Demo Group" }];
+  const byId = new Map<string, { id: string; organizationId: string; name: string }>();
+  for (const name of names) {
+    const id = branchIdForName(demoOrganizationId, name);
+    if (!byId.has(id)) byId.set(id, { id, organizationId: demoOrganizationId, name });
+  }
+
+  const scoped: RecordValue = {};
+  for (const key of tenantKeys) {
+    scoped[key] = rowsOf(key).map((row) => {
+      if (!isRecord(row)) return row;
+      const name = branchName(row.branch);
+      return { ...row, branch: name, branchId: branchIdForName(demoOrganizationId, name) };
+    });
+  }
+
+  return { ...value, ...scoped, schemaVersion: 3, organizations, branches: [...byId.values()], preferences: { ...preferences, branch: preferredBranch } };
+}
+
+function addSessionsAndAuditTenancy(value: RecordValue): RecordValue {
+  const activities = (Array.isArray(value.activities) ? value.activities as unknown[] : []).map((activity) => {
+    if (!isRecord(activity)) return activity;
+    const organizationId = typeof activity.organizationId === "string" && activity.organizationId.length > 0 ? activity.organizationId : demoOrganizationId;
+    return { ...activity, organizationId };
+  });
+  return { ...value, schemaVersion: 4, activities, sessions: Array.isArray(value.sessions) ? value.sessions : [] };
+}
+
+const notificationCategoryFor = (relatedId: unknown): string => {
+  const prefix = typeof relatedId === "string" ? relatedId.split("-")[0] : "";
+  const known: Record<string, string> = { deal: "deal", lead: "lead", customer: "customer", vehicle: "inventory", service: "service", task: "task" };
+  return known[prefix] ?? "system";
+};
+
+function addNotificationCentre(value: RecordValue): RecordValue {
+  const notifications = (Array.isArray(value.notifications) ? value.notifications as unknown[] : []).map((notification) => {
+    if (!isRecord(notification)) return notification;
+    const category = oneOf(notificationCategories)(notification.category) ? notification.category : notificationCategoryFor(notification.relatedId);
+    const priority = notification.priority === "high" || notification.tone === "critical" ? "high" : "normal";
+    const createdAt = typeof notification.createdAt === "string" && notification.createdAt.length > 0 ? notification.createdAt : DEMO_NOW;
+    return { ...notification, organizationId: typeof notification.organizationId === "string" && notification.organizationId.length > 0 ? notification.organizationId : demoOrganizationId, category, priority, createdAt };
+  });
+  return { ...value, schemaVersion: 5, notifications };
+}
+
+/**
+ * Collections that reference each other are restored as a set. Filling one of them from the demo seed
+ * while keeping the rest of a stored payload would leave references pointing at records that never
+ * existed, and the whole state would then fail validation and be thrown away.
+ */
+function restoreSet(value: RecordValue, keys: readonly string[], schemaVersion: number): RecordValue {
+  const restored: RecordValue = {};
+  if (keys.some((key) => Array.isArray(value[key]) && (value[key] as unknown[]).length > 0)) {
+    for (const key of keys) restored[key] = Array.isArray(value[key]) ? value[key] : [];
+  } else {
+    const seed = createSeedState() as unknown as RecordValue;
+    for (const key of keys) restored[key] = seed[key];
+  }
+  return { ...value, ...restored, schemaVersion };
+}
+
+function addWorkOs(value: RecordValue): RecordValue {
+  return restoreSet(value, ["workspaces", "boards", "boardGroups", "boardColumns", "boardItems", "boardViews"], 6);
+}
+
+function addComments(value: RecordValue): RecordValue {
+  const seed = createSeedState() as unknown as RecordValue;
+  const comments = Array.isArray(value.comments) && (value.comments as unknown[]).length > 0 ? value.comments : seed.comments;
+  return { ...value, comments, schemaVersion: 7 };
+}
+
+function addStaffChat(value: RecordValue): RecordValue {
+  return restoreSet(value, ["chatChannels", "chatMessages", "chatReads"], 8);
+}
+
 export function migrateDemoState(value: unknown): DemoState | null {
   if (isRecord(value) && value.schemaVersion === 1) value = migrateVehicleRoster(value);
-  if (isRecord(value) && value.schemaVersion === 2 && isRecord(value.preferences)) {
+  if (isRecord(value) && value.schemaVersion === 2) value = addOrganizationTenancy(value);
+  if (isRecord(value) && value.schemaVersion === 3) value = addSessionsAndAuditTenancy(value);
+  if (isRecord(value) && value.schemaVersion === 4) value = addNotificationCentre(value);
+  if (isRecord(value) && value.schemaVersion === 5) value = addWorkOs(value);
+  if (isRecord(value) && value.schemaVersion === 6) value = addComments(value);
+  if (isRecord(value) && value.schemaVersion === 7) value = addStaffChat(value);
+  if (isRecord(value) && value.schemaVersion === CURRENT_SCHEMA_VERSION && isRecord(value.preferences)) {
     const normalized = normalizeConnectedDataset(normalizeDemoAssignees(value));
     const preferences = isRecord(normalized.preferences) ? normalized.preferences : value.preferences;
     const { activePage: _page, activeSubview: _subview, activeRecordType: _type, activeRecordId: _id, activeContextId: _context, ...stablePreferences } = preferences;

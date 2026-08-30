@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { CURRENT_SCHEMA_VERSION } from "../domain/models";
 import { createSeedState } from "./seed";
 import { migrateDemoState } from "./migrations";
 import { LEGACY_STORAGE_KEY, loadDemoState, STORAGE_KEY } from "./storage";
@@ -33,20 +34,20 @@ describe("preference migrations", () => {
 
     const migrated = migrateDemoState(state)!;
 
-    expect(migrated.schemaVersion).toBe(2);
+    expect(migrated.schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
     expect(migrated.vehicles).toHaveLength(30);
     expect(migrated.vehicles[0]).toMatchObject({ price: 4_300_000, bodyType: "Coupe", branch: "Johannesburg North" });
     expect(migrated.vehicles.every((vehicle) => vehicle.engine && vehicle.registration)).toBe(true);
   });
 
-  it("discovers the legacy storage key and persists its migration under v2", () => {
+  it("discovers the legacy storage key and persists its migration under the current schema", () => {
     const storage = memoryStorage();
     const state = stateRecord();
     state.schemaVersion = 1;
     storage.setItem(LEGACY_STORAGE_KEY, JSON.stringify(state));
 
-    expect(loadDemoState(storage).schemaVersion).toBe(2);
-    expect(JSON.parse(storage.getItem(STORAGE_KEY)!).schemaVersion).toBe(2);
+    expect(loadDemoState(storage).schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
+    expect(JSON.parse(storage.getItem(STORAGE_KEY)!).schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
   });
 
   it("does not assign seeded specifications to a legacy user vehicle with a colliding ID", () => {
@@ -196,5 +197,110 @@ describe("preference migrations", () => {
     expect(migrated.appointments).toHaveLength(24);
     expect(migrated.documents).toHaveLength(30);
     expect(migrated.activities).toHaveLength(40);
+  });
+it("rejects a persisted state whose records point at a missing branch", () => {
+    const state = createSeedState();
+    const broken = { ...state, vehicles: state.vehicles.map((vehicle) => ({ ...vehicle, branchId: "branch-does-not-exist" })) };
+
+    expect(migrateDemoState(broken)).toBeNull();
+  });
+
+  it("gives every migrated legacy record a branch that resolves inside the organization", () => {
+    const state = createSeedState() as unknown as UnknownRecord;
+    state.schemaVersion = 2;
+    for (const key of ["vehicles", "employees", "appointments"] as const) {
+      state[key] = (state[key] as UnknownRecord[]).map(({ branchId: _branchId, ...rest }) => rest);
+    }
+
+    const migrated = migrateDemoState(state);
+
+    expect(migrated).not.toBeNull();
+    const branchIds = new Set(migrated!.branches.map((branch) => branch.id));
+    expect(migrated!.branches.every((branch) => branch.organizationId === migrated!.organizations[0].id)).toBe(true);
+    expect(migrated!.vehicles.every((vehicle) => branchIds.has(vehicle.branchId))).toBe(true);
+    expect(migrated!.employees.every((employee) => branchIds.has(employee.branchId))).toBe(true);
+    expect(migrated!.appointments.every((appointment) => branchIds.has(appointment.branchId))).toBe(true);
+  });
+});
+
+describe("stepwise schema upgrades", () => {
+  const strip = (keys: readonly string[]) => {
+    const state = createSeedState() as unknown as UnknownRecord;
+    for (const key of keys) delete state[key];
+    return state;
+  };
+
+  it("carries a v4 payload through every later step instead of discarding it", () => {
+    const state = strip(["chatChannels", "chatMessages", "chatReads", "workspaces", "boards", "boardGroups", "boardColumns", "boardItems", "boardViews", "comments"]);
+    state.schemaVersion = 4;
+    state.notifications = (state.notifications as UnknownRecord[]).map(({ category: _category, priority: _priority, createdAt: _createdAt, ...rest }) => rest);
+
+    const migrated = migrateDemoState(state);
+
+    expect(migrated).not.toBeNull();
+    expect(migrated!.schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
+    expect(migrated!.boards.length).toBeGreaterThan(0);
+    expect(migrated!.comments.length).toBeGreaterThan(0);
+    expect(migrated!.notifications.every((notification) => notification.category !== undefined)).toBe(true);
+  });
+
+  it("carries a v5 payload through the work os and comment steps", () => {
+    const state = strip(["chatChannels", "chatMessages", "chatReads", "workspaces", "boards", "boardGroups", "boardColumns", "boardItems", "boardViews", "comments"]);
+    state.schemaVersion = 5;
+
+    const migrated = migrateDemoState(state);
+
+    expect(migrated).not.toBeNull();
+    expect(migrated!.boardItems.length).toBeGreaterThan(0);
+    expect(migrated!.comments.length).toBeGreaterThan(0);
+  });
+
+  it("carries a v6 payload through the comment step", () => {
+    const state = strip(["chatChannels", "chatMessages", "chatReads", "comments"]);
+    state.schemaVersion = 6;
+
+    const migrated = migrateDemoState(state);
+
+    expect(migrated).not.toBeNull();
+    expect(migrated!.comments.length).toBeGreaterThan(0);
+    expect(migrated!.chatChannels.length).toBeGreaterThan(0);
+  });
+
+  it("carries a v7 payload through the staff chat step", () => {
+    const state = strip(["chatChannels", "chatMessages", "chatReads"]);
+    state.schemaVersion = 7;
+
+    const migrated = migrateDemoState(state);
+
+    expect(migrated).not.toBeNull();
+    expect(migrated!.schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
+    expect(migrated!.chatChannels.length).toBeGreaterThan(0);
+    expect(migrated!.chatMessages.length).toBeGreaterThan(0);
+  });
+
+  it("keeps a stored board set intact instead of mixing demo records into it", () => {
+    const state = createSeedState() as unknown as UnknownRecord;
+    state.schemaVersion = 5;
+    state.boardItems = [];
+    state.boardViews = [];
+
+    const migrated = migrateDemoState(state);
+
+    expect(migrated).not.toBeNull();
+    expect(migrated!.boards.length).toBeGreaterThan(0);
+    expect(migrated!.boardItems).toEqual([]);
+    expect(migrated!.boardViews).toEqual([]);
+  });
+
+  it("keeps conversations a stored payload already has", () => {
+    const state = createSeedState() as unknown as UnknownRecord;
+    state.schemaVersion = 7;
+    state.chatMessages = [{ id: "chat-message-001", channelId: "chat-channel-01", authorEmployeeId: "employee-04", body: "Only this one survived.", mentions: [], createdAt: "2026-08-14T09:00:00+02:00" }];
+    state.chatReads = [];
+
+    const migrated = migrateDemoState(state);
+
+    expect(migrated!.chatMessages).toHaveLength(1);
+    expect(migrated!.chatMessages[0].body).toBe("Only this one survived.");
   });
 });

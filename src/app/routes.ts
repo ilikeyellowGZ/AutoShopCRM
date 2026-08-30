@@ -1,4 +1,4 @@
-export const pageKeys = ["my-day", "inventory", "customers", "pipeline", "sales", "finance", "service", "operations"] as const;
+export const pageKeys = ["my-day", "work", "chat", "inventory", "customers", "pipeline", "sales", "finance", "service", "operations"] as const;
 
 export type PageKey = (typeof pageKeys)[number];
 export type SubviewKey = string;
@@ -12,6 +12,8 @@ export type NavigationGroup = {
 
 export const primaryNavigation: readonly { label: string; target: NavigationTarget }[] = [
   { label: "My Day", target: { page: "my-day", subview: "overview" } },
+  { label: "Work", target: { page: "work", subview: "boards" } },
+  { label: "Chat", target: { page: "chat", subview: "channels" } },
   { label: "Inventory", target: { page: "inventory", subview: "list" } },
   { label: "Customers", target: { page: "customers", subview: "directory" } },
   { label: "Pipeline", target: { page: "pipeline", subview: "board" } },
@@ -22,6 +24,7 @@ export const primaryNavigation: readonly { label: string; target: NavigationTarg
 
 export const navigationGroups: readonly NavigationGroup[] = [
   { label: "Command", destinations: [{ label: "My Day", target: { page: "my-day", subview: "overview" } }, { label: "Action Centre", target: { page: "my-day", subview: "action-centre" } }, { label: "Notifications", target: { page: "my-day", subview: "notifications" } }] },
+  { label: "Work", destinations: [{ label: "Boards", target: { page: "work", subview: "boards" } }, { label: "Staff chat", target: { page: "chat", subview: "channels" } }] },
   { label: "CRM", destinations: [{ label: "Leads", target: { page: "customers", subview: "leads" } }, { label: "Customers", target: { page: "customers", subview: "directory" } }, { label: "Pipeline", target: { page: "pipeline", subview: "board" } }, { label: "Follow-ups", target: { page: "customers", subview: "follow-ups" } }, { label: "Appointments", target: { page: "customers", subview: "appointments" } }, { label: "Test Drives", target: { page: "customers", subview: "test-drives" } }] },
   { label: "Vehicles", destinations: [{ label: "Inventory", target: { page: "inventory", subview: "list" } }, { label: "Vehicle intake", target: { page: "inventory", subview: "intake" } }, { label: "Appraisals", target: { page: "inventory", subview: "appraisals" } }, { label: "Trade-ins", target: { page: "inventory", subview: "trade-ins" } }, { label: "Recon", target: { page: "inventory", subview: "recon" } }, { label: "Transfers", target: { page: "inventory", subview: "transfers" } }, { label: "Pricing", target: { page: "inventory", subview: "pricing" } }] },
   { label: "Sales", destinations: [{ label: "Sales Log", target: { page: "sales", subview: "sales-log" } }, { label: "Deals", target: { page: "sales", subview: "deals" } }, { label: "Quotations", target: { page: "sales", subview: "quotations" } }, { label: "Approvals", target: { page: "sales", subview: "approvals" } }, { label: "Deliveries", target: { page: "sales", subview: "deliveries" } }, { label: "Commissions", target: { page: "sales", subview: "commissions" } }] },

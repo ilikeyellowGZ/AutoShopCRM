@@ -1,14 +1,28 @@
-import type { DemoState, TaskItem } from "../domain/models";
+import type { BoardItem, CommentEntityType, CrmDocument, DemoState, Employee, PersistedRecordType, TaskItem } from "../domain/models";
 import { hasPermission, type DemoAccount, type DemoBranch } from "./access";
 
-const groupWideRoles = new Set(["owner", "ceo", "auditor"]);
-const individuallyScopedRoles = new Set(["sales", "employee"]);
+const emptyScope = (state: DemoState, branch: string): DemoState => ({
+  ...state,
+  organizations: [], branches: [], sessions: [], comments: [], chatChannels: [], chatMessages: [], chatReads: [], workspaces: [], boards: [], boardGroups: [], boardColumns: [], boardItems: [], boardViews: [], vehicles: [], customers: [], leads: [], deals: [], financeDrafts: [],
+  financeApplications: [], serviceJobs: [], employees: [], appointments: [], testDrives: [], quotes: [],
+  payments: [], documents: [], tasks: [], notifications: [], activities: [],
+  preferences: { ...state.preferences, branch, activePage: "my-day", activeSubview: "overview", activeRecordType: undefined, activeRecordId: undefined, activeContextId: undefined },
+  drafts: { vehicleIntake: null, vehicleIntakes: {}, lead: null, deal: null, serviceNotes: {} },
+});
 
 export function scopeStateForAccount(state: DemoState, account: DemoAccount): DemoState {
-  const selectedBranch = account.allowedBranches.includes(state.preferences.branch as DemoBranch) ? state.preferences.branch as DemoBranch : account.homeBranch;
-  const visibleBranches = groupWideRoles.has(account.role) ? account.allowedBranches : [selectedBranch];
-  const individuallyScoped = individuallyScopedRoles.has(account.role);
-  const vehicles = state.vehicles.filter((vehicle) => visibleBranches.includes(vehicle.branch as DemoBranch));
+  const organizations = state.organizations.filter((organization) => organization.id === account.organizationId);
+  const branches = state.branches.filter((branch) => branch.organizationId === account.organizationId);
+  const permittedBranches = branches.filter((branch) => account.allowedBranches.includes(branch.name as DemoBranch));
+  if (organizations.length === 0 || permittedBranches.length === 0) return emptyScope(state, account.homeBranch);
+  const selected = permittedBranches.find((branch) => branch.name === state.preferences.branch)
+    ?? permittedBranches.find((branch) => branch.name === account.homeBranch)
+    ?? permittedBranches[0];
+  const selectedBranch = selected.name;
+  const visibleBranchIds = new Set((account.dataScope === "organization" ? permittedBranches : [selected]).map((branch) => branch.id));
+  const tenantBranchIds = new Set(branches.map((branch) => branch.id));
+  const individuallyScoped = account.dataScope === "own";
+  const vehicles = state.vehicles.filter((vehicle) => visibleBranchIds.has(vehicle.branchId));
   const vehicleIds = new Set(vehicles.map((vehicle) => vehicle.id));
   const leads = state.leads.filter((lead) => vehicleIds.has(lead.vehicleId) && (!individuallyScoped || lead.owner === account.recordAssignee));
   const leadIds = new Set(leads.map((lead) => lead.id));
@@ -26,13 +40,18 @@ export function scopeStateForAccount(state: DemoState, account: DemoAccount): De
   const customers = state.customers.filter((customer) => customerIds.has(customer.id) || (!individuallyScoped && vehicleIds.has(customer.vehicleInterestId)));
   const visibleCustomerIds = new Set(customers.map((customer) => customer.id));
   const financeApplications = canViewFinance ? state.financeApplications.filter((application) => vehicleIds.has(application.vehicleId) && dealIds.has(application.dealId) && visibleCustomerIds.has(application.customerId)) : [];
-  const appointments = state.appointments.filter((appointment) => vehicleIds.has(appointment.vehicleId) && leadIds.has(appointment.leadId) && visibleCustomerIds.has(appointment.customerId) && (!individuallyScoped || appointment.assignedTo === account.recordAssignee));
+  const appointments = state.appointments.filter((appointment) => visibleBranchIds.has(appointment.branchId) && vehicleIds.has(appointment.vehicleId) && leadIds.has(appointment.leadId) && visibleCustomerIds.has(appointment.customerId) && (!individuallyScoped || appointment.assignedTo === account.recordAssignee));
   const appointmentIds = new Set(appointments.map((appointment) => appointment.id));
   const testDrives = state.testDrives.filter((drive) => appointmentIds.has(drive.appointmentId) && vehicleIds.has(drive.vehicleId) && leadIds.has(drive.leadId) && visibleCustomerIds.has(drive.customerId));
   const quotes = state.quotes.filter((quote) => vehicleIds.has(quote.vehicleId) && leadIds.has(quote.leadId) && visibleCustomerIds.has(quote.customerId) && (!individuallyScoped || quote.createdBy === account.recordAssignee));
   const payments = canViewFinance ? state.payments.filter((payment) => dealIds.has(payment.dealId) && visibleCustomerIds.has(payment.customerId)) : [];
-  const documents = state.documents.filter((document) => (!document.vehicleId || vehicleIds.has(document.vehicleId)) && (!document.customerId || visibleCustomerIds.has(document.customerId)) && (!document.leadId || leadIds.has(document.leadId)) && (!document.dealId || dealIds.has(document.dealId)));
-  const employees = hasPermission(account, "staff.read") ? state.employees.filter((employee) => visibleBranches.includes(employee.branch as DemoBranch)) : state.employees.filter((employee) => employee.name === account.name);
+  const documentLinks = (document: CrmDocument) => [
+    document.vehicleId === undefined ? null : vehicleIds.has(document.vehicleId),
+    document.customerId === undefined ? null : visibleCustomerIds.has(document.customerId),
+    document.leadId === undefined ? null : leadIds.has(document.leadId),
+    document.dealId === undefined ? null : dealIds.has(document.dealId),
+  ].filter((link): link is boolean => link !== null);
+  const documents = state.documents.filter((document) => { const links = documentLinks(document); return links.length > 0 && links.every(Boolean); });
   const visibleTask = (task: TaskItem) => {
     if (task.relatedType === "vehicle") return !individuallyScoped && account.pages.includes("inventory") && vehicleIds.has(task.relatedId);
     if (task.relatedType === "lead") return (account.pages.includes("customers") || account.pages.includes("pipeline")) && leadIds.has(task.relatedId);
@@ -41,10 +60,58 @@ export function scopeStateForAccount(state: DemoState, account: DemoAccount): De
   };
   const tasks = state.tasks.filter(visibleTask);
   const relatedIds = new Set([...vehicleIds, ...leadIds, ...dealIds, ...serviceIds, ...customerIds, ...tasks.map((task) => task.id)]);
-  const notifications = state.notifications.filter((notification) => relatedIds.has(notification.relatedId));
-  const activities = hasPermission(account, "audit.read") ? state.activities.filter((activity) => activity.targetType === "system" || relatedIds.has(activity.targetId)) : [];
+  const ownEmployee = state.employees.find((employee) => tenantBranchIds.has(employee.branchId) && employee.name === account.name);
+  const chatChannels = ownEmployee ? state.chatChannels.filter((channel) => channel.organizationId === account.organizationId && channel.memberEmployeeIds.includes(ownEmployee.id)) : [];
+  const chatChannelIds = new Set(chatChannels.map((channel) => channel.id));
+  const chatMessages = state.chatMessages.filter((message) => chatChannelIds.has(message.channelId));
+  const chatReads = state.chatReads.filter((read) => chatChannelIds.has(read.channelId));
+  const chatParticipantIds = new Set(chatChannels.flatMap((channel) => channel.memberEmployeeIds));
+  const activities = hasPermission(account, "audit.read") ? state.activities.filter((activity) => activity.organizationId === account.organizationId && (activity.targetType === "system" || relatedIds.has(activity.targetId))) : [];
+  const sessions = state.sessions.filter((session) => session.organizationId === account.organizationId && (session.accountId === account.id || (hasPermission(account, "staff.read") && visibleBranchIds.has(session.branchId))));
+  const workspaces = state.workspaces.filter((workspace) => workspace.organizationId === account.organizationId && (!workspace.branchId || visibleBranchIds.has(workspace.branchId)));
+  const workspaceIds = new Set(workspaces.map((workspace) => workspace.id));
+  const boards = state.boards.filter((board) => workspaceIds.has(board.workspaceId));
+  const boardIds = new Set(boards.map((board) => board.id));
+  const boardGroups = state.boardGroups.filter((group) => boardIds.has(group.boardId));
+  const boardColumns = state.boardColumns.filter((column) => boardIds.has(column.boardId));
+  const boardViews = state.boardViews.filter((view) => boardIds.has(view.boardId));
+  const scopedRecordIds: Record<PersistedRecordType, Set<string>> = { vehicle: vehicleIds, customer: visibleCustomerIds, lead: leadIds, deal: dealIds, service: serviceIds, task: new Set(tasks.map((task) => task.id)) };
+  const ownEmployeeIds = new Set(state.employees.filter((employee) => tenantBranchIds.has(employee.branchId) && employee.name === account.name).map((employee) => employee.id));
+  const personColumnIds = new Set(state.boardColumns.filter((column) => column.kind === "person").map((column) => column.id));
+  const itemIsVisible = (item: BoardItem) => Object.entries(item.values).every(([columnId, value]) => {
+    if (value.kind === "relation") return scopedRecordIds[value.recordType].has(value.recordId);
+    if (individuallyScoped && value.kind === "person" && personColumnIds.has(columnId)) return ownEmployeeIds.has(value.employeeId);
+    return true;
+  });
+  const reachableItems = state.boardItems.filter((item) => boardIds.has(item.boardId) && itemIsVisible(item));
+  const reachableItemIds = new Set(reachableItems.map((item) => item.id));
+  const boardItems = reachableItems.filter((item) => item.parentItemId === undefined || reachableItemIds.has(item.parentItemId));
+  const assignedEmployeeIds = new Set(boardItems.flatMap((item) => Object.values(item.values).flatMap((value) => value.kind === "person" ? [value.employeeId] : [])));
+  const inDirectory = (employee: Employee) => hasPermission(account, "staff.read")
+    ? visibleBranchIds.has(employee.branchId)
+    : (tenantBranchIds.has(employee.branchId) && employee.name === account.name) || (visibleBranchIds.has(employee.branchId) && assignedEmployeeIds.has(employee.id));
+  // A conversation cannot have anonymous participants, so sharing a channel makes a colleague's record
+  // readable across branches. Tenancy still holds: it never reaches outside the account's organization.
+  const employees = state.employees.filter((employee) => inDirectory(employee) || (tenantBranchIds.has(employee.branchId) && chatParticipantIds.has(employee.id)));
+  const commentableIds: Record<CommentEntityType, Set<string>> = {
+    vehicle: vehicleIds, customer: visibleCustomerIds, lead: leadIds, deal: dealIds,
+    service: serviceIds, task: new Set(tasks.map((task) => task.id)), "board-item": new Set(boardItems.map((item) => item.id)),
+  };
+  const reachableComments = state.comments.filter((comment) => comment.organizationId === account.organizationId && commentableIds[comment.entityType].has(comment.entityId));
+  const reachableCommentIds = new Set(reachableComments.map((comment) => comment.id));
+  const comments = reachableComments.filter((comment) => comment.parentCommentId === undefined || reachableCommentIds.has(comment.parentCommentId));
+  const visibleCommentIds = new Set(comments.map((comment) => comment.id));
+  const visibleChatMessageIds = new Set(chatMessages.map((message) => message.id));
+  const notificationReaches = (notification: DemoState["notifications"][number]) => {
+    if (notification.chatMessageId !== undefined) return visibleChatMessageIds.has(notification.chatMessageId);
+    if (notification.commentId !== undefined) return visibleCommentIds.has(notification.commentId);
+    return relatedIds.has(notification.relatedId);
+  };
+  const notifications = state.notifications.filter((notification) => notification.organizationId === account.organizationId
+    && notificationReaches(notification)
+    && (notification.recipientEmployeeId === undefined || notification.recipientEmployeeId === ownEmployee?.id));
   const draftScope = `${account.id}:${selectedBranch}`;
   const vehicleIntake = state.drafts.vehicleIntakes[draftScope] ?? null;
 
-  return { ...state, vehicles, customers, leads, deals, financeDrafts, financeApplications, serviceJobs, employees, appointments, testDrives, quotes, payments, documents, tasks, notifications, activities, preferences: { ...state.preferences, branch: selectedBranch }, drafts: { ...state.drafts, vehicleIntake, vehicleIntakes: vehicleIntake ? { [draftScope]: vehicleIntake } : {} } };
+  return { ...state, organizations, branches, sessions, comments, chatChannels, chatMessages, chatReads, workspaces, boards, boardGroups, boardColumns, boardItems, boardViews, vehicles, customers, leads, deals, financeDrafts, financeApplications, serviceJobs, employees, appointments, testDrives, quotes, payments, documents, tasks, notifications, activities, preferences: { ...state.preferences, branch: selectedBranch }, drafts: { ...state.drafts, vehicleIntake, vehicleIntakes: vehicleIntake ? { [draftScope]: vehicleIntake } : {} } };
 }

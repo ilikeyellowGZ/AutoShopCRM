@@ -1,4 +1,5 @@
 import type { DemoState } from "../domain/models";
+import { validateCellValue } from "../domain/boards";
 
 export type SeedIntegrityIssue = {
   code: "duplicate-id" | "duplicate-value" | "dangling-reference";
@@ -14,7 +15,9 @@ type Identified = { id: string };
 export function validateDemoState(state: DemoState): SeedIntegrityIssue[] {
   const issues: SeedIntegrityIssue[] = [];
   const collections: Record<string, readonly Identified[]> = {
-    vehicles: state.vehicles, customers: state.customers, leads: state.leads, deals: state.deals,
+    organizations: state.organizations, branches: state.branches, sessions: state.sessions,
+    chatChannels: state.chatChannels, chatMessages: state.chatMessages,
+    workspaces: state.workspaces, boards: state.boards, boardGroups: state.boardGroups, boardColumns: state.boardColumns, boardItems: state.boardItems, boardViews: state.boardViews, vehicles: state.vehicles, customers: state.customers, leads: state.leads, deals: state.deals,
     financeApplications: state.financeApplications, serviceJobs: state.serviceJobs, employees: state.employees,
     appointments: state.appointments, testDrives: state.testDrives, quotes: state.quotes, payments: state.payments,
     documents: state.documents, tasks: state.tasks, notifications: state.notifications, activities: state.activities,
@@ -51,6 +54,11 @@ export function validateDemoState(state: DemoState): SeedIntegrityIssue[] {
   const reference = (collection: string, recordId: string, field: string, targetId: string | undefined, targetCollection: keyof typeof ids) => {
     if (targetId && !ids[targetCollection].has(targetId)) issues.push({ code: "dangling-reference", collection, recordId, field, targetId, message: `${collection}.${recordId}.${field} points to missing ${targetCollection}.${targetId}.` });
   };
+  for (const branch of state.branches) reference("branches", branch.id, "organizationId", branch.organizationId, "organizations");
+  for (const session of state.sessions) { reference("sessions", session.id, "organizationId", session.organizationId, "organizations"); reference("sessions", session.id, "branchId", session.branchId, "branches"); }
+  for (const vehicle of state.vehicles) reference("vehicles", vehicle.id, "branchId", vehicle.branchId, "branches");
+  for (const employee of state.employees) reference("employees", employee.id, "branchId", employee.branchId, "branches");
+  for (const appointment of state.appointments) reference("appointments", appointment.id, "branchId", appointment.branchId, "branches");
   for (const customer of state.customers) reference("customers", customer.id, "vehicleInterestId", customer.vehicleInterestId, "vehicles");
   for (const lead of state.leads) { reference("leads", lead.id, "customerId", lead.customerId, "customers"); reference("leads", lead.id, "vehicleId", lead.vehicleId, "vehicles"); }
   for (const deal of state.deals) { reference("deals", deal.id, "customerId", deal.customerId, "customers"); reference("deals", deal.id, "vehicleId", deal.vehicleId, "vehicles"); }
@@ -67,8 +75,64 @@ export function validateDemoState(state: DemoState): SeedIntegrityIssue[] {
   for (const task of state.tasks) reference("tasks", task.id, "relatedId", task.relatedId, taskTargets[task.relatedType]);
   const activityTargets = { vehicle: "vehicles", customer: "customers", lead: "leads", deal: "deals", service: "serviceJobs", task: "tasks" } as const;
   for (const activity of state.activities) if (activity.targetType !== "system") reference("activities", activity.id, "targetId", activity.targetId, activityTargets[activity.targetType]);
-  const allRecordIds = new Set(Object.values(ids).flatMap((set) => [...set]));
-  for (const notification of state.notifications) if (!allRecordIds.has(notification.relatedId)) issues.push({ code: "dangling-reference", collection: "notifications", recordId: notification.id, field: "relatedId", targetId: notification.relatedId, message: `notifications.${notification.id}.relatedId points to a missing record.` });
+  for (const workspace of state.workspaces) reference("workspaces", workspace.id, "organizationId", workspace.organizationId, "organizations");
+  for (const board of state.boards) reference("boards", board.id, "workspaceId", board.workspaceId, "workspaces");
+  for (const group of state.boardGroups) reference("boardGroups", group.id, "boardId", group.boardId, "boards");
+  for (const column of state.boardColumns) reference("boardColumns", column.id, "boardId", column.boardId, "boards");
+  for (const view of state.boardViews) {
+    reference("boardViews", view.id, "boardId", view.boardId, "boards");
+    if (view.groupByColumnId) reference("boardViews", view.id, "groupByColumnId", view.groupByColumnId, "boardColumns");
+    for (const filter of view.filters) reference("boardViews", view.id, "filters.columnId", filter.columnId, "boardColumns");
+  }
+  const columnsById = new Map(state.boardColumns.map((column) => [column.id, column]));
+  for (const item of state.boardItems) {
+    reference("boardItems", item.id, "boardId", item.boardId, "boards");
+    reference("boardItems", item.id, "groupId", item.groupId, "boardGroups");
+    reference("boardItems", item.id, "parentItemId", item.parentItemId, "boardItems");
+    const group = state.boardGroups.find((candidate) => candidate.id === item.groupId);
+    if (group && group.boardId !== item.boardId) issues.push({ code: "dangling-reference", collection: "boardItems", recordId: item.id, field: "groupId", targetId: item.groupId, message: `boardItems.${item.id}.groupId belongs to a different board.` });
+    for (const [columnId, value] of Object.entries(item.values)) {
+      const column = columnsById.get(columnId);
+      if (!column) { issues.push({ code: "dangling-reference", collection: "boardItems", recordId: item.id, field: "values", targetId: columnId, message: `boardItems.${item.id}.values points to missing boardColumns.${columnId}.` }); continue; }
+      if (column.boardId !== item.boardId) { issues.push({ code: "dangling-reference", collection: "boardItems", recordId: item.id, field: "values", targetId: columnId, message: `boardItems.${item.id}.values uses a column from another board.` }); continue; }
+      const issue = validateCellValue(state, column, value);
+      if (issue) issues.push({ code: "dangling-reference", collection: "boardItems", recordId: item.id, field: "values", targetId: columnId, message: issue.message });
+    }
+  }
+  for (const channel of state.chatChannels) {
+    reference("chatChannels", channel.id, "organizationId", channel.organizationId, "organizations");
+    for (const employeeId of channel.memberEmployeeIds) reference("chatChannels", channel.id, "memberEmployeeIds", employeeId, "employees");
+  }
+  const channelsById = new Map(state.chatChannels.map((channel) => [channel.id, channel]));
+  for (const message of state.chatMessages) {
+    reference("chatMessages", message.id, "channelId", message.channelId, "chatChannels");
+    reference("chatMessages", message.id, "authorEmployeeId", message.authorEmployeeId, "employees");
+    const channel = channelsById.get(message.channelId);
+    if (channel && !channel.memberEmployeeIds.includes(message.authorEmployeeId)) issues.push({ code: "dangling-reference", collection: "chatMessages", recordId: message.id, field: "authorEmployeeId", targetId: message.authorEmployeeId, message: `chatMessages.${message.id} was written by someone who is not a member of the channel.` });
+    for (const employeeId of message.mentions) {
+      if (channel && !channel.memberEmployeeIds.includes(employeeId)) issues.push({ code: "dangling-reference", collection: "chatMessages", recordId: message.id, field: "mentions", targetId: employeeId, message: `chatMessages.${message.id} mentions someone who cannot read the channel.` });
+    }
+  }
+  const chatMessagesById = new Map(state.chatMessages.map((message) => [message.id, message]));
+  for (const read of state.chatReads) {
+    const recordId = `${read.channelId}:${read.employeeId}`;
+    reference("chatReads", recordId, "channelId", read.channelId, "chatChannels");
+    reference("chatReads", recordId, "employeeId", read.employeeId, "employees");
+    reference("chatReads", recordId, "lastReadMessageId", read.lastReadMessageId, "chatMessages");
+    const marked = chatMessagesById.get(read.lastReadMessageId);
+    if (marked && marked.channelId !== read.channelId) issues.push({ code: "dangling-reference", collection: "chatReads", recordId, field: "lastReadMessageId", targetId: read.lastReadMessageId, message: `chatReads.${recordId}.lastReadMessageId marks a message from another channel.` });
+    const channel = channelsById.get(read.channelId);
+    if (channel && !channel.memberEmployeeIds.includes(read.employeeId)) issues.push({ code: "dangling-reference", collection: "chatReads", recordId, field: "employeeId", targetId: read.employeeId, message: `chatReads.${recordId} belongs to someone who is not a member of the channel.` });
+  }
+
+  const allRecordIds = new Set(Object.entries(ids).filter(([collection]) => collection !== "branches" && collection !== "organizations" && collection !== "sessions" && !collection.startsWith("board") && !collection.startsWith("chat") && collection !== "workspaces").flatMap(([, set]) => [...set]));
+  const commentIds = new Set(state.comments.map((comment) => comment.id));
+  const boardItemIds = new Set(state.boardItems.map((item) => item.id));
+  for (const notification of state.notifications) {
+    if (notification.chatMessageId !== undefined && !ids.chatMessages.has(notification.chatMessageId)) issues.push({ code: "dangling-reference", collection: "notifications", recordId: notification.id, field: "chatMessageId", targetId: notification.chatMessageId, message: `notifications.${notification.id}.chatMessageId points to a missing chat message.` });
+    if (notification.commentId !== undefined && !commentIds.has(notification.commentId)) issues.push({ code: "dangling-reference", collection: "notifications", recordId: notification.id, field: "commentId", targetId: notification.commentId, message: `notifications.${notification.id}.commentId points to a missing comment.` });
+    if (!allRecordIds.has(notification.relatedId) && !boardItemIds.has(notification.relatedId) && !ids.chatChannels.has(notification.relatedId)) issues.push({ code: "dangling-reference", collection: "notifications", recordId: notification.id, field: "relatedId", targetId: notification.relatedId, message: `notifications.${notification.id}.relatedId points to a missing record.` });
+  }
 
   return issues;
 }

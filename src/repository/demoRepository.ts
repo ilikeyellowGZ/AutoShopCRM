@@ -7,11 +7,20 @@ import type {
   FormDrafts,
   Lead,
   LeadStage,
+  BoardCellValue,
+  BoardFilter,
+  Comment,
+  CommentEntityType,
+  ChatMessage,
   ServiceJob,
+  SessionEndReason,
   UserPreferences,
   Vehicle,
   VehicleIntakeDraft,
 } from "../domain/models";
+import { demoOrganizationId } from "../domain/models";
+import { validateCellValue } from "../domain/boards";
+import { mentionedEmployeeIds } from "../domain/comments";
 import { createSeedState, NOW } from "./seed";
 import { loadDemoState, saveDemoState, STORAGE_KEY } from "./storage";
 import { isLeadStage } from "../domain/leadStages";
@@ -23,6 +32,9 @@ export type DemoRepository = {
   getState(): DemoState;
   subscribe(listener: (state: DemoState) => void): () => void;
   setAuditActor(actor: string): void;
+  startSession(account: { id: string; name: string; title: string; organizationId: string }, userAgent: string): string;
+  touchSession(sessionId: string): void;
+  endSession(sessionId: string, reason?: SessionEndReason): void;
   reset(): void;
   setPreferences(patch: Partial<UserPreferences>): void;
   updateDraft<K extends keyof FormDrafts>(key: K, draft: FormDrafts[K]): void;
@@ -45,9 +57,23 @@ export type DemoRepository = {
   addServiceJob(job: ServiceJob): void;
   updateServiceState(jobId: string, status: ServiceJob["status"]): void;
   markNotificationRead(notificationId: string): void;
+  markAllNotificationsRead(notificationIds: readonly string[]): void;
+  addBoardItem(boardId: string, groupId: string, title: string): string;
+  setBoardCellValue(itemId: string, columnId: string, value: BoardCellValue): void;
+  moveBoardItem(itemId: string, groupId: string): void;
+  saveBoardView(viewId: string, patch: { title?: string; filters?: BoardFilter[]; groupByColumnId?: string }): void;
+  addComment(input: { entityType: CommentEntityType; entityId: string; body: string; authorEmployeeId: string; parentCommentId?: string; columnId?: string }): string;
+  editComment(commentId: string, body: string): void;
+  resolveComment(commentId: string, employeeId: string): void;
+  reopenComment(commentId: string): void;
+  toggleCommentPin(commentId: string): void;
+  toggleCommentReaction(commentId: string, emoji: string, employeeId: string): void;
+  sendChatMessage(input: { channelId: string; authorEmployeeId: string; body: string }): string;
+  markChannelRead(channelId: string, employeeId: string): void;
 };
 
 const clone = <T,>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
+const maximumSuffix = (ids: string[]) => ids.reduce((largest, id) => Math.max(largest, Number(id.match(/(\d+)$/)?.[1]) || 0), 0);
 const maximumActivityNumber = (activities: AuditActivity[]) => activities.reduce((largest, activity) => Math.max(largest, Number(activity.id.match(/(\d+)$/)?.[1]) || 0), 0);
 const activityId = (number: number) => `activity-${String(number).padStart(2, "0")}`;
 export const normalizeVehicleIdentifier = (value: string) => value.trim().toUpperCase();
@@ -81,16 +107,22 @@ function validateCustomerAndVehicle(customerId: string, vehicleId: string, state
   if (!state.vehicles.some((vehicle) => vehicle.id === vehicleId)) throw new Error("Vehicle not found.");
 }
 
-export function createDemoRepository(storage: Storage): DemoRepository {
+export function createDemoRepository(storage: Storage, now: () => string = () => new Date().toISOString()): DemoRepository {
   let state = clone(loadDemoState(storage));
   let activityNumber = maximumActivityNumber(state.activities);
   let auditActor = "Weelee Employee";
+  let sessionNumber = maximumSuffix(state.sessions.map((session) => session.id));
+  let boardItemNumber = maximumSuffix(state.boardItems.map((item) => item.id));
+  let commentNumber = maximumSuffix(state.comments.map((comment) => comment.id));
+  let chatMessageNumber = maximumSuffix(state.chatMessages.map((message) => message.id));
+  let notificationNumber = maximumSuffix(state.notifications.map((notification) => notification.id));
   const listeners = new Set<(state: DemoState) => void>();
 
   const commit = (action: string, detail: string, mutate: (draft: DemoState) => void, tone: AuditActivity["tone"] = "info", targetType: AuditActivity["targetType"] = "system", targetId = "system") => {
     const draft = clone(state);
     mutate(draft);
-    draft.activities.unshift({ id: activityId(++activityNumber), action, detail, actor: auditActor, occurredAt: NOW, tone, targetType, targetId });
+    const tenant = draft.branches.find((branch) => branch.name === draft.preferences.branch);
+    draft.activities.unshift({ id: activityId(++activityNumber), organizationId: tenant?.organizationId ?? demoOrganizationId, branchId: tenant?.id, action, detail, actor: auditActor, occurredAt: NOW, tone, targetType, targetId });
     state = draft;
     saveDemoState(storage, state);
     listeners.forEach((listener) => listener(clone(state)));
@@ -117,10 +149,40 @@ export function createDemoRepository(storage: Storage): DemoRepository {
       return () => listeners.delete(listener);
     },
     setAuditActor: (actor) => { auditActor = actor.trim() || "Weelee Employee"; },
+    startSession: (account, userAgent) => {
+      const startedAt = now();
+      const id = `session-${String(++sessionNumber).padStart(4, "0")}`;
+      const homeBranch = state.branches.find((branch) => branch.name === state.preferences.branch && branch.organizationId === account.organizationId) ?? state.branches.find((branch) => branch.organizationId === account.organizationId);
+      persist((draft) => {
+        for (const session of draft.sessions) {
+          if (session.accountId === account.id && session.status === "active") {
+            session.status = "ended";
+            session.endedAt = startedAt;
+            session.endReason = "replaced";
+          }
+        }
+        draft.sessions.unshift({ id, organizationId: account.organizationId, branchId: homeBranch?.id ?? "", accountId: account.id, actor: `${account.name} · ${account.title}`, startedAt, lastActivityAt: startedAt, status: "active", userAgent });
+      });
+      return id;
+    },
+    touchSession: (sessionId) => persist((draft) => {
+      const session = draft.sessions.find((item) => item.id === sessionId);
+      if (session && session.status === "active") session.lastActivityAt = now();
+    }),
+    endSession: (sessionId, reason = "signed-out") => persist((draft) => {
+      const session = draft.sessions.find((item) => item.id === sessionId);
+      if (!session || session.status === "ended") return;
+      const endedAt = now();
+      session.status = "ended";
+      session.endedAt = endedAt;
+      session.lastActivityAt = endedAt;
+      session.endReason = reason;
+    }),
     reset: () => {
       const resetState = createSeedState();
       resetState.activities.unshift({
         id: activityId(++activityNumber),
+        organizationId: demoOrganizationId,
         action: "Demo data reset",
         detail: "The employee demo was restored to its deterministic seed data.",
         actor: auditActor,
@@ -159,14 +221,17 @@ export function createDemoRepository(storage: Storage): DemoRepository {
     }, "info", "task", taskId),
     addVehicle: (vehicle) => {
       const identifiers = validateVehicleIdentifiers(vehicle, state.vehicles);
+      if (!state.branches.some((branch) => branch.id === vehicle.branchId)) throw new Error("Vehicle branch not found.");
       commit("Vehicle added", `${vehicle.year} ${vehicle.make} ${vehicle.model} was added to inventory.`, (draft) => { draft.vehicles.push({ ...clone(vehicle), ...identifiers }); }, "positive", "vehicle", vehicle.id);
     },
     updateVehicle: (vehicleId, patch) => {
       const current = state.vehicles[findIndex(state.vehicles, vehicleId, "Vehicle")];
       const identifiers = validateVehicleIdentifiers({ ...current, ...patch }, state.vehicles, vehicleId);
+      const movedBranch = patch.branch !== undefined && patch.branch !== current.branch ? state.branches.find((branch) => branch.name === patch.branch) : undefined;
+      if (patch.branch !== undefined && patch.branch !== current.branch && !movedBranch) throw new Error("Vehicle branch not found.");
       commit("Vehicle updated", "Vehicle record was updated.", (draft) => {
         const index = findIndex(draft.vehicles, vehicleId, "Vehicle");
-        draft.vehicles[index] = { ...draft.vehicles[index], ...clone(patch), ...identifiers };
+        draft.vehicles[index] = { ...draft.vehicles[index], ...clone(patch), ...identifiers, ...(movedBranch ? { branchId: movedBranch.id } : {}) };
       }, "info", "vehicle", vehicleId);
     },
     addCustomer: (customer) => {
@@ -253,5 +318,223 @@ export function createDemoRepository(storage: Storage): DemoRepository {
       const index = findIndex(draft.notifications, notificationId, "Notification");
       draft.notifications[index] = { ...draft.notifications[index], read: true };
     }, "neutral"),
+    addComment: ({ entityType, entityId, body, authorEmployeeId, parentCommentId, columnId }) => {
+      const trimmed = body.trim();
+      if (!trimmed) throw new Error("A comment needs something to say.");
+      if (!state.employees.some((employee) => employee.id === authorEmployeeId)) throw new Error("Comment author not found.");
+      if (parentCommentId) {
+        const parent = state.comments.find((candidate) => candidate.id === parentCommentId);
+        if (!parent) throw new Error("Parent comment not found.");
+        if (parent.entityType !== entityType || parent.entityId !== entityId) throw new Error("A reply must stay on its own record.");
+        if (parent.parentCommentId) throw new Error("A reply cannot be replied to.");
+      }
+      const tenant = state.branches.find((branch) => branch.name === state.preferences.branch);
+      const organizationId = tenant?.organizationId ?? demoOrganizationId;
+      const mentions = mentionedEmployeeIds(trimmed, state.employees).filter((employeeId) => employeeId !== authorEmployeeId);
+      const id = `comment-${String(++commentNumber).padStart(2, "0")}`;
+      const author = state.employees.find((employee) => employee.id === authorEmployeeId);
+      commit("Comment added", `A comment was added to ${entityType} ${entityId}.`, (draft) => {
+        draft.comments.push({ id, organizationId, entityType, entityId, columnId, parentCommentId, authorEmployeeId, body: trimmed, mentions, createdAt: NOW, pinned: false, reactions: [] });
+        for (const employeeId of mentions) {
+          draft.notifications.unshift({
+            id: `notification-${String(++notificationNumber).padStart(2, "0")}`,
+            organizationId,
+            category: "mention",
+            priority: "high",
+            title: `${author?.name ?? "A colleague"} mentioned you`,
+            detail: trimmed.length > 140 ? `${trimmed.slice(0, 137)}...` : trimmed,
+            read: false,
+            tone: "info",
+            createdAt: NOW,
+            relatedId: entityId,
+            commentId: id,
+            recipientEmployeeId: employeeId,
+          });
+        }
+      }, "positive");
+      return id;
+    },
+    editComment: (commentId, body) => {
+      const trimmed = body.trim();
+      if (!trimmed) throw new Error("A comment needs something to say.");
+      const existing = state.comments.find((candidate) => candidate.id === commentId);
+      if (!existing) throw new Error("Comment not found.");
+      const mentions = mentionedEmployeeIds(trimmed, state.employees).filter((employeeId) => employeeId !== existing.authorEmployeeId);
+      const addedMentions = mentions.filter((employeeId) => !existing.mentions.includes(employeeId));
+      const editAuthor = state.employees.find((employee) => employee.id === existing.authorEmployeeId);
+      commit("Comment edited", "A comment was edited.", (draft) => {
+        const index = findIndex(draft.comments, commentId, "Comment");
+        draft.comments[index] = { ...draft.comments[index], body: trimmed, mentions, editedAt: NOW };
+        for (const employeeId of addedMentions) {
+          draft.notifications.unshift({
+            id: `notification-${String(++notificationNumber).padStart(2, "0")}`,
+            organizationId: existing.organizationId,
+            category: "mention",
+            priority: "high",
+            title: `${editAuthor?.name ?? "A colleague"} mentioned you`,
+            detail: trimmed.length > 140 ? `${trimmed.slice(0, 137)}...` : trimmed,
+            read: false,
+            tone: "info",
+            createdAt: NOW,
+            relatedId: existing.entityId,
+            commentId,
+            recipientEmployeeId: employeeId,
+          });
+        }
+      }, "neutral");
+    },
+    resolveComment: (commentId, employeeId) => {
+      const existing = state.comments.find((candidate) => candidate.id === commentId);
+      if (!existing) throw new Error("Comment not found.");
+      if (existing.parentCommentId) throw new Error("Resolve the thread, not a reply.");
+      if (existing.resolvedAt) return;
+      commit("Comment resolved", "A discussion was resolved.", (draft) => {
+        const index = findIndex(draft.comments, commentId, "Comment");
+        draft.comments[index] = { ...draft.comments[index], resolvedAt: NOW, resolvedByEmployeeId: employeeId };
+      }, "positive");
+    },
+    reopenComment: (commentId) => {
+      const existing = state.comments.find((candidate) => candidate.id === commentId);
+      if (!existing) throw new Error("Comment not found.");
+      if (!existing.resolvedAt) return;
+      commit("Comment reopened", "A discussion was reopened.", (draft) => {
+        const index = findIndex(draft.comments, commentId, "Comment");
+        const { resolvedAt: _resolvedAt, resolvedByEmployeeId: _resolvedBy, ...rest } = draft.comments[index];
+        draft.comments[index] = rest as Comment;
+      }, "warning");
+    },
+    toggleCommentPin: (commentId) => {
+      const existing = state.comments.find((candidate) => candidate.id === commentId);
+      if (!existing) throw new Error("Comment not found.");
+      commit(existing.pinned ? "Comment unpinned" : "Comment pinned", "A discussion pin changed.", (draft) => {
+        const index = findIndex(draft.comments, commentId, "Comment");
+        draft.comments[index] = { ...draft.comments[index], pinned: !draft.comments[index].pinned };
+      }, "neutral");
+    },
+    toggleCommentReaction: (commentId, emoji, employeeId) => {
+      const existing = state.comments.find((candidate) => candidate.id === commentId);
+      if (!existing) throw new Error("Comment not found.");
+      if (!state.employees.some((employee) => employee.id === employeeId)) throw new Error("Reaction author not found.");
+      commit("Comment reaction", "A reaction changed on a comment.", (draft) => {
+        const index = findIndex(draft.comments, commentId, "Comment");
+        const current = draft.comments[index];
+        const reaction = current.reactions.find((candidate) => candidate.emoji === emoji);
+        const reactions = reaction
+          ? current.reactions
+              .map((candidate) => candidate.emoji === emoji
+                ? { ...candidate, employeeIds: candidate.employeeIds.includes(employeeId) ? candidate.employeeIds.filter((id) => id !== employeeId) : [...candidate.employeeIds, employeeId] }
+                : candidate)
+              .filter((candidate) => candidate.employeeIds.length > 0)
+          : [...current.reactions, { emoji, employeeIds: [employeeId] }];
+        draft.comments[index] = { ...current, reactions };
+      }, "neutral");
+    },
+    sendChatMessage: ({ channelId, authorEmployeeId, body }) => {
+      const trimmed = body.trim();
+      if (!trimmed) throw new Error("A message needs something to say.");
+      const channel = state.chatChannels.find((candidate) => candidate.id === channelId);
+      if (!channel) throw new Error("Channel not found.");
+      if (!channel.memberEmployeeIds.includes(authorEmployeeId)) throw new Error("Only channel members can post here.");
+      // A mention only reaches somebody who can open the channel, so a name from outside it is left as plain text.
+      const mentions = mentionedEmployeeIds(trimmed, state.employees).filter((employeeId) => employeeId !== authorEmployeeId && channel.memberEmployeeIds.includes(employeeId));
+      const id = `chat-message-${String(++chatMessageNumber).padStart(3, "0")}`;
+      const author = state.employees.find((employee) => employee.id === authorEmployeeId);
+      commit("Chat message sent", `A message was posted in ${channel.kind === "direct" ? "a direct conversation" : `#${channel.name}`}.`, (draft) => {
+        const message: ChatMessage = { id, channelId, authorEmployeeId, body: trimmed, mentions, createdAt: NOW };
+        draft.chatMessages.push(message);
+        for (const employeeId of mentions) {
+          draft.notifications.unshift({
+            id: `notification-${String(++notificationNumber).padStart(2, "0")}`,
+            organizationId: channel.organizationId,
+            category: "mention",
+            priority: "high",
+            title: `${author?.name ?? "A colleague"} mentioned you`,
+            detail: trimmed.length > 140 ? `${trimmed.slice(0, 137)}...` : trimmed,
+            read: false,
+            tone: "info",
+            createdAt: NOW,
+            relatedId: channelId,
+            chatMessageId: id,
+            recipientEmployeeId: employeeId,
+          });
+        }
+      }, "positive");
+      return id;
+    },
+    // Read markers are per-reader bookkeeping rather than a business action, so they stay out of the audit trail.
+    markChannelRead: (channelId, employeeId) => {
+      const channel = state.chatChannels.find((candidate) => candidate.id === channelId);
+      if (!channel) throw new Error("Channel not found.");
+      if (!channel.memberEmployeeIds.includes(employeeId)) throw new Error("Only channel members can read here.");
+      const latest = state.chatMessages.filter((message) => message.channelId === channelId).sort((first, second) => first.createdAt.localeCompare(second.createdAt) || first.id.localeCompare(second.id)).at(-1);
+      if (!latest) return;
+      const existing = state.chatReads.find((read) => read.channelId === channelId && read.employeeId === employeeId);
+      if (existing?.lastReadMessageId === latest.id) return;
+      const readAt = now();
+      persist((draft) => {
+        const index = draft.chatReads.findIndex((read) => read.channelId === channelId && read.employeeId === employeeId);
+        if (index < 0) draft.chatReads.push({ channelId, employeeId, lastReadMessageId: latest.id, readAt });
+        else draft.chatReads[index] = { ...draft.chatReads[index], lastReadMessageId: latest.id, readAt };
+      });
+    },
+    addBoardItem: (boardId, groupId, title) => {
+      const trimmed = title.trim();
+      if (!trimmed) throw new Error("Board item needs a title.");
+      const group = state.boardGroups.find((candidate) => candidate.id === groupId);
+      if (!group || group.boardId !== boardId) throw new Error("Board group not found.");
+      const id = `board-item-${String(++boardItemNumber).padStart(3, "0")}`;
+      const position = state.boardItems.filter((item) => item.boardId === boardId).length + 1;
+      commit("Board item added", `${trimmed} was added to the board.`, (draft) => {
+        draft.boardItems.push({ id, boardId, groupId, title: trimmed, position, values: {}, createdAt: NOW, createdBy: auditActor, updatedAt: NOW, updatedBy: auditActor });
+      }, "positive");
+      return id;
+    },
+    setBoardCellValue: (itemId, columnId, value) => {
+      const item = state.boardItems.find((candidate) => candidate.id === itemId);
+      if (!item) throw new Error("Board item not found.");
+      const column = state.boardColumns.find((candidate) => candidate.id === columnId);
+      if (!column || column.boardId !== item.boardId) throw new Error("Board column not found.");
+      const issue = validateCellValue(state, column, value);
+      if (issue) throw new Error(issue.message);
+      commit("Board item updated", `${column.title} was updated on ${item.title}.`, (draft) => {
+        const index = findIndex(draft.boardItems, itemId, "Board item");
+        draft.boardItems[index] = { ...draft.boardItems[index], values: { ...draft.boardItems[index].values, [columnId]: clone(value) }, updatedAt: NOW, updatedBy: auditActor };
+      });
+    },
+    moveBoardItem: (itemId, groupId) => {
+      const item = state.boardItems.find((candidate) => candidate.id === itemId);
+      if (!item) throw new Error("Board item not found.");
+      const group = state.boardGroups.find((candidate) => candidate.id === groupId);
+      if (!group || group.boardId !== item.boardId) throw new Error("Board group not found.");
+      if (item.groupId === groupId) return;
+      commit("Board item moved", `${item.title} moved to ${group.title}.`, (draft) => {
+        const index = findIndex(draft.boardItems, itemId, "Board item");
+        draft.boardItems[index] = { ...draft.boardItems[index], groupId, updatedAt: NOW, updatedBy: auditActor };
+      });
+    },
+    saveBoardView: (viewId, patch) => {
+      const view = state.boardViews.find((candidate) => candidate.id === viewId);
+      if (!view) throw new Error("Board view not found.");
+      const columnIds = new Set(state.boardColumns.filter((column) => column.boardId === view.boardId).map((column) => column.id));
+      for (const filter of patch.filters ?? []) if (!columnIds.has(filter.columnId)) throw new Error("Board column not found.");
+      if (patch.groupByColumnId !== undefined && !columnIds.has(patch.groupByColumnId)) throw new Error("Board column not found.");
+      commit("Board view saved", `${patch.title ?? view.title} was saved.`, (draft) => {
+        const index = findIndex(draft.boardViews, viewId, "Board view");
+        const current = draft.boardViews[index];
+        draft.boardViews[index] = {
+          ...current,
+          title: patch.title ?? current.title,
+          filters: patch.filters ? clone(patch.filters) : current.filters,
+          ...("groupByColumnId" in patch ? { groupByColumnId: patch.groupByColumnId } : {}),
+        };
+      }, "neutral");
+    },
+    markAllNotificationsRead: (notificationIds) => {
+      const visible = new Set(notificationIds);
+      if (!state.notifications.some((notification) => visible.has(notification.id) && !notification.read)) return;
+      commit("Notifications read", "Visible notifications were marked as read.", (draft) => {
+        draft.notifications = draft.notifications.map((notification) => visible.has(notification.id) ? { ...notification, read: true } : notification);
+      }, "neutral");
+    },
   };
 }

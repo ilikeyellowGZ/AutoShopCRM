@@ -107,7 +107,7 @@ describe("workspace links are real and optional", () => {
   });
 
   it("does not fabricate an Open action for a system activity", () => {
-    const state = createDemoRepository(memoryStorage()).getState(); state.tasks = []; state.activities = [{ id: "activity-system", action: "Demo data reset", detail: "Seed restored.", actor: "Weelee Employee", occurredAt: "2026-08-16T08:00:00+02:00", tone: "neutral", targetType: "system", targetId: "system" }];
+    const state = createDemoRepository(memoryStorage()).getState(); state.tasks = []; state.activities = [{ id: "activity-system", organizationId: "org-motorgroup-sa", action: "Demo data reset", detail: "Seed restored.", actor: "Weelee Employee", occurredAt: "2026-08-16T08:00:00+02:00", tone: "neutral", targetType: "system", targetId: "system" }];
     render(<DomainWorkspace page="operations" subview="documents" state={state} onNavigate={vi.fn()} />);
     expect(screen.getByText(/Demo data reset/)).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Open audit artifact/ })).not.toBeInTheDocument();
@@ -115,7 +115,7 @@ describe("workspace links are real and optional", () => {
 
   it("does not offer an Open action for an untyped system notification", () => {
     const repository = createDemoRepository(memoryStorage()); const state = repository.getState();
-    state.notifications = [{ id: "notification-system", title: "Local maintenance", detail: "No connected entity.", read: false, tone: "neutral", relatedId: "system" }];
+    state.notifications = [{ id: "notification-system", organizationId: "org-motorgroup-sa", category: "system" as const, priority: "normal" as const, createdAt: "2026-08-16T08:00:00+02:00", title: "Local maintenance", detail: "No connected entity.", read: false, tone: "neutral", relatedId: "system" }];
     render(<ActionCentreView view="notifications" state={state} repository={repository} onNavigate={vi.fn()} />);
     expect(screen.getByText("Local maintenance")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Open related record" })).not.toBeInTheDocument();
