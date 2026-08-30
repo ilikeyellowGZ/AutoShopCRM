@@ -39,7 +39,7 @@ export type TaskItem = { id: string; title: string; detail: string; relatedType:
 export const notificationCategories = ["mention", "deal", "lead", "customer", "inventory", "service", "task", "system"] as const;
 export type NotificationCategory = (typeof notificationCategories)[number];
 export type NotificationPriority = "normal" | "high";
-export type Notification = { id: string; organizationId: string; category: NotificationCategory; priority: NotificationPriority; title: string; detail: string; read: boolean; tone: Tone; createdAt: string; relatedId: string; commentId?: string; recipientEmployeeId?: string };
+export type Notification = { id: string; organizationId: string; category: NotificationCategory; priority: NotificationPriority; title: string; detail: string; read: boolean; tone: Tone; createdAt: string; relatedId: string; commentId?: string; chatMessageId?: string; recipientEmployeeId?: string };
 export type ActivityTargetType = "vehicle" | "customer" | "lead" | "deal" | "service" | "task" | "system";
 export type AuditActivity = { id: string; organizationId: string; branchId?: string; action: string; detail: string; actor: string; occurredAt: string; tone: Tone; targetType: ActivityTargetType; targetId: string };
 export type SessionStatus = "active" | "ended";
@@ -112,5 +112,12 @@ export type Comment = {
   reactions: CommentReaction[];
 };
 
-export const CURRENT_SCHEMA_VERSION = 7;
-export type DemoState = { schemaVersion: typeof CURRENT_SCHEMA_VERSION; organizations: Organization[]; branches: Branch[]; sessions: SessionRecord[]; comments: Comment[]; workspaces: Workspace[]; boards: Board[]; boardGroups: BoardGroup[]; boardColumns: BoardColumn[]; boardItems: BoardItem[]; boardViews: BoardView[]; vehicles: Vehicle[]; customers: Customer[]; leads: Lead[]; deals: Deal[]; financeDrafts: FinanceDraft[]; financeApplications: FinanceApplication[]; serviceJobs: ServiceJob[]; employees: Employee[]; appointments: Appointment[]; testDrives: TestDrive[]; quotes: Quote[]; payments: Payment[]; documents: CrmDocument[]; tasks: TaskItem[]; notifications: Notification[]; activities: AuditActivity[]; preferences: UserPreferences; drafts: FormDrafts };
+export const chatChannelKinds = ["channel", "direct"] as const;
+export type ChatChannelKind = (typeof chatChannelKinds)[number];
+export type ChatChannel = { id: string; organizationId: string; kind: ChatChannelKind; name: string; topic: string; memberEmployeeIds: string[]; createdAt: string };
+export type ChatMessage = { id: string; channelId: string; authorEmployeeId: string; body: string; mentions: string[]; createdAt: string; editedAt?: string };
+/** A read receipt is a marker on the last message a colleague has seen, not a timestamp, so two messages posted in the same instant still order correctly. */
+export type ChatRead = { channelId: string; employeeId: string; lastReadMessageId: string; readAt: string };
+
+export const CURRENT_SCHEMA_VERSION = 8;
+export type DemoState = { schemaVersion: typeof CURRENT_SCHEMA_VERSION; organizations: Organization[]; branches: Branch[]; sessions: SessionRecord[]; comments: Comment[]; chatChannels: ChatChannel[]; chatMessages: ChatMessage[]; chatReads: ChatRead[]; workspaces: Workspace[]; boards: Board[]; boardGroups: BoardGroup[]; boardColumns: BoardColumn[]; boardItems: BoardItem[]; boardViews: BoardView[]; vehicles: Vehicle[]; customers: Customer[]; leads: Lead[]; deals: Deal[]; financeDrafts: FinanceDraft[]; financeApplications: FinanceApplication[]; serviceJobs: ServiceJob[]; employees: Employee[]; appointments: Appointment[]; testDrives: TestDrive[]; quotes: Quote[]; payments: Payment[]; documents: CrmDocument[]; tasks: TaskItem[]; notifications: Notification[]; activities: AuditActivity[]; preferences: UserPreferences; drafts: FormDrafts };

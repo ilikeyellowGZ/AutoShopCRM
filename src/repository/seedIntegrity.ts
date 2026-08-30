@@ -16,6 +16,7 @@ export function validateDemoState(state: DemoState): SeedIntegrityIssue[] {
   const issues: SeedIntegrityIssue[] = [];
   const collections: Record<string, readonly Identified[]> = {
     organizations: state.organizations, branches: state.branches, sessions: state.sessions,
+    chatChannels: state.chatChannels, chatMessages: state.chatMessages,
     workspaces: state.workspaces, boards: state.boards, boardGroups: state.boardGroups, boardColumns: state.boardColumns, boardItems: state.boardItems, boardViews: state.boardViews, vehicles: state.vehicles, customers: state.customers, leads: state.leads, deals: state.deals,
     financeApplications: state.financeApplications, serviceJobs: state.serviceJobs, employees: state.employees,
     appointments: state.appointments, testDrives: state.testDrives, quotes: state.quotes, payments: state.payments,
@@ -98,12 +99,39 @@ export function validateDemoState(state: DemoState): SeedIntegrityIssue[] {
       if (issue) issues.push({ code: "dangling-reference", collection: "boardItems", recordId: item.id, field: "values", targetId: columnId, message: issue.message });
     }
   }
-  const allRecordIds = new Set(Object.entries(ids).filter(([collection]) => collection !== "branches" && collection !== "organizations" && collection !== "sessions" && !collection.startsWith("board") && collection !== "workspaces").flatMap(([, set]) => [...set]));
+  for (const channel of state.chatChannels) {
+    reference("chatChannels", channel.id, "organizationId", channel.organizationId, "organizations");
+    for (const employeeId of channel.memberEmployeeIds) reference("chatChannels", channel.id, "memberEmployeeIds", employeeId, "employees");
+  }
+  const channelsById = new Map(state.chatChannels.map((channel) => [channel.id, channel]));
+  for (const message of state.chatMessages) {
+    reference("chatMessages", message.id, "channelId", message.channelId, "chatChannels");
+    reference("chatMessages", message.id, "authorEmployeeId", message.authorEmployeeId, "employees");
+    const channel = channelsById.get(message.channelId);
+    if (channel && !channel.memberEmployeeIds.includes(message.authorEmployeeId)) issues.push({ code: "dangling-reference", collection: "chatMessages", recordId: message.id, field: "authorEmployeeId", targetId: message.authorEmployeeId, message: `chatMessages.${message.id} was written by someone who is not a member of the channel.` });
+    for (const employeeId of message.mentions) {
+      if (channel && !channel.memberEmployeeIds.includes(employeeId)) issues.push({ code: "dangling-reference", collection: "chatMessages", recordId: message.id, field: "mentions", targetId: employeeId, message: `chatMessages.${message.id} mentions someone who cannot read the channel.` });
+    }
+  }
+  const chatMessagesById = new Map(state.chatMessages.map((message) => [message.id, message]));
+  for (const read of state.chatReads) {
+    const recordId = `${read.channelId}:${read.employeeId}`;
+    reference("chatReads", recordId, "channelId", read.channelId, "chatChannels");
+    reference("chatReads", recordId, "employeeId", read.employeeId, "employees");
+    reference("chatReads", recordId, "lastReadMessageId", read.lastReadMessageId, "chatMessages");
+    const marked = chatMessagesById.get(read.lastReadMessageId);
+    if (marked && marked.channelId !== read.channelId) issues.push({ code: "dangling-reference", collection: "chatReads", recordId, field: "lastReadMessageId", targetId: read.lastReadMessageId, message: `chatReads.${recordId}.lastReadMessageId marks a message from another channel.` });
+    const channel = channelsById.get(read.channelId);
+    if (channel && !channel.memberEmployeeIds.includes(read.employeeId)) issues.push({ code: "dangling-reference", collection: "chatReads", recordId, field: "employeeId", targetId: read.employeeId, message: `chatReads.${recordId} belongs to someone who is not a member of the channel.` });
+  }
+
+  const allRecordIds = new Set(Object.entries(ids).filter(([collection]) => collection !== "branches" && collection !== "organizations" && collection !== "sessions" && !collection.startsWith("board") && !collection.startsWith("chat") && collection !== "workspaces").flatMap(([, set]) => [...set]));
   const commentIds = new Set(state.comments.map((comment) => comment.id));
   const boardItemIds = new Set(state.boardItems.map((item) => item.id));
   for (const notification of state.notifications) {
+    if (notification.chatMessageId !== undefined && !ids.chatMessages.has(notification.chatMessageId)) issues.push({ code: "dangling-reference", collection: "notifications", recordId: notification.id, field: "chatMessageId", targetId: notification.chatMessageId, message: `notifications.${notification.id}.chatMessageId points to a missing chat message.` });
     if (notification.commentId !== undefined && !commentIds.has(notification.commentId)) issues.push({ code: "dangling-reference", collection: "notifications", recordId: notification.id, field: "commentId", targetId: notification.commentId, message: `notifications.${notification.id}.commentId points to a missing comment.` });
-    if (!allRecordIds.has(notification.relatedId) && !boardItemIds.has(notification.relatedId)) issues.push({ code: "dangling-reference", collection: "notifications", recordId: notification.id, field: "relatedId", targetId: notification.relatedId, message: `notifications.${notification.id}.relatedId points to a missing record.` });
+    if (!allRecordIds.has(notification.relatedId) && !boardItemIds.has(notification.relatedId) && !ids.chatChannels.has(notification.relatedId)) issues.push({ code: "dangling-reference", collection: "notifications", recordId: notification.id, field: "relatedId", targetId: notification.relatedId, message: `notifications.${notification.id}.relatedId points to a missing record.` });
   }
 
   return issues;

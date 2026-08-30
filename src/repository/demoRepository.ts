@@ -11,6 +11,7 @@ import type {
   BoardFilter,
   Comment,
   CommentEntityType,
+  ChatMessage,
   ServiceJob,
   SessionEndReason,
   UserPreferences,
@@ -67,6 +68,8 @@ export type DemoRepository = {
   reopenComment(commentId: string): void;
   toggleCommentPin(commentId: string): void;
   toggleCommentReaction(commentId: string, emoji: string, employeeId: string): void;
+  sendChatMessage(input: { channelId: string; authorEmployeeId: string; body: string }): string;
+  markChannelRead(channelId: string, employeeId: string): void;
 };
 
 const clone = <T,>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
@@ -111,6 +114,7 @@ export function createDemoRepository(storage: Storage, now: () => string = () =>
   let sessionNumber = maximumSuffix(state.sessions.map((session) => session.id));
   let boardItemNumber = maximumSuffix(state.boardItems.map((item) => item.id));
   let commentNumber = maximumSuffix(state.comments.map((comment) => comment.id));
+  let chatMessageNumber = maximumSuffix(state.chatMessages.map((message) => message.id));
   let notificationNumber = maximumSuffix(state.notifications.map((notification) => notification.id));
   const listeners = new Set<(state: DemoState) => void>();
 
@@ -424,6 +428,54 @@ export function createDemoRepository(storage: Storage, now: () => string = () =>
           : [...current.reactions, { emoji, employeeIds: [employeeId] }];
         draft.comments[index] = { ...current, reactions };
       }, "neutral");
+    },
+    sendChatMessage: ({ channelId, authorEmployeeId, body }) => {
+      const trimmed = body.trim();
+      if (!trimmed) throw new Error("A message needs something to say.");
+      const channel = state.chatChannels.find((candidate) => candidate.id === channelId);
+      if (!channel) throw new Error("Channel not found.");
+      if (!channel.memberEmployeeIds.includes(authorEmployeeId)) throw new Error("Only channel members can post here.");
+      // A mention only reaches somebody who can open the channel, so a name from outside it is left as plain text.
+      const mentions = mentionedEmployeeIds(trimmed, state.employees).filter((employeeId) => employeeId !== authorEmployeeId && channel.memberEmployeeIds.includes(employeeId));
+      const id = `chat-message-${String(++chatMessageNumber).padStart(3, "0")}`;
+      const author = state.employees.find((employee) => employee.id === authorEmployeeId);
+      commit("Chat message sent", `A message was posted in ${channel.kind === "direct" ? "a direct conversation" : `#${channel.name}`}.`, (draft) => {
+        const message: ChatMessage = { id, channelId, authorEmployeeId, body: trimmed, mentions, createdAt: NOW };
+        draft.chatMessages.push(message);
+        for (const employeeId of mentions) {
+          draft.notifications.unshift({
+            id: `notification-${String(++notificationNumber).padStart(2, "0")}`,
+            organizationId: channel.organizationId,
+            category: "mention",
+            priority: "high",
+            title: `${author?.name ?? "A colleague"} mentioned you`,
+            detail: trimmed.length > 140 ? `${trimmed.slice(0, 137)}...` : trimmed,
+            read: false,
+            tone: "info",
+            createdAt: NOW,
+            relatedId: channelId,
+            chatMessageId: id,
+            recipientEmployeeId: employeeId,
+          });
+        }
+      }, "positive");
+      return id;
+    },
+    // Read markers are per-reader bookkeeping rather than a business action, so they stay out of the audit trail.
+    markChannelRead: (channelId, employeeId) => {
+      const channel = state.chatChannels.find((candidate) => candidate.id === channelId);
+      if (!channel) throw new Error("Channel not found.");
+      if (!channel.memberEmployeeIds.includes(employeeId)) throw new Error("Only channel members can read here.");
+      const latest = state.chatMessages.filter((message) => message.channelId === channelId).sort((first, second) => first.createdAt.localeCompare(second.createdAt) || first.id.localeCompare(second.id)).at(-1);
+      if (!latest) return;
+      const existing = state.chatReads.find((read) => read.channelId === channelId && read.employeeId === employeeId);
+      if (existing?.lastReadMessageId === latest.id) return;
+      const readAt = now();
+      persist((draft) => {
+        const index = draft.chatReads.findIndex((read) => read.channelId === channelId && read.employeeId === employeeId);
+        if (index < 0) draft.chatReads.push({ channelId, employeeId, lastReadMessageId: latest.id, readAt });
+        else draft.chatReads[index] = { ...draft.chatReads[index], lastReadMessageId: latest.id, readAt };
+      });
     },
     addBoardItem: (boardId, groupId, title) => {
       const trimmed = title.trim();

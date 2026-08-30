@@ -63,7 +63,10 @@ describe("role and branch record scope", () => {
     expect(scoped.financeDrafts).toEqual([]);
     expect(scoped.financeApplications).toEqual([]);
     expect(scoped.payments).toEqual([]);
-    expect(scoped.employees.map((employee) => employee.name)).toEqual([account.name]);
+    // The directory stays shut: she sees herself and the colleagues she shares a channel with, nobody else.
+    const sharedWithNaledi = new Set(state.chatChannels.filter((channel) => channel.memberEmployeeIds.includes("employee-05")).flatMap((channel) => channel.memberEmployeeIds));
+    expect(scoped.employees.every((employee) => employee.name === account.name || sharedWithNaledi.has(employee.id))).toBe(true);
+    expect(scoped.employees.some((employee) => employee.id === "employee-07")).toBe(false);
   });
 
   it("limits connected employee and operational collections to a manager's selected branch", () => {
@@ -74,7 +77,10 @@ describe("role and branch record scope", () => {
     const scoped = scopeStateForAccount(state, account);
     const vehicleIds = new Set(scoped.vehicles.map((vehicle) => vehicle.id));
 
-    expect(scoped.employees.every((employee) => employee.branch === "Midrand")).toBe(true);
+    const sharedWithManager = new Set(scoped.chatChannels.flatMap((channel) => channel.memberEmployeeIds));
+    const tenantBranchIds = new Set(state.branches.filter((branch) => branch.organizationId === demoOrganizationId).map((branch) => branch.id));
+    expect(scoped.employees.every((employee) => employee.branch === "Midrand" || sharedWithManager.has(employee.id))).toBe(true);
+    expect(scoped.employees.every((employee) => tenantBranchIds.has(employee.branchId))).toBe(true);
     expect(scoped.appointments.every((appointment) => appointment.branch === "Midrand" && vehicleIds.has(appointment.vehicleId))).toBe(true);
     expect(scoped.financeApplications.every((application) => vehicleIds.has(application.vehicleId))).toBe(true);
     expect(scoped.documents.every((document) => !document.vehicleId || vehicleIds.has(document.vehicleId))).toBe(true);
@@ -211,7 +217,9 @@ it("hides a same-named employee owned by another organization when staff access 
     const scoped = scopeStateForAccount(state, account);
 
     expect(scoped.employees.some((employee) => employee.id === "employee-rival-01")).toBe(false);
-    expect(scoped.employees.every((employee) => employee.branchId === branchIdForName(demoOrganizationId, "Pretoria"))).toBe(true);
+    const ownBranchIds = new Set(state.branches.filter((branch) => branch.organizationId === demoOrganizationId).map((branch) => branch.id));
+    expect(scoped.employees.every((employee) => ownBranchIds.has(employee.branchId))).toBe(true);
+    expect(scoped.employees.some((employee) => employee.branchId === branchIdForName(demoOrganizationId, "Pretoria"))).toBe(true);
   });
 it("resolves a denied account's persisted deep link to the safe default route", () => {
     const state = createSeedState();

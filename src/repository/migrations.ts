@@ -1,5 +1,6 @@
 import {
   boardColumnKinds,
+  chatChannelKinds,
   commentEntityTypes,
   boardFilterOperators,
   boardViewKinds,
@@ -139,6 +140,9 @@ const isCellValue = (value: unknown): boolean => {
 };
 const isReaction = (value: unknown) => hasShape(value, { emoji: nonEmptyString, employeeIds: (ids) => Array.isArray(ids) && ids.every(nonEmptyString) });
 const isComment = (value: unknown) => hasShape(value, { id: nonEmptyString, organizationId: nonEmptyString, entityType: oneOf(commentEntityTypes), entityId: nonEmptyString, columnId: optional(nonEmptyString), parentCommentId: optional(nonEmptyString), authorEmployeeId: nonEmptyString, body: nonEmptyString, mentions: (ids) => Array.isArray(ids) && ids.every(nonEmptyString), createdAt: nonEmptyString, editedAt: optional(nonEmptyString), resolvedAt: optional(nonEmptyString), resolvedByEmployeeId: optional(nonEmptyString), pinned: boolean, reactions: (items) => Array.isArray(items) && items.every(isReaction) });
+const isChatChannel = (value: unknown) => hasShape(value, { id: nonEmptyString, organizationId: nonEmptyString, kind: oneOf(chatChannelKinds), name: nonEmptyString, topic: string, memberEmployeeIds: (ids) => Array.isArray(ids) && ids.every(nonEmptyString), createdAt: nonEmptyString });
+const isChatMessage = (value: unknown) => hasShape(value, { id: nonEmptyString, channelId: nonEmptyString, authorEmployeeId: nonEmptyString, body: nonEmptyString, mentions: (ids) => Array.isArray(ids) && ids.every(nonEmptyString), createdAt: nonEmptyString, editedAt: optional(nonEmptyString) });
+const isChatRead = (value: unknown) => hasShape(value, { channelId: nonEmptyString, employeeId: nonEmptyString, lastReadMessageId: nonEmptyString, readAt: nonEmptyString });
 const isWorkspace = (value: unknown) => hasShape(value, { id: nonEmptyString, organizationId: nonEmptyString, branchId: optional(nonEmptyString), name: nonEmptyString, description: string, position: number });
 const isBoard = (value: unknown) => hasShape(value, { id: nonEmptyString, workspaceId: nonEmptyString, title: nonEmptyString, description: string, position: number });
 const isBoardGroup = (value: unknown) => hasShape(value, { id: nonEmptyString, boardId: nonEmptyString, title: nonEmptyString, tone: oneOf(tones), position: number });
@@ -198,6 +202,7 @@ function normalizeRoute(state: RecordValue, preferences: RecordValue): RecordVal
     return fallback;
   }
   if (page === "work" && Array.isArray(state.boards) && (state.boards as unknown[]).some((board) => isRecord(board) && board.id === subview)) return { activePage: page, activeSubview: subview };
+  if (page === "chat" && Array.isArray(state.chatChannels) && (state.chatChannels as unknown[]).some((channel) => isRecord(channel) && channel.id === subview)) return { activePage: page, activeSubview: subview };
   if (page === "inventory" && recordExists(state, "vehicle", subview)) return { activePage: page, activeSubview: subview, activeRecordType: "vehicle", activeRecordId: subview };
   if (page === "customers" && recordExists(state, "customer", subview)) return { activePage: page, activeSubview: subview, activeRecordType: "customer", activeRecordId: subview };
   return staticRoutes.has(`${page}:${subview}`) ? { activePage: page, activeSubview: subview } : fallback;
@@ -220,9 +225,17 @@ const isDrafts = (value: unknown) => isRecord(value)
 
 export function isCompatibleDemoState(value: unknown): value is DemoState {
   if (!isRecord(value) || value.schemaVersion !== CURRENT_SCHEMA_VERSION || !hasShape(value.preferences, { branch: nonEmptyString, density: oneOf(["comfortable", "compact"]), activePage: nonEmptyString, activeSubview: nonEmptyString, viewPreferences: (item) => JSON.stringify(normalizeViewPreferences(item)) === JSON.stringify(item) }) || !isDrafts(value.drafts)) return false;
-  const collections = ["organizations", "branches", "sessions", "comments", "workspaces", "boards", "boardGroups", "boardColumns", "boardItems", "boardViews", "vehicles", "customers", "leads", "deals", "financeDrafts", "financeApplications", "serviceJobs", "employees", "appointments", "testDrives", "quotes", "payments", "documents", "tasks", "notifications", "activities"] as const;
+  const collections = ["organizations", "branches", "sessions", "comments", "chatChannels", "chatMessages", "chatReads", "workspaces", "boards", "boardGroups", "boardColumns", "boardItems", "boardViews", "vehicles", "customers", "leads", "deals", "financeDrafts", "financeApplications", "serviceJobs", "employees", "appointments", "testDrives", "quotes", "payments", "documents", "tasks", "notifications", "activities"] as const;
   if (!collections.every((key) => Array.isArray(value[key]))) return false;
 
+  const chatChannels = value.chatChannels as unknown[];
+  const chatMessages = value.chatMessages as unknown[];
+  const chatReads = value.chatReads as unknown[];
+  if (!chatChannels.every(isChatChannel) || !chatMessages.every(isChatMessage) || !chatReads.every(isChatRead)) return false;
+  const chatChannelIds = new Set(chatChannels.map((channel) => (channel as RecordValue).id as string));
+  const chatMessageIds = new Set(chatMessages.map((message) => (message as RecordValue).id as string));
+  if (!chatMessages.every((message) => chatChannelIds.has((message as RecordValue).channelId as string))) return false;
+  if (!chatReads.every((read) => chatChannelIds.has((read as RecordValue).channelId as string) && chatMessageIds.has((read as RecordValue).lastReadMessageId as string))) return false;
   const comments = value.comments as unknown[];
   if (!comments.every(isComment)) return false;
   const commentIds = new Set(comments.map((comment) => (comment as RecordValue).id as string));
@@ -459,18 +472,34 @@ function addNotificationCentre(value: RecordValue): RecordValue {
   return { ...value, schemaVersion: 5, notifications };
 }
 
-function addWorkOs(value: RecordValue): RecordValue {
-  const seed = createSeedState() as unknown as RecordValue;
-  const keys = ["workspaces", "boards", "boardGroups", "boardColumns", "boardItems", "boardViews"] as const;
+/**
+ * Collections that reference each other are restored as a set. Filling one of them from the demo seed
+ * while keeping the rest of a stored payload would leave references pointing at records that never
+ * existed, and the whole state would then fail validation and be thrown away.
+ */
+function restoreSet(value: RecordValue, keys: readonly string[], schemaVersion: number): RecordValue {
   const restored: RecordValue = {};
-  for (const key of keys) restored[key] = Array.isArray(value[key]) && (value[key] as unknown[]).length > 0 ? value[key] : seed[key];
-  return { ...value, ...restored, schemaVersion: 6 };
+  if (keys.some((key) => Array.isArray(value[key]) && (value[key] as unknown[]).length > 0)) {
+    for (const key of keys) restored[key] = Array.isArray(value[key]) ? value[key] : [];
+  } else {
+    const seed = createSeedState() as unknown as RecordValue;
+    for (const key of keys) restored[key] = seed[key];
+  }
+  return { ...value, ...restored, schemaVersion };
+}
+
+function addWorkOs(value: RecordValue): RecordValue {
+  return restoreSet(value, ["workspaces", "boards", "boardGroups", "boardColumns", "boardItems", "boardViews"], 6);
 }
 
 function addComments(value: RecordValue): RecordValue {
   const seed = createSeedState() as unknown as RecordValue;
   const comments = Array.isArray(value.comments) && (value.comments as unknown[]).length > 0 ? value.comments : seed.comments;
   return { ...value, comments, schemaVersion: 7 };
+}
+
+function addStaffChat(value: RecordValue): RecordValue {
+  return restoreSet(value, ["chatChannels", "chatMessages", "chatReads"], 8);
 }
 
 export function migrateDemoState(value: unknown): DemoState | null {
@@ -480,6 +509,7 @@ export function migrateDemoState(value: unknown): DemoState | null {
   if (isRecord(value) && value.schemaVersion === 4) value = addNotificationCentre(value);
   if (isRecord(value) && value.schemaVersion === 5) value = addWorkOs(value);
   if (isRecord(value) && value.schemaVersion === 6) value = addComments(value);
+  if (isRecord(value) && value.schemaVersion === 7) value = addStaffChat(value);
   if (isRecord(value) && value.schemaVersion === CURRENT_SCHEMA_VERSION && isRecord(value.preferences)) {
     const normalized = normalizeConnectedDataset(normalizeDemoAssignees(value));
     const preferences = isRecord(normalized.preferences) ? normalized.preferences : value.preferences;

@@ -14,8 +14,12 @@ export function taskRelatedTarget(task: TaskItem): NavigationTarget {
   return exactRecordTarget(task.relatedType, task.relatedId);
 }
 
+/** A notification is only worth raising if the reader can reach what it is about, chat and boards included. */
 export function targetForRelatedId(state: DemoState, id: string): NavigationTarget | undefined {
   const collections: readonly [PersistedRecordType, readonly { id: string }[]][] = [["vehicle", state.vehicles], ["customer", state.customers], ["lead", state.leads], ["deal", state.deals], ["service", state.serviceJobs], ["task", state.tasks]];
   const match = collections.find(([, records]) => records.some((record) => record.id === id));
-  return match ? exactRecordTarget(match[0], id) : undefined;
+  if (match) return exactRecordTarget(match[0], id);
+  if (state.chatChannels.some((channel) => channel.id === id)) return { page: "chat", subview: id };
+  const item = state.boardItems.find((candidate) => candidate.id === id);
+  return item ? { page: "work", subview: item.boardId } : undefined;
 }

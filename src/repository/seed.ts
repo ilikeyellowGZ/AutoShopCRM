@@ -1,5 +1,5 @@
 import { branchIdForName, CURRENT_SCHEMA_VERSION, demoBranches, demoOrganizationId } from "../domain/models";
-import type { Comment, Board, BoardColumn, BoardGroup, BoardItem, BoardView, Workspace, Branch, Organization, Appointment, AuditActivity, CrmDocument, Customer, Deal, DemoState, Employee, FinanceApplication, Lead, Payment, Quote, ServiceJob, TaskItem, TestDrive, Vehicle } from "../domain/models";
+import type { ChatChannel, ChatMessage, ChatRead, Comment, Board, BoardColumn, BoardGroup, BoardItem, BoardView, Workspace, Branch, Organization, Appointment, AuditActivity, CrmDocument, Customer, Deal, DemoState, Employee, FinanceApplication, Lead, Payment, Quote, ServiceJob, TaskItem, TestDrive, Vehicle } from "../domain/models";
 import { vehicleGalleries } from "../media/vehicleGalleries";
 
 const NOW = "2026-08-16T08:00:00+02:00";
@@ -223,11 +223,39 @@ const comments: Comment[] = [
   { id: "comment-04", organizationId: demoOrganizationId, entityType: "customer", entityId: "customer-01", authorEmployeeId: "employee-05", body: "Customer asked about a trade-in valuation.", mentions: [], createdAt: at(16, 10), resolvedAt: at(16, 12), resolvedByEmployeeId: "employee-04", pinned: false, reactions: [] },
 ];
 
+const chatChannels: ChatChannel[] = [
+  { id: "chat-channel-01", organizationId: demoOrganizationId, kind: "channel", name: "sales-floor", topic: "Deals in flight and cover for the showroom floor.", memberEmployeeIds: ["employee-01", "employee-03", "employee-04", "employee-05"], createdAt: at(10, 8) },
+  { id: "chat-channel-02", organizationId: demoOrganizationId, kind: "channel", name: "vehicle-prep", topic: "Readiness for vehicles moving towards the floor.", memberEmployeeIds: ["employee-01", "employee-03", "employee-07", "employee-10"], createdAt: at(10, 8) },
+  { id: "chat-channel-03", organizationId: demoOrganizationId, kind: "direct", name: "Lindiwe Khumalo and Naledi Ndlovu", topic: "", memberEmployeeIds: ["employee-04", "employee-05"], createdAt: at(12, 9) },
+];
+
+const chatMessages: ChatMessage[] = [
+  { id: "chat-message-001", channelId: "chat-channel-01", authorEmployeeId: "employee-04", body: "Morning all. The GT3 buyer is coming in at eleven.", mentions: [], createdAt: at(14, 9) },
+  { id: "chat-message-002", channelId: "chat-channel-01", authorEmployeeId: "employee-05", body: "Quote is ready. @Jacques van der Merwe can you sign off the discount?", mentions: ["employee-03"], createdAt: at(14, 10) },
+  { id: "chat-message-003", channelId: "chat-channel-01", authorEmployeeId: "employee-03", body: "Signed off. Keep the trade-in valuation conservative.", mentions: [], createdAt: at(14, 11) },
+  { id: "chat-message-004", channelId: "chat-channel-02", authorEmployeeId: "employee-07", body: "Roadworthy is booked for the M4 on Tuesday.", mentions: [], createdAt: at(14, 14) },
+  { id: "chat-message-005", channelId: "chat-channel-02", authorEmployeeId: "employee-10", body: "Detail bay is free from Wednesday morning.", mentions: [], createdAt: at(15, 8) },
+  { id: "chat-message-006", channelId: "chat-channel-02", authorEmployeeId: "employee-01", body: "Good. Photography has to follow on the same day.", mentions: [], createdAt: at(15, 9) },
+  { id: "chat-message-007", channelId: "chat-channel-03", authorEmployeeId: "employee-04", body: "Can you take the Midrand walk-in tomorrow?", mentions: [], createdAt: at(15, 15) },
+  { id: "chat-message-008", channelId: "chat-channel-03", authorEmployeeId: "employee-05", body: "Yes, I will pick it up first thing.", mentions: [], createdAt: at(15, 16) },
+];
+
+const chatReads: ChatRead[] = [
+  { channelId: "chat-channel-01", employeeId: "employee-03", lastReadMessageId: "chat-message-001", readAt: at(14, 10) },
+  { channelId: "chat-channel-01", employeeId: "employee-05", lastReadMessageId: "chat-message-003", readAt: at(14, 12) },
+  { channelId: "chat-channel-02", employeeId: "employee-01", lastReadMessageId: "chat-message-004", readAt: at(15, 7) },
+  { channelId: "chat-channel-03", employeeId: "employee-04", lastReadMessageId: "chat-message-008", readAt: at(15, 17) },
+  { channelId: "chat-channel-03", employeeId: "employee-05", lastReadMessageId: "chat-message-008", readAt: at(15, 16) },
+];
+
 export function createSeedState(): DemoState {
   const vehicles = vehicleRows.map((vehicle) => ({ ...vehicle, branchId: branchIdForName(demoOrganizationId, vehicle.branch), gallery: copyGallery(vehicle.id) }));
   const financedVehicleIndexes = [1, 0, ...Array.from({ length: 18 }, (_, index) => index + 2)];
   const financeDrafts = financedVehicleIndexes.map((vehicleIndex, index) => ({ vehicleId: `vehicle-${String(vehicleIndex + 1).padStart(2, "0")}`, vehiclePrice: vehicleRows[vehicleIndex].price, downPayment: index === 0 ? 350_000 : 150_000 + index * 10_000, termMonths: ([60, 48, 60, 72] as const)[index % 4], aprPercent: index === 0 ? 11.5 : 9.5 + (index % 6) * .75, tradeAllowance: index === 0 ? 280_000 : index % 3 ? 0 : 220_000, lienPayoff: index === 0 ? 90_000 : 0, serviceContract: index === 0 ? 32_000 : 18_000 + index * 500, gapInsurance: index === 0 ? 14_500 : 9_500 }));
-  return { schemaVersion: CURRENT_SCHEMA_VERSION, sessions: [], comments: comments.map((comment) => ({ ...comment, mentions: [...comment.mentions], reactions: comment.reactions.map((reaction) => ({ ...reaction, employeeIds: [...reaction.employeeIds] })) })),
+  return { schemaVersion: CURRENT_SCHEMA_VERSION, sessions: [],
+    chatChannels: chatChannels.map((channel) => ({ ...channel, memberEmployeeIds: [...channel.memberEmployeeIds] })),
+    chatMessages: chatMessages.map((message) => ({ ...message, mentions: [...message.mentions] })),
+    chatReads: chatReads.map((read) => ({ ...read })), comments: comments.map((comment) => ({ ...comment, mentions: [...comment.mentions], reactions: comment.reactions.map((reaction) => ({ ...reaction, employeeIds: [...reaction.employeeIds] })) })),
     workspaces: workspaces.map((workspace) => ({ ...workspace })),
     boards: boards.map((board) => ({ ...board })),
     boardGroups: boardGroups.map((group) => ({ ...group })),

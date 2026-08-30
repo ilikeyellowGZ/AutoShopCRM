@@ -261,4 +261,45 @@ Each migration step now stamps the version it produces rather than the current b
 
 ### Not Delivered
 
-Staff chat, channels, typing indicators, read receipts and attachments are unbuilt. Presence is computed in `src/domain/sessions.ts` but no screen renders it. Mentions resolve to people only; `@team` and `@department` are not supported.
+Mentions resolve to people only; `@team` and `@department` are not supported.
+
+## Phase 3 Progress — Staff Chat and Presence
+
+Date: 2026-08-30. Schema version: 8.
+
+### Conversations
+
+- `ChatChannel` is either a named channel or a direct conversation. Membership is an explicit list of employee ids; there is no implicit "everyone" channel.
+- A direct conversation is titled by the colleague on the other side of it, computed per reader rather than stored.
+- Messages carry the same mention parser the comment thread uses, so `@Firstname Lastname` behaves identically in both places.
+- A mention of somebody who is not in the channel is left as plain text and notifies nobody, because the notification would link to a conversation they cannot open.
+
+### Read Receipts
+
+- A read receipt is a marker on the last message a colleague has seen, not a timestamp. Two messages posted in the same instant still order correctly, and a stale marker that no longer matches a message reads as "everything unread" rather than silently reporting zero.
+- The unread count never counts what the reader wrote themselves.
+- Marking a conversation read is written with `persist` rather than `commit`: reading is per-reader bookkeeping, not an auditable business action.
+
+### Presence
+
+- Presence is read from the most recent session for the colleague's account and classified by `sessionPresence`: online, idle after five minutes, away after twenty, signed out when the session has ended.
+- A colleague with no visible session reads "No signal". The screen does not claim they are offline, because with no session record there is nothing to read.
+- The member rail refreshes every thirty seconds. Tests inject a fixed clock instead, so no timer runs in them.
+
+### Scope
+
+- A channel is visible only to its members, and only inside the account's own organization.
+- Sharing a channel makes a colleague's employee record readable across branches. This deliberately widens the previous rule, because a conversation cannot have anonymous participants. It is bounded by membership and by tenancy: a sales executive sees the three colleagues she shares channels with and nobody else, and a channel belonging to another organization stays invisible.
+- The lookup for "which employee is this account" is now tenant-checked, so a same-named employee in another organization can no longer be mistaken for the reader.
+
+### Migration Correctness
+
+Interdependent collections are now restored as a set. Filling one of them from the seed while keeping the rest of a stored payload left references pointing at records that never existed, and the whole state then failed validation and was thrown away. This applied to the board collections as well as the chat ones, and both are covered by tests.
+
+### Notification Targets
+
+`targetForRelatedId` now resolves a chat channel and a board item, so a mention notification raised from either can actually be opened. Before this, a board-item mention appeared in the notification centre with no way to reach it.
+
+### Not Delivered
+
+Typing indicators are not built. They would need a live transport between browsers; in a single-browser demo any indicator would be invented rather than observed, so none is shown. Attachments are not built: there is no file store, and a link that does not open a file would be a false promise. Channels cannot be created, renamed or joined from the interface; membership is seeded. Messages cannot be edited or deleted, and there are no threaded replies inside a channel.

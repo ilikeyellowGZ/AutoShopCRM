@@ -1,9 +1,9 @@
-import type { BoardItem, CommentEntityType, CrmDocument, DemoState, PersistedRecordType, TaskItem } from "../domain/models";
+import type { BoardItem, CommentEntityType, CrmDocument, DemoState, Employee, PersistedRecordType, TaskItem } from "../domain/models";
 import { hasPermission, type DemoAccount, type DemoBranch } from "./access";
 
 const emptyScope = (state: DemoState, branch: string): DemoState => ({
   ...state,
-  organizations: [], branches: [], sessions: [], comments: [], workspaces: [], boards: [], boardGroups: [], boardColumns: [], boardItems: [], boardViews: [], vehicles: [], customers: [], leads: [], deals: [], financeDrafts: [],
+  organizations: [], branches: [], sessions: [], comments: [], chatChannels: [], chatMessages: [], chatReads: [], workspaces: [], boards: [], boardGroups: [], boardColumns: [], boardItems: [], boardViews: [], vehicles: [], customers: [], leads: [], deals: [], financeDrafts: [],
   financeApplications: [], serviceJobs: [], employees: [], appointments: [], testDrives: [], quotes: [],
   payments: [], documents: [], tasks: [], notifications: [], activities: [],
   preferences: { ...state.preferences, branch, activePage: "my-day", activeSubview: "overview", activeRecordType: undefined, activeRecordId: undefined, activeContextId: undefined },
@@ -60,7 +60,12 @@ export function scopeStateForAccount(state: DemoState, account: DemoAccount): De
   };
   const tasks = state.tasks.filter(visibleTask);
   const relatedIds = new Set([...vehicleIds, ...leadIds, ...dealIds, ...serviceIds, ...customerIds, ...tasks.map((task) => task.id)]);
-  const ownEmployee = state.employees.find((employee) => employee.name === account.name);
+  const ownEmployee = state.employees.find((employee) => tenantBranchIds.has(employee.branchId) && employee.name === account.name);
+  const chatChannels = ownEmployee ? state.chatChannels.filter((channel) => channel.organizationId === account.organizationId && channel.memberEmployeeIds.includes(ownEmployee.id)) : [];
+  const chatChannelIds = new Set(chatChannels.map((channel) => channel.id));
+  const chatMessages = state.chatMessages.filter((message) => chatChannelIds.has(message.channelId));
+  const chatReads = state.chatReads.filter((read) => chatChannelIds.has(read.channelId));
+  const chatParticipantIds = new Set(chatChannels.flatMap((channel) => channel.memberEmployeeIds));
   const activities = hasPermission(account, "audit.read") ? state.activities.filter((activity) => activity.organizationId === account.organizationId && (activity.targetType === "system" || relatedIds.has(activity.targetId))) : [];
   const sessions = state.sessions.filter((session) => session.organizationId === account.organizationId && (session.accountId === account.id || (hasPermission(account, "staff.read") && visibleBranchIds.has(session.branchId))));
   const workspaces = state.workspaces.filter((workspace) => workspace.organizationId === account.organizationId && (!workspace.branchId || visibleBranchIds.has(workspace.branchId)));
@@ -71,7 +76,7 @@ export function scopeStateForAccount(state: DemoState, account: DemoAccount): De
   const boardColumns = state.boardColumns.filter((column) => boardIds.has(column.boardId));
   const boardViews = state.boardViews.filter((view) => boardIds.has(view.boardId));
   const scopedRecordIds: Record<PersistedRecordType, Set<string>> = { vehicle: vehicleIds, customer: visibleCustomerIds, lead: leadIds, deal: dealIds, service: serviceIds, task: new Set(tasks.map((task) => task.id)) };
-  const ownEmployeeIds = new Set(state.employees.filter((employee) => employee.name === account.name).map((employee) => employee.id));
+  const ownEmployeeIds = new Set(state.employees.filter((employee) => tenantBranchIds.has(employee.branchId) && employee.name === account.name).map((employee) => employee.id));
   const personColumnIds = new Set(state.boardColumns.filter((column) => column.kind === "person").map((column) => column.id));
   const itemIsVisible = (item: BoardItem) => Object.entries(item.values).every(([columnId, value]) => {
     if (value.kind === "relation") return scopedRecordIds[value.recordType].has(value.recordId);
@@ -82,9 +87,12 @@ export function scopeStateForAccount(state: DemoState, account: DemoAccount): De
   const reachableItemIds = new Set(reachableItems.map((item) => item.id));
   const boardItems = reachableItems.filter((item) => item.parentItemId === undefined || reachableItemIds.has(item.parentItemId));
   const assignedEmployeeIds = new Set(boardItems.flatMap((item) => Object.values(item.values).flatMap((value) => value.kind === "person" ? [value.employeeId] : [])));
-  const employees = hasPermission(account, "staff.read")
-    ? state.employees.filter((employee) => visibleBranchIds.has(employee.branchId))
-    : state.employees.filter((employee) => (tenantBranchIds.has(employee.branchId) && employee.name === account.name) || (visibleBranchIds.has(employee.branchId) && assignedEmployeeIds.has(employee.id)));
+  const inDirectory = (employee: Employee) => hasPermission(account, "staff.read")
+    ? visibleBranchIds.has(employee.branchId)
+    : (tenantBranchIds.has(employee.branchId) && employee.name === account.name) || (visibleBranchIds.has(employee.branchId) && assignedEmployeeIds.has(employee.id));
+  // A conversation cannot have anonymous participants, so sharing a channel makes a colleague's record
+  // readable across branches. Tenancy still holds: it never reaches outside the account's organization.
+  const employees = state.employees.filter((employee) => inDirectory(employee) || (tenantBranchIds.has(employee.branchId) && chatParticipantIds.has(employee.id)));
   const commentableIds: Record<CommentEntityType, Set<string>> = {
     vehicle: vehicleIds, customer: visibleCustomerIds, lead: leadIds, deal: dealIds,
     service: serviceIds, task: new Set(tasks.map((task) => task.id)), "board-item": new Set(boardItems.map((item) => item.id)),
@@ -93,11 +101,17 @@ export function scopeStateForAccount(state: DemoState, account: DemoAccount): De
   const reachableCommentIds = new Set(reachableComments.map((comment) => comment.id));
   const comments = reachableComments.filter((comment) => comment.parentCommentId === undefined || reachableCommentIds.has(comment.parentCommentId));
   const visibleCommentIds = new Set(comments.map((comment) => comment.id));
+  const visibleChatMessageIds = new Set(chatMessages.map((message) => message.id));
+  const notificationReaches = (notification: DemoState["notifications"][number]) => {
+    if (notification.chatMessageId !== undefined) return visibleChatMessageIds.has(notification.chatMessageId);
+    if (notification.commentId !== undefined) return visibleCommentIds.has(notification.commentId);
+    return relatedIds.has(notification.relatedId);
+  };
   const notifications = state.notifications.filter((notification) => notification.organizationId === account.organizationId
-    && (notification.commentId !== undefined ? visibleCommentIds.has(notification.commentId) : relatedIds.has(notification.relatedId))
+    && notificationReaches(notification)
     && (notification.recipientEmployeeId === undefined || notification.recipientEmployeeId === ownEmployee?.id));
   const draftScope = `${account.id}:${selectedBranch}`;
   const vehicleIntake = state.drafts.vehicleIntakes[draftScope] ?? null;
 
-  return { ...state, organizations, branches, sessions, comments, workspaces, boards, boardGroups, boardColumns, boardItems, boardViews, vehicles, customers, leads, deals, financeDrafts, financeApplications, serviceJobs, employees, appointments, testDrives, quotes, payments, documents, tasks, notifications, activities, preferences: { ...state.preferences, branch: selectedBranch }, drafts: { ...state.drafts, vehicleIntake, vehicleIntakes: vehicleIntake ? { [draftScope]: vehicleIntake } : {} } };
+  return { ...state, organizations, branches, sessions, comments, chatChannels, chatMessages, chatReads, workspaces, boards, boardGroups, boardColumns, boardItems, boardViews, vehicles, customers, leads, deals, financeDrafts, financeApplications, serviceJobs, employees, appointments, testDrives, quotes, payments, documents, tasks, notifications, activities, preferences: { ...state.preferences, branch: selectedBranch }, drafts: { ...state.drafts, vehicleIntake, vehicleIntakes: vehicleIntake ? { [draftScope]: vehicleIntake } : {} } };
 }

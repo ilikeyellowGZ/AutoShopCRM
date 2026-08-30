@@ -231,7 +231,7 @@ describe("stepwise schema upgrades", () => {
   };
 
   it("carries a v4 payload through every later step instead of discarding it", () => {
-    const state = strip(["workspaces", "boards", "boardGroups", "boardColumns", "boardItems", "boardViews", "comments"]);
+    const state = strip(["chatChannels", "chatMessages", "chatReads", "workspaces", "boards", "boardGroups", "boardColumns", "boardItems", "boardViews", "comments"]);
     state.schemaVersion = 4;
     state.notifications = (state.notifications as UnknownRecord[]).map(({ category: _category, priority: _priority, createdAt: _createdAt, ...rest }) => rest);
 
@@ -245,7 +245,7 @@ describe("stepwise schema upgrades", () => {
   });
 
   it("carries a v5 payload through the work os and comment steps", () => {
-    const state = strip(["workspaces", "boards", "boardGroups", "boardColumns", "boardItems", "boardViews", "comments"]);
+    const state = strip(["chatChannels", "chatMessages", "chatReads", "workspaces", "boards", "boardGroups", "boardColumns", "boardItems", "boardViews", "comments"]);
     state.schemaVersion = 5;
 
     const migrated = migrateDemoState(state);
@@ -256,12 +256,51 @@ describe("stepwise schema upgrades", () => {
   });
 
   it("carries a v6 payload through the comment step", () => {
-    const state = strip(["comments"]);
+    const state = strip(["chatChannels", "chatMessages", "chatReads", "comments"]);
     state.schemaVersion = 6;
 
     const migrated = migrateDemoState(state);
 
     expect(migrated).not.toBeNull();
     expect(migrated!.comments.length).toBeGreaterThan(0);
+    expect(migrated!.chatChannels.length).toBeGreaterThan(0);
+  });
+
+  it("carries a v7 payload through the staff chat step", () => {
+    const state = strip(["chatChannels", "chatMessages", "chatReads"]);
+    state.schemaVersion = 7;
+
+    const migrated = migrateDemoState(state);
+
+    expect(migrated).not.toBeNull();
+    expect(migrated!.schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
+    expect(migrated!.chatChannels.length).toBeGreaterThan(0);
+    expect(migrated!.chatMessages.length).toBeGreaterThan(0);
+  });
+
+  it("keeps a stored board set intact instead of mixing demo records into it", () => {
+    const state = createSeedState() as unknown as UnknownRecord;
+    state.schemaVersion = 5;
+    state.boardItems = [];
+    state.boardViews = [];
+
+    const migrated = migrateDemoState(state);
+
+    expect(migrated).not.toBeNull();
+    expect(migrated!.boards.length).toBeGreaterThan(0);
+    expect(migrated!.boardItems).toEqual([]);
+    expect(migrated!.boardViews).toEqual([]);
+  });
+
+  it("keeps conversations a stored payload already has", () => {
+    const state = createSeedState() as unknown as UnknownRecord;
+    state.schemaVersion = 7;
+    state.chatMessages = [{ id: "chat-message-001", channelId: "chat-channel-01", authorEmployeeId: "employee-04", body: "Only this one survived.", mentions: [], createdAt: "2026-08-14T09:00:00+02:00" }];
+    state.chatReads = [];
+
+    const migrated = migrateDemoState(state);
+
+    expect(migrated!.chatMessages).toHaveLength(1);
+    expect(migrated!.chatMessages[0].body).toBe("Only this one survived.");
   });
 });
