@@ -1,4 +1,4 @@
-import type { CrmDocument, DemoState, TaskItem } from "../domain/models";
+import type { BoardItem, CrmDocument, DemoState, PersistedRecordType, TaskItem } from "../domain/models";
 import { hasPermission, type DemoAccount, type DemoBranch } from "./access";
 
 const emptyScope = (state: DemoState, branch: string): DemoState => ({
@@ -52,7 +52,6 @@ export function scopeStateForAccount(state: DemoState, account: DemoAccount): De
     document.dealId === undefined ? null : dealIds.has(document.dealId),
   ].filter((link): link is boolean => link !== null);
   const documents = state.documents.filter((document) => { const links = documentLinks(document); return links.length > 0 && links.every(Boolean); });
-  const employees = hasPermission(account, "staff.read") ? state.employees.filter((employee) => visibleBranchIds.has(employee.branchId)) : state.employees.filter((employee) => tenantBranchIds.has(employee.branchId) && employee.name === account.name);
   const visibleTask = (task: TaskItem) => {
     if (task.relatedType === "vehicle") return !individuallyScoped && account.pages.includes("inventory") && vehicleIds.has(task.relatedId);
     if (task.relatedType === "lead") return (account.pages.includes("customers") || account.pages.includes("pipeline")) && leadIds.has(task.relatedId);
@@ -70,8 +69,22 @@ export function scopeStateForAccount(state: DemoState, account: DemoAccount): De
   const boardIds = new Set(boards.map((board) => board.id));
   const boardGroups = state.boardGroups.filter((group) => boardIds.has(group.boardId));
   const boardColumns = state.boardColumns.filter((column) => boardIds.has(column.boardId));
-  const boardItems = state.boardItems.filter((item) => boardIds.has(item.boardId));
   const boardViews = state.boardViews.filter((view) => boardIds.has(view.boardId));
+  const scopedRecordIds: Record<PersistedRecordType, Set<string>> = { vehicle: vehicleIds, customer: visibleCustomerIds, lead: leadIds, deal: dealIds, service: serviceIds, task: new Set(tasks.map((task) => task.id)) };
+  const ownEmployeeIds = new Set(state.employees.filter((employee) => employee.name === account.name).map((employee) => employee.id));
+  const personColumnIds = new Set(state.boardColumns.filter((column) => column.kind === "person").map((column) => column.id));
+  const itemIsVisible = (item: BoardItem) => Object.entries(item.values).every(([columnId, value]) => {
+    if (value.kind === "relation") return scopedRecordIds[value.recordType].has(value.recordId);
+    if (individuallyScoped && value.kind === "person" && personColumnIds.has(columnId)) return ownEmployeeIds.has(value.employeeId);
+    return true;
+  });
+  const reachableItems = state.boardItems.filter((item) => boardIds.has(item.boardId) && itemIsVisible(item));
+  const reachableItemIds = new Set(reachableItems.map((item) => item.id));
+  const boardItems = reachableItems.filter((item) => item.parentItemId === undefined || reachableItemIds.has(item.parentItemId));
+  const assignedEmployeeIds = new Set(boardItems.flatMap((item) => Object.values(item.values).flatMap((value) => value.kind === "person" ? [value.employeeId] : [])));
+  const employees = hasPermission(account, "staff.read")
+    ? state.employees.filter((employee) => visibleBranchIds.has(employee.branchId))
+    : state.employees.filter((employee) => (tenantBranchIds.has(employee.branchId) && employee.name === account.name) || (visibleBranchIds.has(employee.branchId) && assignedEmployeeIds.has(employee.id)));
   const draftScope = `${account.id}:${selectedBranch}`;
   const vehicleIntake = state.drafts.vehicleIntakes[draftScope] ?? null;
 

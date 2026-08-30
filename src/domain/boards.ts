@@ -95,7 +95,7 @@ function comparableText(state: DemoState, column: BoardColumn | undefined, value
     case "date": return value.date;
     case "option": return column?.options.find((option) => option.id === value.optionId)?.label ?? value.optionId;
     case "options": return value.optionIds.map((optionId) => column?.options.find((option) => option.id === optionId)?.label ?? optionId).join(" ");
-    case "person": return state.employees.find((employee) => employee.id === value.employeeId)?.name ?? value.employeeId;
+    case "person": return value.employeeId;
     case "relation": return value.recordId;
   }
 }
@@ -152,7 +152,7 @@ export function workloadForView(state: DemoState, view: BoardView): { assigned: 
     else unassigned.push(item);
   }
   const assigned = [...byEmployee.entries()]
-    .map(([employeeId, entries]) => ({ employeeId, name: state.employees.find((employee) => employee.id === employeeId)?.name ?? employeeId, items: entries }))
+    .map(([employeeId, entries]) => ({ employeeId, name: state.employees.find((employee) => employee.id === employeeId)?.name ?? "Outside your access", items: entries }))
     .sort((first, second) => second.items.length - first.items.length || first.name.localeCompare(second.name));
   return { assigned, unassigned };
 }

@@ -194,6 +194,7 @@ function normalizeRoute(state: RecordValue, preferences: RecordValue): RecordVal
     if (page === "finance" && subview === "deal-finance" && typeof contextId === "string" && recordExists(state, "vehicle", contextId)) return { activePage: page, activeSubview: subview, activeContextId: contextId };
     return fallback;
   }
+  if (page === "work" && Array.isArray(state.boards) && (state.boards as unknown[]).some((board) => isRecord(board) && board.id === subview)) return { activePage: page, activeSubview: subview };
   if (page === "inventory" && recordExists(state, "vehicle", subview)) return { activePage: page, activeSubview: subview, activeRecordType: "vehicle", activeRecordId: subview };
   if (page === "customers" && recordExists(state, "customer", subview)) return { activePage: page, activeSubview: subview, activeRecordType: "customer", activeRecordId: subview };
   return staticRoutes.has(`${page}:${subview}`) ? { activePage: page, activeSubview: subview } : fallback;
@@ -271,12 +272,25 @@ export function isCompatibleDemoState(value: unknown): value is DemoState {
   const boardIds = new Set(boards.map((board) => (board as RecordValue).id as string));
   const boardGroupIds = new Set(boardGroups.map((group) => (group as RecordValue).id as string));
   const boardItemIds = new Set(boardItems.map((item) => (item as RecordValue).id as string));
+  const columnBoard = new Map(boardColumns.map((column) => [(column as RecordValue).id as string, (column as RecordValue).boardId as string]));
   const boardTenancyHolds = workspaces.every((workspace) => organizationIds.has((workspace as RecordValue).organizationId as string))
     && boards.every((board) => workspaceIds.has((board as RecordValue).workspaceId as string))
     && boardGroups.every((group) => boardIds.has((group as RecordValue).boardId as string))
     && boardColumns.every((column) => boardIds.has((column as RecordValue).boardId as string))
     && boardViews.every((view) => boardIds.has((view as RecordValue).boardId as string))
-    && boardItems.every((item) => { const record = item as RecordValue; return boardIds.has(record.boardId as string) && boardGroupIds.has(record.groupId as string) && (record.parentItemId === undefined || boardItemIds.has(record.parentItemId as string)); });
+    && boardItems.every((item) => {
+      const record = item as RecordValue;
+      if (!boardIds.has(record.boardId as string) || !boardGroupIds.has(record.groupId as string)) return false;
+      if (record.parentItemId !== undefined && !boardItemIds.has(record.parentItemId as string)) return false;
+      const group = boardGroups.find((candidate) => (candidate as RecordValue).id === record.groupId);
+      if (!group || (group as RecordValue).boardId !== record.boardId) return false;
+      return Object.keys(record.values as RecordValue).every((columnId) => columnBoard.get(columnId) === record.boardId);
+    })
+    && boardViews.every((view) => {
+      const record = view as RecordValue;
+      if (record.groupByColumnId !== undefined && columnBoard.get(record.groupByColumnId as string) !== record.boardId) return false;
+      return (record.filters as RecordValue[]).every((filter) => columnBoard.get(filter.columnId as string) === record.boardId);
+    });
   if (!boardTenancyHolds) return false;
   return notifications.every((notification) => organizationIds.has((notification as RecordValue).organizationId as string))
     && sessions.every((session) => organizationIds.has((session as RecordValue).organizationId as string) && branchIds.has((session as RecordValue).branchId as string))

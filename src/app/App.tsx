@@ -12,6 +12,7 @@ import { FinancePage } from "../features/finance/FinancePage";
 import { InventoryPage } from "../features/inventory/InventoryPage";
 import { MyDayPage } from "../features/my-day/MyDayPage";
 import { PipelinePage } from "../features/pipeline/PipelinePage";
+import { BoardsPage } from "../features/work/BoardsPage";
 import { DealEntry } from "../features/sales/DealEntry";
 import { SalesPage } from "../features/sales/SalesPage";
 import { ServicePage } from "../features/service/ServicePage";
@@ -137,6 +138,7 @@ export function App({ repository: providedRepository, initialAccountId }: AppPro
       if ((domainSubviews.customers as readonly string[]).includes(target.subview)) return <DomainWorkspace page="customers" subview={target.subview} state={scopedState} onNavigate={navigate} />;
       return <CustomersPage state={scopedState} repository={repository} canWrite={canWriteCustomers} viewPreferences={scopedState.preferences.viewPreferences.customers} onViewPreferencesChange={(patch) => updateView("customers", patch)} onOpenCustomer={(recordId) => navigate({ page: "customers", subview: recordId, recordType: "customer", recordId })} />;
     }
+    if (target.page === "work") return <BoardsPage state={scopedState} repository={repository} boardId={target.subview === "boards" ? undefined : target.subview} onNavigate={navigate} canWriteItems={hasPermission(account, "work.item.write")} canManageViews={hasPermission(account, "work.view.manage")} />;
     if (target.page === "pipeline") return <PipelinePage state={scopedState} repository={repository} onNavigate={navigate} canWrite={canWritePipeline} defaultOwner={account.recordAssignee} lockOwner={lockIndividualAssignee} />;
     if (target.page === "sales") {
       if (target.subview === "new-deal") return <section className="sales-page crm-page"><header className="crm-heading"><div><p className="crm-eyebrow">Sales · connected vehicle</p><h1>New vehicle deal</h1><p>Create a locally persisted deal linked to the selected inventory record.</p></div></header><DealEntry title="Deal details" state={scopedState} repository={repository} initialVehicleId={target.contextId} defaultSalesRep={account.recordAssignee} lockSalesRep={lockIndividualAssignee} onCreated={(deal) => navigate({ page: "sales", subview: "deals", recordType: "deal", recordId: deal.id })} /></section>;

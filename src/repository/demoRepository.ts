@@ -346,7 +346,13 @@ export function createDemoRepository(storage: Storage, now: () => string = () =>
       if (patch.groupByColumnId !== undefined && !columnIds.has(patch.groupByColumnId)) throw new Error("Board column not found.");
       commit("Board view saved", `${patch.title ?? view.title} was saved.`, (draft) => {
         const index = findIndex(draft.boardViews, viewId, "Board view");
-        draft.boardViews[index] = { ...draft.boardViews[index], ...clone(patch) };
+        const current = draft.boardViews[index];
+        draft.boardViews[index] = {
+          ...current,
+          title: patch.title ?? current.title,
+          filters: patch.filters ? clone(patch.filters) : current.filters,
+          ...("groupByColumnId" in patch ? { groupByColumnId: patch.groupByColumnId } : {}),
+        };
       }, "neutral");
     },
     markAllNotificationsRead: (notificationIds) => {

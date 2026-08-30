@@ -152,3 +152,83 @@ describe("board tenancy", () => {
     expect(denied.boardItems).toEqual([]);
   });
 });
+
+describe("board item record scope", () => {
+  it("hides an item that links to a record the viewer cannot see", () => {
+    const repository = repo();
+    const state = repository.getState();
+
+    const salesScope = scopeStateForAccount(state, getDemoAccount("sales"));
+    const visibleLeadIds = new Set(salesScope.leads.map((lead) => lead.id));
+    const linkedLeads = salesScope.boardItems.flatMap((item) => Object.values(item.values).flatMap((value) => value.kind === "relation" && value.recordType === "lead" ? [value.recordId] : []));
+
+    expect(linkedLeads.length).toBeGreaterThan(0);
+    expect(linkedLeads.every((leadId) => visibleLeadIds.has(leadId))).toBe(true);
+  });
+
+  it("hides an item linked to a vehicle outside the viewer's branch", () => {
+    const repository = repo();
+    const state = repository.getState();
+
+    const stockScope = scopeStateForAccount(state, getDemoAccount("stock"));
+    const visibleVehicleIds = new Set(stockScope.vehicles.map((vehicle) => vehicle.id));
+    const linkedVehicles = stockScope.boardItems.flatMap((item) => Object.values(item.values).flatMap((value) => value.kind === "relation" && value.recordType === "vehicle" ? [value.recordId] : []));
+
+    expect(linkedVehicles.every((vehicleId) => visibleVehicleIds.has(vehicleId))).toBe(true);
+    expect(stockScope.boardItems.length).toBeLessThan(state.boardItems.length);
+  });
+
+  it("limits an own-scoped account to work assigned to it or unassigned", () => {
+    const repository = repo();
+    const state = repository.getState();
+    const account = getDemoAccount("sales");
+    const self = state.employees.find((employee) => employee.name === account.name)!;
+
+    const scoped = scopeStateForAccount(state, account);
+    const owners = scoped.boardItems.flatMap((item) => Object.values(item.values).flatMap((value) => value.kind === "person" ? [value.employeeId] : []));
+
+    expect(owners.every((employeeId) => employeeId === self.id)).toBe(true);
+  });
+
+  it("never shows a subitem whose parent is hidden", () => {
+    const repository = repo();
+    const scoped = scopeStateForAccount(repository.getState(), getDemoAccount("sales"));
+    const visible = new Set(scoped.boardItems.map((item) => item.id));
+
+    expect(scoped.boardItems.every((item) => item.parentItemId === undefined || visible.has(item.parentItemId))).toBe(true);
+  });
+
+  it("resolves a saved filter to the same rows for every viewer", () => {
+    const repository = repo();
+    repository.saveBoardView("view-01", { filters: [{ columnId: "column-01", operator: "is", value: "Blocked" }] });
+    const state = repository.getState();
+    const view = state.boardViews.find((candidate) => candidate.id === "view-01")!;
+
+    const raw = itemsForView(state, view).map((item) => item.id);
+    const asOwner = itemsForView(scopeStateForAccount(state, getDemoAccount("owner")), view).map((item) => item.id);
+    const asManager = itemsForView(scopeStateForAccount(state, getDemoAccount("manager")), view);
+
+    expect(asOwner).toEqual(raw);
+    expect(asManager.every((item) => item.values["column-01"]?.kind === "option" && item.values["column-01"].optionId === "status-blocked")).toBe(true);
+  });
+});
+
+describe("saved view editing", () => {
+  it("clears a grouping instead of silently keeping it", () => {
+    const repository = repo();
+
+    repository.saveBoardView("view-02", { groupByColumnId: undefined });
+
+    expect(repository.getState().boardViews.find((view) => view.id === "view-02")?.groupByColumnId).toBeUndefined();
+  });
+
+  it("keeps the grouping when the patch does not mention it", () => {
+    const repository = repo();
+
+    repository.saveBoardView("view-02", { title: "Status board" });
+
+    const view = repository.getState().boardViews.find((candidate) => candidate.id === "view-02");
+    expect(view?.groupByColumnId).toBe("column-01");
+    expect(view?.title).toBe("Status board");
+  });
+});
