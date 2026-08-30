@@ -195,3 +195,70 @@ The notification centre is unbuilt. Notifications remain a flat list without cat
 ### Security Boundary Unchanged
 
 This is browser-side scoping. It is not a network boundary. The production requirements in the Security Boundary section above still apply in full.
+
+## Phase 2 Progress — Work OS
+
+Date: 2026-08-30. Schema version: 6.
+
+### Board Engine
+
+- Workspace, Board, BoardGroup, BoardColumn, BoardItem and BoardView are generic records in `DemoState`. A board is described by its columns. No board has its own schema.
+- Eleven column kinds ship: text, number, money, status, priority, person, date, checkbox, tags, progress and relation.
+- `BoardCellValue` is a discriminated union. `valueKindForColumn` in `src/domain/boards.ts` maps each column kind to exactly one value shape. A status column cannot hold free text.
+- `validateCellValue` rejects an undefined option, out-of-range progress, an unknown employee, and a relation to a missing record or the wrong record type. The repository refuses the write. `validateDemoState` checks every stored cell.
+
+### Views
+
+- `itemsForView` is the single read path. Table, kanban, calendar and workload all use it, so a view cannot disagree with the board behind it.
+- Saved filters live on the view. Applying one narrows what is read and never changes an item.
+- Kanban lanes come from the grouping column's options plus an explicit lane for unset values.
+- Workload reports unassigned work rather than hiding it.
+- Subitems hang off `parentItemId` and are never listed twice.
+
+### Tenancy
+
+- Workspaces are organization owned and may be branch scoped.
+- A board item is hidden when any relation points at a record the viewer cannot see.
+- An own-scoped account sees only work assigned to it, or unassigned work.
+- A subitem never outlives a hidden parent.
+- A person assigned to visible work is named only within the viewer's visible branches. Anyone further away reads "Outside your access". Branch isolation is not relaxed to render a name.
+- Saved filters compare person cells on the employee id, so one saved view returns the same rows for every viewer.
+
+### Permissions
+
+`work.item.write` allows creating, moving and editing items. `work.view.manage` allows saving views. The CEO and the auditor hold neither.
+
+### Not Delivered
+
+Timeline and Gantt render through the calendar view and have no dependency or milestone model. There is no drag and drop; items move through explicit buttons. There is no column editor, so a board's columns are seeded rather than user-configurable.
+
+## Phase 3 Progress — Collaboration
+
+Date: 2026-08-30. Schema version: 7.
+
+### Contextual Discussion
+
+- `Comment` hangs off any record through `entityType` and `entityId`: vehicle, customer, lead, deal, service, task and board item. An optional `columnId` anchors a comment to one field.
+- Threads are one level deep. A reply must stay on its parent's record, and a reply cannot be replied to.
+- Comments carry pin, resolve and reopen state, an edited marker, and emoji reactions that disappear when the last person removes theirs.
+
+### Mentions
+
+- `findMentions` matches `@Firstname Lastname` against the employee directory, longest name first, so a colleague whose name is a prefix of another is never mistaken for them. An unmatched `@word` stays plain text.
+- A mention creates a high-priority notification for that person, carrying `commentId` so the notification links back to the comment rather than only the record.
+- Editing a comment notifies people added by the edit, and does not notify anyone twice.
+- Mentioning yourself notifies nobody.
+
+### Delivery and Scope
+
+- A notification with a `recipientEmployeeId` reaches only that person.
+- A comment is only as visible as the record it hangs on. A reply never outlives a hidden parent.
+- A mention on a record the recipient cannot reach is stored but not delivered. This is deliberate: the notification would link to a record they cannot open. It is covered by a test.
+
+### Migration Correctness
+
+Each migration step now stamps the version it produces rather than the current build's version. Before this, a stored v4 or v5 state skipped the later steps, failed validation and was silently replaced by the seed. Stepwise upgrade tests cover v4, v5 and v6 payloads.
+
+### Not Delivered
+
+Staff chat, channels, typing indicators, read receipts and attachments are unbuilt. Presence is computed in `src/domain/sessions.ts` but no screen renders it. Mentions resolve to people only; `@team` and `@department` are not supported.

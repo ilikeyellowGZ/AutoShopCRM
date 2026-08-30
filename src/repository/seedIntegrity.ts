@@ -99,7 +99,12 @@ export function validateDemoState(state: DemoState): SeedIntegrityIssue[] {
     }
   }
   const allRecordIds = new Set(Object.entries(ids).filter(([collection]) => collection !== "branches" && collection !== "organizations" && collection !== "sessions" && !collection.startsWith("board") && collection !== "workspaces").flatMap(([, set]) => [...set]));
-  for (const notification of state.notifications) if (!allRecordIds.has(notification.relatedId)) issues.push({ code: "dangling-reference", collection: "notifications", recordId: notification.id, field: "relatedId", targetId: notification.relatedId, message: `notifications.${notification.id}.relatedId points to a missing record.` });
+  const commentIds = new Set(state.comments.map((comment) => comment.id));
+  const boardItemIds = new Set(state.boardItems.map((item) => item.id));
+  for (const notification of state.notifications) {
+    if (notification.commentId !== undefined && !commentIds.has(notification.commentId)) issues.push({ code: "dangling-reference", collection: "notifications", recordId: notification.id, field: "commentId", targetId: notification.commentId, message: `notifications.${notification.id}.commentId points to a missing comment.` });
+    if (!allRecordIds.has(notification.relatedId) && !boardItemIds.has(notification.relatedId)) issues.push({ code: "dangling-reference", collection: "notifications", recordId: notification.id, field: "relatedId", targetId: notification.relatedId, message: `notifications.${notification.id}.relatedId points to a missing record.` });
+  }
 
   return issues;
 }

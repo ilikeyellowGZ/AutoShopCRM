@@ -1,5 +1,5 @@
 import { branchIdForName, CURRENT_SCHEMA_VERSION, demoBranches, demoOrganizationId } from "../domain/models";
-import type { Board, BoardColumn, BoardGroup, BoardItem, BoardView, Workspace, Branch, Organization, Appointment, AuditActivity, CrmDocument, Customer, Deal, DemoState, Employee, FinanceApplication, Lead, Payment, Quote, ServiceJob, TaskItem, TestDrive, Vehicle } from "../domain/models";
+import type { Comment, Board, BoardColumn, BoardGroup, BoardItem, BoardView, Workspace, Branch, Organization, Appointment, AuditActivity, CrmDocument, Customer, Deal, DemoState, Employee, FinanceApplication, Lead, Payment, Quote, ServiceJob, TaskItem, TestDrive, Vehicle } from "../domain/models";
 import { vehicleGalleries } from "../media/vehicleGalleries";
 
 const NOW = "2026-08-16T08:00:00+02:00";
@@ -157,7 +157,7 @@ const boardColumns: BoardColumn[] = [
   { id: "column-10", boardId: "board-02", kind: "relation", title: "Lead", position: 4, options: [], relationTarget: "lead" },
 ];
 
-const prepOwners = ["employee-08", "employee-09", "employee-10", "employee-11"];
+const prepOwners = ["employee-07", "employee-10"];
 const boardItems: BoardItem[] = prepVehicleIds.flatMap((vehicleId, vehicleIndex) => prepSteps.map((step, stepIndex) => {
   const index = vehicleIndex * prepSteps.length + stepIndex;
   const status = statusOptions[index % 4];
@@ -216,11 +216,18 @@ const boardViews: BoardView[] = [
   { id: "view-07", boardId: "board-02", kind: "kanban", title: "By status", position: 2, groupByColumnId: "column-07", filters: [] },
 ];
 
+const comments: Comment[] = [
+  { id: "comment-01", organizationId: demoOrganizationId, entityType: "board-item", entityId: "board-item-001", authorEmployeeId: "employee-07", body: "Bay is booked for Tuesday. @Naledi Ndlovu please confirm the customer is happy to wait.", mentions: ["employee-05"], createdAt: at(15, 9), pinned: true, reactions: [{ emoji: "👍", employeeIds: ["employee-09"] }] },
+  { id: "comment-02", organizationId: demoOrganizationId, entityType: "board-item", entityId: "board-item-001", parentCommentId: "comment-01", authorEmployeeId: "employee-05", body: "Confirmed, they are fine with Tuesday.", mentions: [], createdAt: at(15, 11), pinned: false, reactions: [] },
+  { id: "comment-03", organizationId: demoOrganizationId, entityType: "vehicle", entityId: "vehicle-01", authorEmployeeId: "employee-07", body: "Paint correction finished, ready for photography.", mentions: [], createdAt: at(16, 8), pinned: false, reactions: [] },
+  { id: "comment-04", organizationId: demoOrganizationId, entityType: "customer", entityId: "customer-01", authorEmployeeId: "employee-05", body: "Customer asked about a trade-in valuation.", mentions: [], createdAt: at(16, 10), resolvedAt: at(16, 12), resolvedByEmployeeId: "employee-04", pinned: false, reactions: [] },
+];
+
 export function createSeedState(): DemoState {
   const vehicles = vehicleRows.map((vehicle) => ({ ...vehicle, branchId: branchIdForName(demoOrganizationId, vehicle.branch), gallery: copyGallery(vehicle.id) }));
   const financedVehicleIndexes = [1, 0, ...Array.from({ length: 18 }, (_, index) => index + 2)];
   const financeDrafts = financedVehicleIndexes.map((vehicleIndex, index) => ({ vehicleId: `vehicle-${String(vehicleIndex + 1).padStart(2, "0")}`, vehiclePrice: vehicleRows[vehicleIndex].price, downPayment: index === 0 ? 350_000 : 150_000 + index * 10_000, termMonths: ([60, 48, 60, 72] as const)[index % 4], aprPercent: index === 0 ? 11.5 : 9.5 + (index % 6) * .75, tradeAllowance: index === 0 ? 280_000 : index % 3 ? 0 : 220_000, lienPayoff: index === 0 ? 90_000 : 0, serviceContract: index === 0 ? 32_000 : 18_000 + index * 500, gapInsurance: index === 0 ? 14_500 : 9_500 }));
-  return { schemaVersion: CURRENT_SCHEMA_VERSION, sessions: [],
+  return { schemaVersion: CURRENT_SCHEMA_VERSION, sessions: [], comments: comments.map((comment) => ({ ...comment, mentions: [...comment.mentions], reactions: comment.reactions.map((reaction) => ({ ...reaction, employeeIds: [...reaction.employeeIds] })) })),
     workspaces: workspaces.map((workspace) => ({ ...workspace })),
     boards: boards.map((board) => ({ ...board })),
     boardGroups: boardGroups.map((group) => ({ ...group })),

@@ -5,6 +5,7 @@ import type { NavigationTarget } from "../../app/routes";
 import { Button } from "../../components/controls/Button";
 import { StatusPill } from "../../components/controls/StatusPill";
 import { RecordTable, type RecordTableColumn } from "../../components/data-display/RecordTable";
+import { CommentThread } from "../collaboration/CommentThread";
 import {
   boardColumns,
   boardGroups,
@@ -23,6 +24,7 @@ type BoardsPageProps = {
   onNavigate?: (target: NavigationTarget) => void;
   canWriteItems?: boolean;
   canManageViews?: boolean;
+  authorEmployeeId?: string;
 };
 
 const currency = new Intl.NumberFormat("en-ZA", { style: "currency", currency: "ZAR", maximumFractionDigits: 0 });
@@ -111,7 +113,7 @@ function WorkloadView({ state, view }: { state: DemoState; view: BoardView }) {
   </div>;
 }
 
-export function BoardsPage({ state, repository, boardId, onNavigate, canWriteItems = false, canManageViews = false }: BoardsPageProps) {
+export function BoardsPage({ state, repository, boardId, onNavigate, canWriteItems = false, canManageViews = false, authorEmployeeId }: BoardsPageProps) {
   const boards = state.boards;
   const board = boards.find((candidate) => candidate.id === boardId) ?? boards[0];
   const views = board ? boardViews(state, board.id) : [];
@@ -173,6 +175,7 @@ export function BoardsPage({ state, repository, boardId, onNavigate, canWriteIte
       </li>)}</ul>
       <h4>Subitems</h4>
       <ul className="pipeline-cards">{subitemsOf(state, openItem.id).map((subitem) => <li key={subitem.id} className="pipeline-card"><strong>{subitem.title}</strong></li>)}</ul>
+      <CommentThread state={state} repository={repository} entityType="board-item" entityId={openItem.id} authorEmployeeId={authorEmployeeId} canComment={canWriteItems} />
     </aside> : null}
   </section>;
 }

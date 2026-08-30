@@ -222,3 +222,46 @@ it("rejects a persisted state whose records point at a missing branch", () => {
     expect(migrated!.appointments.every((appointment) => branchIds.has(appointment.branchId))).toBe(true);
   });
 });
+
+describe("stepwise schema upgrades", () => {
+  const strip = (keys: readonly string[]) => {
+    const state = createSeedState() as unknown as UnknownRecord;
+    for (const key of keys) delete state[key];
+    return state;
+  };
+
+  it("carries a v4 payload through every later step instead of discarding it", () => {
+    const state = strip(["workspaces", "boards", "boardGroups", "boardColumns", "boardItems", "boardViews", "comments"]);
+    state.schemaVersion = 4;
+    state.notifications = (state.notifications as UnknownRecord[]).map(({ category: _category, priority: _priority, createdAt: _createdAt, ...rest }) => rest);
+
+    const migrated = migrateDemoState(state);
+
+    expect(migrated).not.toBeNull();
+    expect(migrated!.schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
+    expect(migrated!.boards.length).toBeGreaterThan(0);
+    expect(migrated!.comments.length).toBeGreaterThan(0);
+    expect(migrated!.notifications.every((notification) => notification.category !== undefined)).toBe(true);
+  });
+
+  it("carries a v5 payload through the work os and comment steps", () => {
+    const state = strip(["workspaces", "boards", "boardGroups", "boardColumns", "boardItems", "boardViews", "comments"]);
+    state.schemaVersion = 5;
+
+    const migrated = migrateDemoState(state);
+
+    expect(migrated).not.toBeNull();
+    expect(migrated!.boardItems.length).toBeGreaterThan(0);
+    expect(migrated!.comments.length).toBeGreaterThan(0);
+  });
+
+  it("carries a v6 payload through the comment step", () => {
+    const state = strip(["comments"]);
+    state.schemaVersion = 6;
+
+    const migrated = migrateDemoState(state);
+
+    expect(migrated).not.toBeNull();
+    expect(migrated!.comments.length).toBeGreaterThan(0);
+  });
+});

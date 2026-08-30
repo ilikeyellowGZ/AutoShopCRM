@@ -9,6 +9,8 @@ import type {
   LeadStage,
   BoardCellValue,
   BoardFilter,
+  Comment,
+  CommentEntityType,
   ServiceJob,
   SessionEndReason,
   UserPreferences,
@@ -17,6 +19,7 @@ import type {
 } from "../domain/models";
 import { demoOrganizationId } from "../domain/models";
 import { validateCellValue } from "../domain/boards";
+import { mentionedEmployeeIds } from "../domain/comments";
 import { createSeedState, NOW } from "./seed";
 import { loadDemoState, saveDemoState, STORAGE_KEY } from "./storage";
 import { isLeadStage } from "../domain/leadStages";
@@ -58,6 +61,12 @@ export type DemoRepository = {
   setBoardCellValue(itemId: string, columnId: string, value: BoardCellValue): void;
   moveBoardItem(itemId: string, groupId: string): void;
   saveBoardView(viewId: string, patch: { title?: string; filters?: BoardFilter[]; groupByColumnId?: string }): void;
+  addComment(input: { entityType: CommentEntityType; entityId: string; body: string; authorEmployeeId: string; parentCommentId?: string; columnId?: string }): string;
+  editComment(commentId: string, body: string): void;
+  resolveComment(commentId: string, employeeId: string): void;
+  reopenComment(commentId: string): void;
+  toggleCommentPin(commentId: string): void;
+  toggleCommentReaction(commentId: string, emoji: string, employeeId: string): void;
 };
 
 const clone = <T,>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
@@ -101,6 +110,8 @@ export function createDemoRepository(storage: Storage, now: () => string = () =>
   let auditActor = "Weelee Employee";
   let sessionNumber = maximumSuffix(state.sessions.map((session) => session.id));
   let boardItemNumber = maximumSuffix(state.boardItems.map((item) => item.id));
+  let commentNumber = maximumSuffix(state.comments.map((comment) => comment.id));
+  let notificationNumber = maximumSuffix(state.notifications.map((notification) => notification.id));
   const listeners = new Set<(state: DemoState) => void>();
 
   const commit = (action: string, detail: string, mutate: (draft: DemoState) => void, tone: AuditActivity["tone"] = "info", targetType: AuditActivity["targetType"] = "system", targetId = "system") => {
@@ -303,6 +314,117 @@ export function createDemoRepository(storage: Storage, now: () => string = () =>
       const index = findIndex(draft.notifications, notificationId, "Notification");
       draft.notifications[index] = { ...draft.notifications[index], read: true };
     }, "neutral"),
+    addComment: ({ entityType, entityId, body, authorEmployeeId, parentCommentId, columnId }) => {
+      const trimmed = body.trim();
+      if (!trimmed) throw new Error("A comment needs something to say.");
+      if (!state.employees.some((employee) => employee.id === authorEmployeeId)) throw new Error("Comment author not found.");
+      if (parentCommentId) {
+        const parent = state.comments.find((candidate) => candidate.id === parentCommentId);
+        if (!parent) throw new Error("Parent comment not found.");
+        if (parent.entityType !== entityType || parent.entityId !== entityId) throw new Error("A reply must stay on its own record.");
+        if (parent.parentCommentId) throw new Error("A reply cannot be replied to.");
+      }
+      const tenant = state.branches.find((branch) => branch.name === state.preferences.branch);
+      const organizationId = tenant?.organizationId ?? demoOrganizationId;
+      const mentions = mentionedEmployeeIds(trimmed, state.employees).filter((employeeId) => employeeId !== authorEmployeeId);
+      const id = `comment-${String(++commentNumber).padStart(2, "0")}`;
+      const author = state.employees.find((employee) => employee.id === authorEmployeeId);
+      commit("Comment added", `A comment was added to ${entityType} ${entityId}.`, (draft) => {
+        draft.comments.push({ id, organizationId, entityType, entityId, columnId, parentCommentId, authorEmployeeId, body: trimmed, mentions, createdAt: NOW, pinned: false, reactions: [] });
+        for (const employeeId of mentions) {
+          draft.notifications.unshift({
+            id: `notification-${String(++notificationNumber).padStart(2, "0")}`,
+            organizationId,
+            category: "mention",
+            priority: "high",
+            title: `${author?.name ?? "A colleague"} mentioned you`,
+            detail: trimmed.length > 140 ? `${trimmed.slice(0, 137)}...` : trimmed,
+            read: false,
+            tone: "info",
+            createdAt: NOW,
+            relatedId: entityId,
+            commentId: id,
+            recipientEmployeeId: employeeId,
+          });
+        }
+      }, "positive");
+      return id;
+    },
+    editComment: (commentId, body) => {
+      const trimmed = body.trim();
+      if (!trimmed) throw new Error("A comment needs something to say.");
+      const existing = state.comments.find((candidate) => candidate.id === commentId);
+      if (!existing) throw new Error("Comment not found.");
+      const mentions = mentionedEmployeeIds(trimmed, state.employees).filter((employeeId) => employeeId !== existing.authorEmployeeId);
+      const addedMentions = mentions.filter((employeeId) => !existing.mentions.includes(employeeId));
+      const editAuthor = state.employees.find((employee) => employee.id === existing.authorEmployeeId);
+      commit("Comment edited", "A comment was edited.", (draft) => {
+        const index = findIndex(draft.comments, commentId, "Comment");
+        draft.comments[index] = { ...draft.comments[index], body: trimmed, mentions, editedAt: NOW };
+        for (const employeeId of addedMentions) {
+          draft.notifications.unshift({
+            id: `notification-${String(++notificationNumber).padStart(2, "0")}`,
+            organizationId: existing.organizationId,
+            category: "mention",
+            priority: "high",
+            title: `${editAuthor?.name ?? "A colleague"} mentioned you`,
+            detail: trimmed.length > 140 ? `${trimmed.slice(0, 137)}...` : trimmed,
+            read: false,
+            tone: "info",
+            createdAt: NOW,
+            relatedId: existing.entityId,
+            commentId,
+            recipientEmployeeId: employeeId,
+          });
+        }
+      }, "neutral");
+    },
+    resolveComment: (commentId, employeeId) => {
+      const existing = state.comments.find((candidate) => candidate.id === commentId);
+      if (!existing) throw new Error("Comment not found.");
+      if (existing.parentCommentId) throw new Error("Resolve the thread, not a reply.");
+      if (existing.resolvedAt) return;
+      commit("Comment resolved", "A discussion was resolved.", (draft) => {
+        const index = findIndex(draft.comments, commentId, "Comment");
+        draft.comments[index] = { ...draft.comments[index], resolvedAt: NOW, resolvedByEmployeeId: employeeId };
+      }, "positive");
+    },
+    reopenComment: (commentId) => {
+      const existing = state.comments.find((candidate) => candidate.id === commentId);
+      if (!existing) throw new Error("Comment not found.");
+      if (!existing.resolvedAt) return;
+      commit("Comment reopened", "A discussion was reopened.", (draft) => {
+        const index = findIndex(draft.comments, commentId, "Comment");
+        const { resolvedAt: _resolvedAt, resolvedByEmployeeId: _resolvedBy, ...rest } = draft.comments[index];
+        draft.comments[index] = rest as Comment;
+      }, "warning");
+    },
+    toggleCommentPin: (commentId) => {
+      const existing = state.comments.find((candidate) => candidate.id === commentId);
+      if (!existing) throw new Error("Comment not found.");
+      commit(existing.pinned ? "Comment unpinned" : "Comment pinned", "A discussion pin changed.", (draft) => {
+        const index = findIndex(draft.comments, commentId, "Comment");
+        draft.comments[index] = { ...draft.comments[index], pinned: !draft.comments[index].pinned };
+      }, "neutral");
+    },
+    toggleCommentReaction: (commentId, emoji, employeeId) => {
+      const existing = state.comments.find((candidate) => candidate.id === commentId);
+      if (!existing) throw new Error("Comment not found.");
+      if (!state.employees.some((employee) => employee.id === employeeId)) throw new Error("Reaction author not found.");
+      commit("Comment reaction", "A reaction changed on a comment.", (draft) => {
+        const index = findIndex(draft.comments, commentId, "Comment");
+        const current = draft.comments[index];
+        const reaction = current.reactions.find((candidate) => candidate.emoji === emoji);
+        const reactions = reaction
+          ? current.reactions
+              .map((candidate) => candidate.emoji === emoji
+                ? { ...candidate, employeeIds: candidate.employeeIds.includes(employeeId) ? candidate.employeeIds.filter((id) => id !== employeeId) : [...candidate.employeeIds, employeeId] }
+                : candidate)
+              .filter((candidate) => candidate.employeeIds.length > 0)
+          : [...current.reactions, { emoji, employeeIds: [employeeId] }];
+        draft.comments[index] = { ...current, reactions };
+      }, "neutral");
+    },
     addBoardItem: (boardId, groupId, title) => {
       const trimmed = title.trim();
       if (!trimmed) throw new Error("Board item needs a title.");

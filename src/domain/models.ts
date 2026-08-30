@@ -36,10 +36,10 @@ export type Payment = { id: string; dealId: string; customerId: string; amount: 
 export type FinanceApplication = { id: string; dealId: string; customerId: string; vehicleId: string; owner: string; requestedAmount: number; status: "Draft" | "Submitted" | "Approved" | "Declined"; updatedAt: string };
 export type CrmDocument = { id: string; customerId?: string; leadId?: string; dealId?: string; vehicleId?: string; name: string; category: "Identity" | "Quote" | "Finance" | "Contract" | "Delivery" | "Service"; status: "Required" | "Uploaded" | "Verified" | "Expired"; updatedAt: string };
 export type TaskItem = { id: string; title: string; detail: string; relatedType: "lead" | "deal" | "vehicle" | "service"; relatedId: string; dueAt: string; status: TaskStatus; tone: Tone };
-export const notificationCategories = ["deal", "lead", "customer", "inventory", "service", "task", "system"] as const;
+export const notificationCategories = ["mention", "deal", "lead", "customer", "inventory", "service", "task", "system"] as const;
 export type NotificationCategory = (typeof notificationCategories)[number];
 export type NotificationPriority = "normal" | "high";
-export type Notification = { id: string; organizationId: string; category: NotificationCategory; priority: NotificationPriority; title: string; detail: string; read: boolean; tone: Tone; createdAt: string; relatedId: string };
+export type Notification = { id: string; organizationId: string; category: NotificationCategory; priority: NotificationPriority; title: string; detail: string; read: boolean; tone: Tone; createdAt: string; relatedId: string; commentId?: string; recipientEmployeeId?: string };
 export type ActivityTargetType = "vehicle" | "customer" | "lead" | "deal" | "service" | "task" | "system";
 export type AuditActivity = { id: string; organizationId: string; branchId?: string; action: string; detail: string; actor: string; occurredAt: string; tone: Tone; targetType: ActivityTargetType; targetId: string };
 export type SessionStatus = "active" | "ended";
@@ -91,5 +91,26 @@ export type BoardView = { id: string; boardId: string; kind: BoardViewKind; titl
 export type Board = { id: string; workspaceId: string; title: string; description: string; position: number };
 export type Workspace = { id: string; organizationId: string; branchId?: string; name: string; description: string; position: number };
 
-export const CURRENT_SCHEMA_VERSION = 6;
-export type DemoState = { schemaVersion: typeof CURRENT_SCHEMA_VERSION; organizations: Organization[]; branches: Branch[]; sessions: SessionRecord[]; workspaces: Workspace[]; boards: Board[]; boardGroups: BoardGroup[]; boardColumns: BoardColumn[]; boardItems: BoardItem[]; boardViews: BoardView[]; vehicles: Vehicle[]; customers: Customer[]; leads: Lead[]; deals: Deal[]; financeDrafts: FinanceDraft[]; financeApplications: FinanceApplication[]; serviceJobs: ServiceJob[]; employees: Employee[]; appointments: Appointment[]; testDrives: TestDrive[]; quotes: Quote[]; payments: Payment[]; documents: CrmDocument[]; tasks: TaskItem[]; notifications: Notification[]; activities: AuditActivity[]; preferences: UserPreferences; drafts: FormDrafts };
+export const commentEntityTypes = ["vehicle", "customer", "lead", "deal", "service", "task", "board-item"] as const;
+export type CommentEntityType = (typeof commentEntityTypes)[number];
+export type CommentReaction = { emoji: string; employeeIds: string[] };
+export type Comment = {
+  id: string;
+  organizationId: string;
+  entityType: CommentEntityType;
+  entityId: string;
+  columnId?: string;
+  parentCommentId?: string;
+  authorEmployeeId: string;
+  body: string;
+  mentions: string[];
+  createdAt: string;
+  editedAt?: string;
+  resolvedAt?: string;
+  resolvedByEmployeeId?: string;
+  pinned: boolean;
+  reactions: CommentReaction[];
+};
+
+export const CURRENT_SCHEMA_VERSION = 7;
+export type DemoState = { schemaVersion: typeof CURRENT_SCHEMA_VERSION; organizations: Organization[]; branches: Branch[]; sessions: SessionRecord[]; comments: Comment[]; workspaces: Workspace[]; boards: Board[]; boardGroups: BoardGroup[]; boardColumns: BoardColumn[]; boardItems: BoardItem[]; boardViews: BoardView[]; vehicles: Vehicle[]; customers: Customer[]; leads: Lead[]; deals: Deal[]; financeDrafts: FinanceDraft[]; financeApplications: FinanceApplication[]; serviceJobs: ServiceJob[]; employees: Employee[]; appointments: Appointment[]; testDrives: TestDrive[]; quotes: Quote[]; payments: Payment[]; documents: CrmDocument[]; tasks: TaskItem[]; notifications: Notification[]; activities: AuditActivity[]; preferences: UserPreferences; drafts: FormDrafts };

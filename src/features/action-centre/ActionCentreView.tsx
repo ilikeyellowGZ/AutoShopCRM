@@ -11,7 +11,7 @@ type NotificationRepository = Pick<DemoRepository, "markNotificationRead" | "mar
 type ActionCentreViewProps = { state: DemoState; repository: Pick<DemoRepository, "completeTask" | "rescheduleTask" | "markNotificationRead" | "markAllNotificationsRead">; view?: "actions" | "notifications"; clock?: DemoClock; onNavigate?: (target: NavigationTarget) => void; canManageTasks?: boolean; canMarkNotifications?: boolean };
 type NotificationCentreProps = { state: DemoState; repository: NotificationRepository; onNavigate?: (target: NavigationTarget) => void; canMarkNotifications: boolean };
 
-const categoryLabels: Record<NotificationCategory, string> = { deal: "Deals", lead: "Leads", customer: "Customers", inventory: "Inventory", service: "Service", task: "Tasks", system: "System" };
+const categoryLabels: Record<NotificationCategory, string> = { mention: "Mentions", deal: "Deals", lead: "Leads", customer: "Customers", inventory: "Inventory", service: "Service", task: "Tasks", system: "System" };
 
 function NotificationCentre({ state, repository, onNavigate, canMarkNotifications }: NotificationCentreProps) {
   const [category, setCategory] = useState<NotificationCategory | "all">("all");
