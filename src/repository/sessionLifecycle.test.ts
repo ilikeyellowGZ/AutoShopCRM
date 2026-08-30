@@ -153,3 +153,34 @@ describe("session identity and branch scope", () => {
     expect(() => repository.addVehicle({ ...template, id: "vehicle-99", stockId: "NEW-99", vin: "1HGCM82633A111222", branchId: "" })).toThrow("Vehicle branch not found.");
   });
 });
+
+describe("branch key integrity", () => {
+  it("moves the branch foreign key when a vehicle changes branch", () => {
+    const repository = createDemoRepository(memoryStorage(), clock(["2026-08-29T10:00:00.000Z"]));
+    const vehicle = repository.getState().vehicles[0];
+    const target = repository.getState().branches.find((branch) => branch.name !== vehicle.branch)!;
+
+    repository.updateVehicle(vehicle.id, { branch: target.name });
+
+    const moved = repository.getState().vehicles.find((item) => item.id === vehicle.id)!;
+    expect(moved.branch).toBe(target.name);
+    expect(moved.branchId).toBe(target.id);
+  });
+
+  it("refuses to move a vehicle to a branch that does not exist", () => {
+    const repository = createDemoRepository(memoryStorage(), clock(["2026-08-29T10:00:00.000Z"]));
+    const vehicle = repository.getState().vehicles[0];
+
+    expect(() => repository.updateVehicle(vehicle.id, { branch: "Nowhere" })).toThrow("Vehicle branch not found.");
+  });
+
+  it("leaves the branch key alone when the patch does not touch the branch", () => {
+    const repository = createDemoRepository(memoryStorage(), clock(["2026-08-29T10:00:00.000Z"]));
+    const vehicle = repository.getState().vehicles[0];
+
+    repository.updateVehicle(vehicle.id, { price: vehicle.price + 1000 });
+
+    const updated = repository.getState().vehicles.find((item) => item.id === vehicle.id)!;
+    expect(updated.branchId).toBe(vehicle.branchId);
+  });
+});
