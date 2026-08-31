@@ -19,7 +19,7 @@ export function LoginPage({ onSignIn }: { onSignIn: (account: DemoAccount, exper
     <section className="demo-login-intro" aria-labelledby="demo-login-title">
       <WeeleeLogo className="demo-login-logo" />
       <p className="demo-login-eyebrow">MotorCRM employee workspace</p>
-      <h1 id="demo-login-title">Sign in to MotorCRM</h1>
+      <h1 id="demo-login-title">Sign in to <span className="demo-login-nowrap">MotorCRM</span></h1>
       <p className="demo-login-summary">Choose a dealership role to explore its real navigation, branch scope, records, and available actions.</p>
       <p className="demo-login-boundary"><strong>Functional browser demo.</strong> This access screen demonstrates roles and permissions in the existing Vite application. It is not server-enforced production authentication.</p>
     </section>
