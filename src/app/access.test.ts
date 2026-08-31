@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   DEMO_ACCESS_CODE,
+  DEMO_TUTORIAL_ACCESS_CODE,
   authenticateDemoAccount,
   canAccessTarget,
   demoAccounts,
@@ -10,11 +11,24 @@ import {
 } from "./access";
 
 describe("demo access", () => {
-  it("authenticates a known account with the shared demo code", () => {
+  it("authenticates a known account with the shared demo code as a returning user", () => {
     const result = authenticateDemoAccount("  STOCK@MOTORCRM.DEMO ", DEMO_ACCESS_CODE);
 
     expect(result.ok).toBe(true);
-    if (result.ok) expect(result.account).toMatchObject({ id: "stock", role: "stock", title: "Stock Controller" });
+    if (result.ok) { expect(result.account).toMatchObject({ id: "stock", role: "stock", title: "Stock Controller" }); expect(result.experience).toBe("returning"); }
+  });
+
+  it("authenticates the same account as a first-time user with the tutorial code", () => {
+    const result = authenticateDemoAccount("stock@motorcrm.demo", DEMO_TUTORIAL_ACCESS_CODE);
+
+    expect(result.ok).toBe(true);
+    if (result.ok) { expect(result.account.id).toBe("stock"); expect(result.experience).toBe("first-time"); }
+  });
+
+  it("gives every role a distinct accent colour", () => {
+    const colors = demoAccounts.map((account) => account.color);
+    expect(colors.every((color) => /^#[0-9a-f]{6}$/i.test(color))).toBe(true);
+    expect(new Set(colors).size).toBe(demoAccounts.length);
   });
 
   it("rejects an incorrect demo code without returning account data", () => {

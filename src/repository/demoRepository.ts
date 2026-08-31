@@ -56,6 +56,8 @@ export type DemoRepository = {
   updateServiceJob(jobId: string, patch: Partial<ServiceJob>): void;
   addServiceJob(job: ServiceJob): void;
   updateServiceState(jobId: string, status: ServiceJob["status"]): void;
+  updateServicePartsRisk(jobId: string, partsRisk: ServiceJob["partsRisk"]): void;
+  approveServiceJob(jobId: string): void;
   markNotificationRead(notificationId: string): void;
   markAllNotificationsRead(notificationIds: readonly string[]): void;
   addBoardItem(boardId: string, groupId: string, title: string): string;
@@ -313,6 +315,16 @@ export function createDemoRepository(storage: Storage, now: () => string = () =>
       if (!isServiceStatus(status)) throw new Error("Invalid service job status.");
       if (!canTransitionServiceJob(current.status, status)) throw new Error(`Service job cannot move from ${current.status} to ${status}.`);
       commit("Service job updated", `Service job moved to ${status}.`, (draft) => { const index = findIndex(draft.serviceJobs, jobId, "Service job"); draft.serviceJobs[index] = { ...draft.serviceJobs[index], status }; }, "info", "service", jobId);
+    },
+    updateServicePartsRisk: (jobId, partsRisk) => {
+      findIndex(state.serviceJobs, jobId, "Service job");
+      commit("Parts risk updated", `Parts risk set to ${partsRisk}.`, (draft) => { const index = findIndex(draft.serviceJobs, jobId, "Service job"); draft.serviceJobs[index] = { ...draft.serviceJobs[index], partsRisk }; }, partsRisk === "Blocked" ? "critical" : partsRisk === "At Risk" ? "warning" : "positive", "service", jobId);
+    },
+    approveServiceJob: (jobId) => {
+      const current = state.serviceJobs[findIndex(state.serviceJobs, jobId, "Service job")];
+      if (current.approvalState === "Not Required") throw new Error("Customer approval is not required at this stage.");
+      if (current.approvalState === "Approved") throw new Error("Customer approval has already been recorded.");
+      commit("Customer approval recorded", "The customer approved the additional service work.", (draft) => { const index = findIndex(draft.serviceJobs, jobId, "Service job"); draft.serviceJobs[index] = { ...draft.serviceJobs[index], approvalState: "Approved" }; }, "positive", "service", jobId);
     },
     markNotificationRead: (notificationId) => commit("Notification read", "A notification was marked as read.", (draft) => {
       const index = findIndex(draft.notifications, notificationId, "Notification");

@@ -18,8 +18,8 @@ export function PrimaryNavigation({ activePage, onNavigate, canNavigate = () => 
   const openSheet = (trigger: HTMLButtonElement) => setOpen(true, trigger);
   return <nav className="primary-navigation" aria-label="Primary employee navigation">
     <div className="primary-navigation-scroll">
-      {primaryNavigation.filter((item) => canNavigate(item.target)).map((item) => <button type="button" className="navigation-tab" key={item.label} aria-current={item.target.page === activePage ? "page" : undefined} onClick={() => onNavigate(item.target)}>{item.label}</button>)}
-      <button type="button" className="navigation-tab" ref={internalTriggerRef} aria-controls={menuId} aria-expanded={open} onClick={(event) => openSheet(event.currentTarget)}>More</button>
+      {primaryNavigation.filter((item) => canNavigate(item.target)).map((item) => <button type="button" className="navigation-tab" key={item.label} data-tour={`nav-${item.target.page}`} aria-current={item.target.page === activePage ? "page" : undefined} onClick={() => onNavigate(item.target)}>{item.label}</button>)}
+      <button type="button" className="navigation-tab" data-tour="nav-more" ref={internalTriggerRef} aria-controls={menuId} aria-expanded={open} onClick={(event) => openSheet(event.currentTarget)}>More</button>
     </div>
     {showMobileTrigger && <button type="button" className="mobile-destination-trigger" aria-label="Open destinations" aria-controls={menuId} aria-expanded={open} onClick={(event) => openSheet(event.currentTarget)}>Menu</button>}
     <GroupedNavigation open={open} menuId={menuId} onClose={() => setOpen(false)} onNavigate={onNavigate} canNavigate={canNavigate} returnFocusRef={focusReturn} branch={branch} employeeName={employeeName} onBranch={onBranch} onEmployeeMenu={onEmployeeMenu} />

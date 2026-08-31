@@ -341,6 +341,41 @@ describe("DemoRepository", () => {
     expect(reloaded.serviceJobs[0].note).toBe("Verified by advisor"); expect(reloaded.activities[0]).toMatchObject({ targetType: "service", targetId: job.id });
   });
 
+  it("persists a parts risk change with a typed audit across reload", () => {
+    const storage = memoryStorage();
+    const repository = createDemoRepository(storage);
+    const job = repository.getState().serviceJobs[0];
+
+    repository.updateServicePartsRisk(job.id, "Blocked");
+
+    const reloaded = createDemoRepository(storage).getState();
+    expect(reloaded.serviceJobs.find((item) => item.id === job.id)?.partsRisk).toBe("Blocked");
+    expect(reloaded.activities[0]).toMatchObject({ action: "Parts risk updated", targetType: "service", targetId: job.id, tone: "critical" });
+  });
+
+  it("records customer approval once a job is pending confirmation", () => {
+    const storage = memoryStorage();
+    const repository = createDemoRepository(storage);
+    const job = repository.getState().serviceJobs.find((item) => item.approvalState === "Pending")!;
+
+    repository.approveServiceJob(job.id);
+
+    const reloaded = createDemoRepository(storage).getState();
+    expect(reloaded.serviceJobs.find((item) => item.id === job.id)?.approvalState).toBe("Approved");
+    expect(reloaded.activities[0]).toMatchObject({ action: "Customer approval recorded", targetType: "service", targetId: job.id, tone: "positive" });
+  });
+
+  it("rejects approving a job that does not need or already has approval", () => {
+    const repository = createDemoRepository(memoryStorage());
+    const before = repository.getState();
+    const notRequired = before.serviceJobs.find((item) => item.approvalState === "Not Required")!;
+    const approved = before.serviceJobs.find((item) => item.approvalState === "Approved")!;
+
+    expect(() => repository.approveServiceJob(notRequired.id)).toThrow("Customer approval is not required at this stage.");
+    expect(() => repository.approveServiceJob(approved.id)).toThrow("Customer approval has already been recorded.");
+    expect(repository.getState()).toEqual(before);
+  });
+
   it("resets to seed data and records the reset as the latest activity", () => {
     const repository = createDemoRepository(memoryStorage());
     repository.completeTask(repository.getState().tasks[0].id);

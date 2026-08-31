@@ -24,6 +24,24 @@ describe("MyDayPage", () => {
     expect(createDemoRepository(storage).getState().activities[0].action).toBe("Task completed");
   });
 
+  it("reorders priority actions with keyboard move controls and persists the manual order", async () => {
+    const storage = memoryStorage();
+    const repository = createDemoRepository(storage);
+    render(<MyDayPage state={repository.getState()} repository={repository} onNavigate={vi.fn()} clock={{ now: () => "2026-08-18T08:00:00+02:00" }} />);
+
+    const priorityList = screen.getByRole("heading", { name: "Priority actions" }).closest("section")!.querySelector(".my-day-list")!;
+    const firstRow = priorityList.querySelector("li")!;
+    const firstTaskTitle = firstRow.querySelector("strong")!.textContent!;
+
+    await userEvent.click(within(firstRow).getByRole("button", { name: `Move ${firstTaskTitle} down in priority` }));
+
+    const reordered = createDemoRepository(storage).getState();
+    const movedTaskId = reordered.tasks.find((task) => task.title === firstTaskTitle)?.id;
+    expect(reordered.preferences.taskOrder.length).toBeGreaterThan(0);
+    expect(reordered.preferences.taskOrder[1]).toBe(movedTaskId);
+    expect(reordered.preferences.taskOrder[0]).not.toBe(movedTaskId);
+  });
+
   it("opens Action Search from My Day with a mobile-sized control and routes the exact selected target", async () => {
     const repository = createDemoRepository(memoryStorage());
     const onCommandSelect = vi.fn();

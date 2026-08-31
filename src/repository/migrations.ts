@@ -31,6 +31,8 @@ const tones = ["positive", "warning", "info", "critical", "neutral"] as const;
 const galleryAngles = ["front", "front-left", "left", "rear-left", "rear", "rear-right", "right", "front-right"] as const;
 const dealStatuses = ["Closed", "Pending", "Approval"] as const;
 const serviceStatuses = ["Booked", "Checked In", "In Progress", "Waiting for Parts", "Quality Check", "Ready", "Completed"] as const;
+const servicePartsRisks = ["Clear", "At Risk", "Blocked"] as const;
+const serviceApprovalStates = ["Not Required", "Pending", "Approved"] as const;
 const relatedTypes = ["lead", "deal", "vehicle", "service"] as const;
 const financeTerms = [36, 48, 60, 72] as const;
 const employeeDepartments = ["Executive", "Sales", "Finance", "Inventory", "Marketing", "Accounts", "Service", "Audit"] as const;
@@ -99,7 +101,7 @@ const isFinanceDraft = (value: unknown) => hasShape(value, {
   vehicleId: nonEmptyString, vehiclePrice: number, downPayment: number, termMonths: oneOf(financeTerms), aprPercent: number, tradeAllowance: number, lienPayoff: number, serviceContract: number, gapInsurance: number,
 });
 const isServiceJob = (value: unknown) => hasShape(value, {
-  id: nonEmptyString, customerId: nonEmptyString, vehicleId: nonEmptyString, advisor: nonEmptyString, technician: nonEmptyString, status: oneOf(serviceStatuses), dueAt: nonEmptyString, note: string,
+  id: nonEmptyString, customerId: nonEmptyString, vehicleId: nonEmptyString, advisor: nonEmptyString, technician: nonEmptyString, status: oneOf(serviceStatuses), dueAt: nonEmptyString, note: string, partsRisk: oneOf(servicePartsRisks), approvalState: oneOf(serviceApprovalStates),
 });
 const isTask = (value: unknown) => hasShape(value, {
   id: nonEmptyString, title: nonEmptyString, detail: nonEmptyString, relatedType: oneOf(relatedTypes), relatedId: nonEmptyString, dueAt: nonEmptyString, status: oneOf(taskStatuses), tone: oneOf(tones),
@@ -223,8 +225,10 @@ const isDrafts = (value: unknown) => isRecord(value)
   && (value.deal === null || partial({ id: nonEmptyString, customerId: nonEmptyString, vehicleId: nonEmptyString, salesRep: nonEmptyString, grossProfit: number, status: oneOf(dealStatuses), date: nonEmptyString })(value.deal))
   && isRecord(value.serviceNotes) && Object.values(value.serviceNotes).every(string);
 
+const isStringArray: Validator = (value) => Array.isArray(value) && value.every((item) => typeof item === "string");
+
 export function isCompatibleDemoState(value: unknown): value is DemoState {
-  if (!isRecord(value) || value.schemaVersion !== CURRENT_SCHEMA_VERSION || !hasShape(value.preferences, { branch: nonEmptyString, density: oneOf(["comfortable", "compact"]), activePage: nonEmptyString, activeSubview: nonEmptyString, viewPreferences: (item) => JSON.stringify(normalizeViewPreferences(item)) === JSON.stringify(item) }) || !isDrafts(value.drafts)) return false;
+  if (!isRecord(value) || value.schemaVersion !== CURRENT_SCHEMA_VERSION || !hasShape(value.preferences, { branch: nonEmptyString, density: oneOf(["comfortable", "compact"]), activePage: nonEmptyString, activeSubview: nonEmptyString, taskOrder: isStringArray, tutorialCompletedRoles: isStringArray, viewPreferences: (item) => JSON.stringify(normalizeViewPreferences(item)) === JSON.stringify(item) }) || !isDrafts(value.drafts)) return false;
   const collections = ["organizations", "branches", "sessions", "comments", "chatChannels", "chatMessages", "chatReads", "workspaces", "boards", "boardGroups", "boardColumns", "boardItems", "boardViews", "vehicles", "customers", "leads", "deals", "financeDrafts", "financeApplications", "serviceJobs", "employees", "appointments", "testDrives", "quotes", "payments", "documents", "tasks", "notifications", "activities"] as const;
   if (!collections.every((key) => Array.isArray(value[key]))) return false;
 
@@ -502,6 +506,17 @@ function addStaffChat(value: RecordValue): RecordValue {
   return restoreSet(value, ["chatChannels", "chatMessages", "chatReads"], 8);
 }
 
+function addServiceRiskAndApproval(value: RecordValue): RecordValue {
+  const serviceJobs = (Array.isArray(value.serviceJobs) ? value.serviceJobs as unknown[] : []).map((job) => {
+    if (!isRecord(job)) return job;
+    const status = job.status;
+    const partsRisk = oneOf(servicePartsRisks)(job.partsRisk) ? job.partsRisk : status === "Waiting for Parts" ? "At Risk" : "Clear";
+    const approvalState = oneOf(serviceApprovalStates)(job.approvalState) ? job.approvalState : status === "Completed" ? "Approved" : status === "Ready" || status === "Quality Check" ? "Pending" : "Not Required";
+    return { ...job, partsRisk, approvalState };
+  });
+  return { ...value, schemaVersion: 9, serviceJobs };
+}
+
 export function migrateDemoState(value: unknown): DemoState | null {
   if (isRecord(value) && value.schemaVersion === 1) value = migrateVehicleRoster(value);
   if (isRecord(value) && value.schemaVersion === 2) value = addOrganizationTenancy(value);
@@ -510,6 +525,7 @@ export function migrateDemoState(value: unknown): DemoState | null {
   if (isRecord(value) && value.schemaVersion === 5) value = addWorkOs(value);
   if (isRecord(value) && value.schemaVersion === 6) value = addComments(value);
   if (isRecord(value) && value.schemaVersion === 7) value = addStaffChat(value);
+  if (isRecord(value) && value.schemaVersion === 8) value = addServiceRiskAndApproval(value);
   if (isRecord(value) && value.schemaVersion === CURRENT_SCHEMA_VERSION && isRecord(value.preferences)) {
     const normalized = normalizeConnectedDataset(normalizeDemoAssignees(value));
     const preferences = isRecord(normalized.preferences) ? normalized.preferences : value.preferences;
@@ -518,7 +534,10 @@ export function migrateDemoState(value: unknown): DemoState | null {
     const vehicleIntakes = isRecord(drafts.vehicleIntakes) ? { ...drafts.vehicleIntakes } : {};
     const legacyScope = `owner:${String(preferences.branch)}`;
     if (isVehicleIntakeDraft(drafts.vehicleIntake) && vehicleIntakes[legacyScope] === undefined) vehicleIntakes[legacyScope] = drafts.vehicleIntake;
-    value = { ...normalized, preferences: { ...stablePreferences, ...normalizeRoute(normalized, preferences), viewPreferences: normalizeViewPreferences(preferences.viewPreferences) }, drafts: { ...drafts, vehicleIntake: null, vehicleIntakes } };
+    const taskIds = new Set((Array.isArray(normalized.tasks) ? normalized.tasks as unknown[] : []).filter(isRecord).map((task) => String(task.id)));
+    const taskOrder = isStringArray(preferences.taskOrder) ? (preferences.taskOrder as string[]).filter((id) => taskIds.has(id)) : [];
+    const tutorialCompletedRoles = isStringArray(preferences.tutorialCompletedRoles) ? preferences.tutorialCompletedRoles as string[] : [];
+    value = { ...normalized, preferences: { ...stablePreferences, ...normalizeRoute(normalized, preferences), taskOrder, tutorialCompletedRoles, viewPreferences: normalizeViewPreferences(preferences.viewPreferences) }, drafts: { ...drafts, vehicleIntake: null, vehicleIntakes } };
   }
   return isCompatibleDemoState(value) ? value : null;
 }

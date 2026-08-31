@@ -17,9 +17,11 @@ import { ChatPage } from "../features/chat/ChatPage";
 import { DealEntry } from "../features/sales/DealEntry";
 import { SalesPage } from "../features/sales/SalesPage";
 import { ServicePage } from "../features/service/ServicePage";
+import { TourOverlay } from "../features/tutorial/TourOverlay";
+import { tutorialForRole } from "../features/tutorial/tutorialContent";
 import type { DemoRepository } from "../repository/demoRepository";
 import { createDemoRepository } from "../repository/demoRepository";
-import { canAccessTarget, getDemoAccount, hasPermission, initialTargetForAccount, type DemoAccount, type DemoRole } from "./access";
+import { canAccessTarget, getDemoAccount, hasPermission, initialTargetForAccount, type DemoAccount, type DemoExperienceLevel, type DemoRole } from "./access";
 import { DomainWorkspace, ExactRecordView } from "./DomainWorkspace";
 import { LoginPage } from "./LoginPage";
 import { pageKeys, type NavigationTarget, type PageKey } from "./routes";
@@ -43,6 +45,7 @@ export function App({ repository: providedRepository, initialAccountId }: AppPro
   const repository = useMemo(() => providedRepository ?? browserRepository(), [providedRepository]);
   const defaultAccountId = initialAccountId === undefined ? (providedRepository ? "owner" : null) : initialAccountId;
   const [accountId, setAccountId] = useState<DemoRole | null>(defaultAccountId);
+  const [tutorialActive, setTutorialActive] = useState(false);
   const sessionId = useRef<string | null>(null);
   const [usesPersistedTarget, setUsesPersistedTarget] = useState(initialAccountId === undefined);
   const account = accountId ? getDemoAccount(accountId) : null;
@@ -86,12 +89,17 @@ export function App({ repository: providedRepository, initialAccountId }: AppPro
     if (transitionDocument.startViewTransition && !reducedMotion) transitionDocument.startViewTransition(change); else change();
   };
   const updateView = <K extends keyof ViewPreferences>(key: K, patch: Partial<ViewPreferences[K]>) => repository.setPreferences({ viewPreferences: { ...app.state.preferences.viewPreferences, [key]: { ...app.state.preferences.viewPreferences[key], ...patch } } });
-  const signIn = (nextAccount: DemoAccount) => {
+  const signIn = (nextAccount: DemoAccount, experience: DemoExperienceLevel) => {
     repository.setAuditActor(`${nextAccount.name} · ${nextAccount.title}`);
     repository.setPreferences({ branch: nextAccount.homeBranch, activePage: nextAccount.initialTarget.page, activeSubview: nextAccount.initialTarget.subview, activeRecordType: undefined, activeRecordId: undefined, activeContextId: undefined });
     sessionId.current = repository.startSession(nextAccount, typeof navigator === "undefined" ? "unknown" : navigator.userAgent);
     setUsesPersistedTarget(true);
     setAccountId(nextAccount.id);
+    if (experience === "first-time" && !repository.getState().preferences.tutorialCompletedRoles.includes(nextAccount.role)) setTutorialActive(true);
+  };
+  const finishTutorial = () => {
+    setTutorialActive(false);
+    if (account) repository.setPreferences({ tutorialCompletedRoles: Array.from(new Set([...app.state.preferences.tutorialCompletedRoles, account.role])) });
   };
   const signOut = () => {
     if (sessionId.current) repository.endSession(sessionId.current);
@@ -99,6 +107,7 @@ export function App({ repository: providedRepository, initialAccountId }: AppPro
     app.closeOverlay();
     app.setSearchOpen(false);
     repository.setAuditActor("Weelee Employee");
+    setTutorialActive(false);
     setAccountId(null);
   };
 
@@ -154,14 +163,15 @@ export function App({ repository: providedRepository, initialAccountId }: AppPro
     return <DomainWorkspace page="operations" subview={target.subview} state={scopedState} onNavigate={navigate} />;
   })();
 
-  return <EmployeeShell activePage={target.page} onNavigate={navigate} canNavigate={(next) => canAccessTarget(account, next)} branch={scopedState.preferences.branch} employeeName={account.name} employeeRole={account.title} actionCount={scopedState.tasks.filter((task) => task.status !== "Completed").length} notificationCount={scopedState.notifications.filter((notification) => !notification.read).length} onSearch={() => app.setSearchOpen(true)} onBranch={hasPermission(account, "branch.switch") ? () => app.setActiveOverlay({ kind: "dialog", id: "branch" }) : undefined} onEmployeeMenu={() => app.setActiveOverlay({ kind: "dialog", id: "employee" })}>
+  return <EmployeeShell activePage={target.page} onNavigate={navigate} canNavigate={(next) => canAccessTarget(account, next)} branch={scopedState.preferences.branch} employeeName={account.name} employeeRole={account.title} employeeColor={account.color} actionCount={scopedState.tasks.filter((task) => task.status !== "Completed").length} notificationCount={scopedState.notifications.filter((notification) => !notification.read).length} onSearch={() => app.setSearchOpen(true)} onBranch={hasPermission(account, "branch.switch") ? () => app.setActiveOverlay({ kind: "dialog", id: "branch" }) : undefined} onEmployeeMenu={() => app.setActiveOverlay({ kind: "dialog", id: "employee" })}>
     {account.role === "auditor" ? <p className="access-context" role="status">Read-only demo view</p> : null}
     {content}
     <CommandPalette open={app.searchOpen} state={scopedState} onClose={() => app.setSearchOpen(false)} filterResult={(result) => canAccessTarget(account, result.target)} onSelect={(result) => { navigate(result.target); notify("Opened connected record", result.title); }} />
     {hasPermission(account, "demo.reset") ? <Dialog open={app.activeOverlay?.id === "reset"} title="Reset demo data" onClose={app.closeOverlay}><p>This restores the deterministic Weelee demonstration data in this browser. This cannot be undone.</p><div className="modal-footer"><Button variant="secondary" onClick={app.closeOverlay}>Cancel</Button><Button onClick={() => { repository.reset(); sessionId.current = repository.startSession(account, typeof navigator === "undefined" ? "unknown" : navigator.userAgent); app.closeOverlay(); notify("Demo data reset", "The deterministic demo data was restored."); }}>Reset demo data</Button></div></Dialog> : null}
     <Dialog open={app.activeOverlay?.id === "branch"} title="Select branch" onClose={app.closeOverlay}><p>Choose the current employee branch for this local demo.</p>{account.allowedBranches.map((branch) => <Button key={branch} variant="secondary" onClick={() => { repository.setPreferences({ branch }); app.closeOverlay(); }}>{branch}</Button>)}</Dialog>
-    <Dialog open={app.activeOverlay?.id === "employee"} title="Employee demo controls" onClose={app.closeOverlay}><p>{account.name} · {account.title} · {account.email}</p>{hasPermission(account, "settings.manage") ? <Button variant="secondary" onClick={() => { app.closeOverlay(); navigate({ page: "operations", subview: "settings" }); }}>Open workspace settings</Button> : null}{hasPermission(account, "demo.reset") ? <Button variant="secondary" onClick={() => { app.closeOverlay(); app.setActiveOverlay({ kind: "dialog", id: "reset" }); }}>Reset demo data</Button> : null}<Button variant="secondary" onClick={signOut}>Sign out</Button></Dialog>
+    <Dialog open={app.activeOverlay?.id === "employee"} title="Employee demo controls" onClose={app.closeOverlay}><p>{account.name} · {account.title} · {account.email}</p>{hasPermission(account, "settings.manage") ? <Button variant="secondary" onClick={() => { app.closeOverlay(); navigate({ page: "operations", subview: "settings" }); }}>Open workspace settings</Button> : null}<Button variant="secondary" onClick={() => { app.closeOverlay(); setTutorialActive(true); }}>Replay tutorial</Button>{hasPermission(account, "demo.reset") ? <Button variant="secondary" onClick={() => { app.closeOverlay(); app.setActiveOverlay({ kind: "dialog", id: "reset" }); }}>Reset demo data</Button> : null}<Button variant="secondary" onClick={signOut}>Sign out</Button></Dialog>
     <ToastRegion toasts={app.toasts} onDismiss={app.dismissToast} />
+    {tutorialActive ? <TourOverlay steps={tutorialForRole[account.role]} roleTitle={account.title} accentColor={account.color} onNavigate={navigate} onFinish={finishTutorial} /> : null}
   </EmployeeShell>;
 }
 

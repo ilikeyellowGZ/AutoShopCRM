@@ -27,7 +27,9 @@ export type Customer = { id: string; name: string; email: string; phone: string;
 export type Lead = { id: string; customerId: string; vehicleId: string; owner: string; stage: LeadStage; value: number; nextAction: string; dueAt: string; tone: Tone };
 export type Deal = { id: string; customerId: string; vehicleId: string; salesRep: string; grossProfit: number; status: "Closed" | "Pending" | "Approval"; date: string };
 export type FinanceDraft = { vehicleId: string; vehiclePrice: number; downPayment: number; termMonths: 36 | 48 | 60 | 72; aprPercent: number; tradeAllowance: number; lienPayoff: number; serviceContract: number; gapInsurance: number };
-export type ServiceJob = { id: string; customerId: string; vehicleId: string; advisor: string; technician: string; status: "Booked" | "Checked In" | "In Progress" | "Waiting for Parts" | "Quality Check" | "Ready" | "Completed"; dueAt: string; note: string };
+export type ServicePartsRisk = "Clear" | "At Risk" | "Blocked";
+export type ServiceApprovalState = "Not Required" | "Pending" | "Approved";
+export type ServiceJob = { id: string; customerId: string; vehicleId: string; advisor: string; technician: string; status: "Booked" | "Checked In" | "In Progress" | "Waiting for Parts" | "Quality Check" | "Ready" | "Completed"; dueAt: string; note: string; partsRisk: ServicePartsRisk; approvalState: ServiceApprovalState };
 export type Employee = { id: string; accountId?: string; name: string; email: string; title: string; department: "Executive" | "Sales" | "Finance" | "Inventory" | "Marketing" | "Accounts" | "Service" | "Audit"; branch: string; branchId: string; managerId?: string; status: "Active" | "Leave" };
 export type Appointment = { id: string; customerId: string; leadId: string; vehicleId: string; assignedTo: string; branch: string; branchId: string; scheduledAt: string; purpose: "Consultation" | "Finance Review" | "Delivery" | "Service Handover"; status: "Scheduled" | "Confirmed" | "Completed" | "Cancelled" };
 export type TestDrive = { id: string; appointmentId: string; customerId: string; leadId: string; vehicleId: string; host: string; scheduledAt: string; status: "Booked" | "Completed" | "No Show"; outcome: string };
@@ -60,7 +62,7 @@ export type ViewPreferences = {
   service: { query: string; filter: ServiceFilterPreference; view: ServiceViewMode };
 };
 export type PersistedRecordType = "vehicle" | "customer" | "lead" | "deal" | "service" | "task";
-export type UserPreferences = { branch: string; density: "comfortable" | "compact"; activePage: string; activeSubview: string; activeRecordType?: PersistedRecordType; activeRecordId?: string; activeContextId?: string; viewPreferences: ViewPreferences };
+export type UserPreferences = { branch: string; density: "comfortable" | "compact"; activePage: string; activeSubview: string; activeRecordType?: PersistedRecordType; activeRecordId?: string; activeContextId?: string; viewPreferences: ViewPreferences; taskOrder: string[]; tutorialCompletedRoles: string[] };
 export type VehicleIntakeDraft = { step: 1 | 2 | 3 | 4; values: Partial<Vehicle> };
 export type FormDrafts = { vehicleIntake: VehicleIntakeDraft | null; vehicleIntakes: Record<string, VehicleIntakeDraft>; lead: Partial<Lead> | null; deal: Partial<Deal> | null; serviceNotes: Record<string, string> };
 export const boardColumnKinds = ["text", "number", "money", "status", "priority", "person", "date", "checkbox", "tags", "progress", "relation"] as const;
@@ -119,5 +121,5 @@ export type ChatMessage = { id: string; channelId: string; authorEmployeeId: str
 /** A read receipt is a marker on the last message a colleague has seen, not a timestamp, so two messages posted in the same instant still order correctly. */
 export type ChatRead = { channelId: string; employeeId: string; lastReadMessageId: string; readAt: string };
 
-export const CURRENT_SCHEMA_VERSION = 8;
+export const CURRENT_SCHEMA_VERSION = 9;
 export type DemoState = { schemaVersion: typeof CURRENT_SCHEMA_VERSION; organizations: Organization[]; branches: Branch[]; sessions: SessionRecord[]; comments: Comment[]; chatChannels: ChatChannel[]; chatMessages: ChatMessage[]; chatReads: ChatRead[]; workspaces: Workspace[]; boards: Board[]; boardGroups: BoardGroup[]; boardColumns: BoardColumn[]; boardItems: BoardItem[]; boardViews: BoardView[]; vehicles: Vehicle[]; customers: Customer[]; leads: Lead[]; deals: Deal[]; financeDrafts: FinanceDraft[]; financeApplications: FinanceApplication[]; serviceJobs: ServiceJob[]; employees: Employee[]; appointments: Appointment[]; testDrives: TestDrive[]; quotes: Quote[]; payments: Payment[]; documents: CrmDocument[]; tasks: TaskItem[]; notifications: Notification[]; activities: AuditActivity[]; preferences: UserPreferences; drafts: FormDrafts };

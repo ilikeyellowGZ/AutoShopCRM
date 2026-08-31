@@ -92,7 +92,7 @@ export function ChatPage({ state, repository, employeeId, canPost = false, chann
     }
   };
 
-  return <section className="chat-page" aria-labelledby="chat-title">
+  return <section className="chat-page" data-tour="chat-page" aria-labelledby="chat-title">
     {heading}
     <div className="chat-layout">
       <nav className="chat-channels" aria-label="Conversations">
@@ -127,10 +127,10 @@ export function ChatPage({ state, repository, employeeId, canPost = false, chann
           </li>;
         }) : <li className="my-day-empty">No messages in this conversation yet.</li>}</ul>
 
-        {canPost ? <div className="crm-form">
-          <label htmlFor="chat-draft">Message {channelTitle(state, selected, employeeId)}</label>
-          <textarea id="chat-draft" value={draft} onChange={(event) => setDraft(event.target.value)} rows={2} placeholder="Use @name to notify a member of this channel" />
-          <Button onClick={send}>Send</Button>
+        {canPost ? <div className="chat-composer">
+          <label className="sr-only" htmlFor="chat-draft">Message {channelTitle(state, selected, employeeId)}</label>
+          <textarea id="chat-draft" className="chat-composer-input" value={draft} onChange={(event) => { setDraft(event.target.value); }} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey && draft.trim()) { event.preventDefault(); send(); } }} rows={2} placeholder="Use @name to notify a member of this channel" />
+          <div className="chat-composer-actions"><span className="chat-composer-hint">Enter to send · Shift + Enter for a new line</span><Button onClick={send}>Send</Button></div>
         </div> : <p className="my-day-empty">You can read this conversation but not post in it.</p>}
 
         {error ? <p className="form-error" role="alert">{error}</p> : null}

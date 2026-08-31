@@ -5,7 +5,7 @@ const zar = new Intl.NumberFormat("en-ZA", { style: "currency", currency: "ZAR",
 
 export function PaymentBreakdown({ draft }: { draft: FinanceDraft }) {
   const breakdown = financeBreakdown(draft);
-  return <aside className="finance-breakdown" aria-labelledby="payment-breakdown-title">
+  return <aside className="finance-breakdown" data-tour="finance-breakdown" aria-labelledby="payment-breakdown-title">
     <p className="finance-eyebrow">Live estimate</p>
     <h2 id="payment-breakdown-title">Payment breakdown</h2>
     <strong className="finance-monthly">{zar.format(breakdown.monthly)}<small>/ month</small></strong>

@@ -138,7 +138,7 @@ export function BoardsPage({ state, repository, boardId, onNavigate, canWriteIte
     }
   };
 
-  return <section className="pipeline-page" aria-labelledby="boards-title">
+  return <section className="pipeline-page" data-tour="work-board" aria-labelledby="boards-title">
     <header className="crm-heading">
       <p className="crm-eyebrow">Work</p>
       <h1 id="boards-title">{board.title}</h1>

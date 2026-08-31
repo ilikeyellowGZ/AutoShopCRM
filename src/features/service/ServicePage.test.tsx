@@ -23,6 +23,23 @@ describe("ServicePage", () => {
     expect(repository.getState().serviceJobs[0].status).toBe("Checked In");
   });
 
+  it("changes parts risk and records customer approval as persisted, audited transitions", async () => {
+    const user = userEvent.setup();
+    const storage = memoryStorage();
+    const repository = createDemoRepository(storage);
+    const state = repository.getState();
+    const pendingJob = state.serviceJobs.find((item) => item.approvalState === "Pending")!;
+    const riskJob = state.serviceJobs.find((item) => item.partsRisk !== "Blocked" && item.id !== pendingJob.id && item.approvalState !== "Pending")!;
+    render(<ServicePage state={{ ...state, serviceJobs: [riskJob, pendingJob] }} repository={repository} />);
+
+    await user.selectOptions(screen.getByLabelText(`Parts risk for job ${riskJob.id}`), "Blocked");
+    expect(repository.getState().serviceJobs.find((item) => item.id === riskJob.id)?.partsRisk).toBe("Blocked");
+    expect(repository.getState().activities[0]).toMatchObject({ action: "Parts risk updated", targetId: riskJob.id });
+
+    await user.click(screen.getByRole("button", { name: "Record customer approval" }));
+    expect(repository.getState().serviceJobs.find((item) => item.id === pendingJob.id)?.approvalState).toBe("Approved");
+  });
+
   it("renders Schedule as dated, ordered operations distinct from List", async () => {
     const user = userEvent.setup(); const repository = createDemoRepository(memoryStorage());
     render(<ServicePage state={repository.getState()} repository={repository} />);

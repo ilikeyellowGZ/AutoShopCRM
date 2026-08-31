@@ -80,6 +80,16 @@ describe("preference migrations", () => {
     expect(migrated.vehicles.find((vehicle) => vehicle.stockId === "MCR-2511")?.vin).toBe("MCRMDMA0000000011");
   });
 
+  it("backfills a missing task order as empty and drops ids for tasks that no longer exist", () => {
+    const state = stateRecord();
+    delete preferences(state).taskOrder;
+    expect(migrateDemoState(state)?.preferences.taskOrder).toEqual([]);
+
+    const staleState = stateRecord();
+    preferences(staleState).taskOrder = ["task-01", "not-a-real-task"];
+    expect(migrateDemoState(staleState)?.preferences.taskOrder).toEqual(["task-01"]);
+  });
+
   it("fills every nested default when view preferences are missing", () => {
     const state = stateRecord();
     delete preferences(state).viewPreferences;
@@ -276,6 +286,21 @@ describe("stepwise schema upgrades", () => {
     expect(migrated!.schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
     expect(migrated!.chatChannels.length).toBeGreaterThan(0);
     expect(migrated!.chatMessages.length).toBeGreaterThan(0);
+  });
+
+  it("backfills parts risk and approval state onto a v8 payload", () => {
+    const state = createSeedState() as unknown as UnknownRecord;
+    state.schemaVersion = 8;
+    state.serviceJobs = (state.serviceJobs as UnknownRecord[]).map(({ partsRisk: _partsRisk, approvalState: _approvalState, ...rest }) => rest);
+
+    const migrated = migrateDemoState(state);
+
+    expect(migrated).not.toBeNull();
+    expect(migrated!.schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
+    expect(migrated!.serviceJobs.every((job) => ["Clear", "At Risk", "Blocked"].includes(job.partsRisk))).toBe(true);
+    expect(migrated!.serviceJobs.every((job) => ["Not Required", "Pending", "Approved"].includes(job.approvalState))).toBe(true);
+    const completed = migrated!.serviceJobs.find((job) => job.status === "Completed")!;
+    expect(completed.approvalState).toBe("Approved");
   });
 
   it("keeps a stored board set intact instead of mixing demo records into it", () => {
